@@ -10,6 +10,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Header } from "../components/layout/Header";
+import { Input } from "../components/ui/Input";
+import { GradientButton } from "../components/ui/GradientButton";
 
 export default function ResetPasswordScreen() {
   const router = useRouter();

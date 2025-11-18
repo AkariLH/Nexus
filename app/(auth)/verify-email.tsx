@@ -10,6 +10,8 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { Header } from "../components/layout/Header";
+import { GradientButton } from "../components/ui/GradientButton";
 
 export default function VerifyEmailScreen() {
   const router = useRouter();
@@ -52,15 +54,7 @@ export default function VerifyEmailScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.push("/(auth)/register")}
-          style={styles.backButton}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="arrow-back" size={28} color="#1A1A1A" />
-        </TouchableOpacity>
-      </View>
+      <Header onBack={() => router.push("/(auth)/register")} />
 
       {/* Content */}
       <Animated.View
@@ -101,22 +95,14 @@ export default function VerifyEmailScreen() {
           ))}
         </View>
 
-        {/* Botón de verificación */}
-        <TouchableOpacity
-          activeOpacity={0.9}
-          disabled={!isComplete}
-          style={[styles.buttonWrapper, !isComplete && { opacity: 0.5 }]}
-          onPress={() => router.replace("/(tabs)")}
-        >
-          <LinearGradient
-            colors={["#FF4F81", "#8A2BE2"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.button}
-          >
-            <Text style={styles.buttonText}>Verificar</Text>
-          </LinearGradient>
-        </TouchableOpacity>
+        {/* Submit button */}
+        <View style={styles.buttonContainer}>
+          <GradientButton
+            title="Verificar código"
+            disabled={!isComplete}
+            onPress={() => router.replace("/(tabs)")}
+          />
+        </View>
 
         {/* Reenviar código */}
         <View style={styles.resendWrapper}>
@@ -179,25 +165,8 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "transparent",
   },
-  buttonWrapper: {
+  buttonContainer: {
     width: "100%",
-    borderRadius: 24,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 5,
-  },
-  button: {
-    height: 56,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  buttonText: {
-    color: "#FFF",
-    fontWeight: "700",
-    fontSize: 16,
   },
   resendWrapper: {
     flexDirection: "row",

@@ -5,8 +5,9 @@ export interface RegisterRequest {
   password: string;
   confirmPassword: string;
   displayName: string;
-  nickname?: string;
+  nickname: string;
   birthDate: string; // formato: "YYYY-MM-DD"
+  termsAccepted: boolean;
 }
 
 export interface RegisterResponse {
