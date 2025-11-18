@@ -19,15 +19,15 @@ const getBaseUrl = () => {
 };
 
 export const API_CONFIG = {
-  BASE_URL: getBaseUrl(),
+  BASE_URL: `${getBaseUrl()}/api`,
   
   ENDPOINTS: {
     AUTH: {
-      REGISTER: '/api/auth/register',
-      LOGIN: '/api/auth/login',
-      HEALTH: '/api/auth/health',
+      REGISTER: '/auth/register',
+      LOGIN: '/auth/login',
+      HEALTH: '/auth/health',
     },
   },
   
-  TIMEOUT: 10000,
+  TIMEOUT: 30000, // 30 segundos para dar tiempo al envío de email
 };

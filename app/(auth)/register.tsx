@@ -293,20 +293,21 @@ export default function RegisterScreen() {
 
     console.log('Enviando datos de registro:', registerData); // Debug
 
-    const result = await authService.register(registerData);
+    try {
+      const result = await authService.register(registerData);
 
-    console.log('Respuesta del servidor:', result); // Debug
+      console.log('Respuesta del servidor:', result); // Debug
 
-    setLoading(false);
+      setLoading(false);
 
-    if (result.data) {
-      // Registro exitoso
-      setSuccessData({
-        displayName: result.data.displayName,
-        email: email.trim(),
-      });
-      setShowSuccessModal(true);
-    } else if (result.error) {
+      if (result.data) {
+        // Registro exitoso
+        setSuccessData({
+          displayName: result.data.displayName,
+          email: email.trim(),
+        });
+        setShowSuccessModal(true);
+      } else if (result.error) {
       // Error en el registro
       let errorMessage = result.error.message;
       
@@ -355,6 +356,11 @@ export default function RegisterScreen() {
         // Error genérico
         showError(errorMessage, 'Error en el registro');
       }
+      }
+    } catch (error) {
+      setLoading(false);
+      console.error('Error inesperado en registro:', error);
+      showError('Ocurrió un error inesperado. Por favor intenta de nuevo.', 'Error');
     }
   };
 

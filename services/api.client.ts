@@ -33,9 +33,17 @@ apiClient.interceptors.request.use(
 // Interceptor para responses - manejo de errores
 apiClient.interceptors.response.use(
   (response) => {
+    console.log('✅ Respuesta exitosa:', response.status, response.statusText);
+    console.log('✅ Headers:', response.headers);
+    console.log('✅ Data:', JSON.stringify(response.data, null, 2));
     return response;
   },
   (error: any) => {
+    console.error('❌ Error interceptado:', error.message);
+    console.error('❌ Error code:', error.code);
+    console.error('❌ Error response:', error.response?.status, error.response?.statusText);
+    console.error('❌ Error data:', error.response?.data);
+    console.error('❌ Error request:', error.request ? 'Request was made' : 'No request');
     // Formatear error para que sea más fácil de usar
     if (error.response) {
       // El servidor respondió con un error

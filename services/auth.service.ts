@@ -13,12 +13,16 @@ export const authService = {
    */
   register: async (data: RegisterRequest): Promise<ApiResponse<RegisterResponse>> => {
     try {
+      console.log('📤 Enviando registro:', data);
       const response = await apiClient.post<RegisterResponse>(
         API_CONFIG.ENDPOINTS.AUTH.REGISTER,
         data
       );
+      console.log('📥 Respuesta recibida en authService:', response.status);
+      console.log('📥 Data recibida:', response.data);
       return { data: response.data };
     } catch (error) {
+      console.error('💥 Error capturado en authService:', error);
       return { error: error as ErrorResponse };
     }
   },
