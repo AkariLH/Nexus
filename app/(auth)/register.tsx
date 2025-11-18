@@ -10,7 +10,11 @@ import {
     TextInput,
     TouchableOpacity,
     View,
+    Alert,
+    ActivityIndicator,
 } from "react-native";
+import { authService } from "../../services/auth.service";
+import type { RegisterRequest } from "../../types/auth.types";
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -18,7 +22,11 @@ export default function RegisterScreen() {
   const [nickname, setNickname] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [birthDate, setBirthDate] = useState(""); // formato: DD/MM/YYYY
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
@@ -37,6 +45,110 @@ export default function RegisterScreen() {
       }),
     ]).start();
   }, []);
+
+  // Formatear fecha mientras escribe (DD/MM/YYYY)
+  const handleBirthDateChange = (text: string) => {
+    // Eliminar caracteres no numéricos
+    const numbers = text.replace(/[^\d]/g, '');
+    
+    let formatted = numbers;
+    if (numbers.length >= 2) {
+      formatted = numbers.slice(0, 2) + '/';
+      if (numbers.length >= 4) {
+        formatted += numbers.slice(2, 4) + '/';
+        formatted += numbers.slice(4, 8);
+      } else {
+        formatted += numbers.slice(2);
+      }
+    }
+    
+    setBirthDate(formatted);
+  };
+
+  // Convertir DD/MM/YYYY a YYYY-MM-DD para el backend
+  const convertDateFormat = (date: string): string => {
+    const parts = date.split('/');
+    if (parts.length === 3) {
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+    return '';
+  };
+
+  const handleRegister = async () => {
+    // Validaciones básicas
+    if (!name.trim()) {
+      Alert.alert('Error', 'Por favor ingresa tu nombre completo');
+      return;
+    }
+    if (!email.trim()) {
+      Alert.alert('Error', 'Por favor ingresa tu correo electrónico');
+      return;
+    }
+    if (!password) {
+      Alert.alert('Error', 'Por favor ingresa una contraseña');
+      return;
+    }
+    if (!confirmPassword) {
+      Alert.alert('Error', 'Por favor confirma tu contraseña');
+      return;
+    }
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Las contraseñas no coinciden');
+      return;
+    }
+    if (birthDate.length !== 10) {
+      Alert.alert('Error', 'Por favor ingresa una fecha de nacimiento válida (DD/MM/YYYY)');
+      return;
+    }
+
+    setLoading(true);
+
+    const registerData: RegisterRequest = {
+      email: email.trim(),
+      password,
+      confirmPassword,
+      displayName: name.trim(),
+      birthDate: convertDateFormat(birthDate),
+    };
+
+    // Solo agregar nickname si no está vacío
+    if (nickname.trim()) {
+      registerData.nickname = nickname.trim();
+    }
+
+    console.log('Enviando datos de registro:', registerData); // Debug
+
+    const result = await authService.register(registerData);
+
+    console.log('Respuesta del servidor:', result); // Debug
+
+    setLoading(false);
+
+    if (result.data) {
+      // Registro exitoso
+      Alert.alert(
+        '¡Registro exitoso!',
+        `Bienvenido ${result.data.displayName}!\nTu código de vinculación es: ${result.data.linkCode}`,
+        [
+          {
+            text: 'Continuar',
+            onPress: () => router.push('/(auth)/verify-email'),
+          },
+        ]
+      );
+    } else if (result.error) {
+      // Error en el registro
+      let errorMessage = result.error.message;
+      
+      // Si hay errores de validación, mostrarlos
+      if (result.error.validationErrors) {
+        const errors = Object.values(result.error.validationErrors).join('\n');
+        errorMessage = errors;
+      }
+      
+      Alert.alert('Error en el registro', errorMessage);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -160,11 +272,65 @@ export default function RegisterScreen() {
             </View>
           </View>
 
+          {/* Confirmar Contraseña */}
+          <View style={styles.field}>
+            <Text style={styles.label}>Confirmar contraseña</Text>
+            <View style={styles.inputWrapper}>
+              <Ionicons
+                name="lock-closed-outline"
+                size={20}
+                color="#1A1A1A66"
+                style={styles.iconLeft}
+              />
+              <TextInput
+                placeholder="••••••••"
+                placeholderTextColor="#1A1A1A66"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry={!showConfirmPassword}
+                style={styles.input}
+              />
+              <TouchableOpacity
+                style={styles.iconRight}
+                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                <Ionicons
+                  name={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
+                  size={20}
+                  color="#1A1A1A66"
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Fecha de Nacimiento */}
+          <View style={styles.field}>
+            <Text style={styles.label}>Fecha de nacimiento</Text>
+            <View style={styles.inputWrapper}>
+              <Ionicons
+                name="calendar-outline"
+                size={20}
+                color="#1A1A1A66"
+                style={styles.iconLeft}
+              />
+              <TextInput
+                placeholder="DD/MM/YYYY"
+                placeholderTextColor="#1A1A1A66"
+                value={birthDate}
+                onChangeText={handleBirthDateChange}
+                style={styles.input}
+                keyboardType="numeric"
+                maxLength={10}
+              />
+            </View>
+          </View>
+
           {/* Botón de crear cuenta */}
           <TouchableOpacity
             activeOpacity={0.9}
             style={styles.buttonWrapper}
-            onPress={() => router.push("/(auth)/verify-email")}
+            onPress={handleRegister}
+            disabled={loading}
           >
             <LinearGradient
               colors={["#FF4F81", "#8A2BE2"]}
@@ -172,7 +338,11 @@ export default function RegisterScreen() {
               end={{ x: 1, y: 0 }}
               style={styles.button}
             >
-              <Text style={styles.buttonText}>Crear cuenta</Text>
+              {loading ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={styles.buttonText}>Crear cuenta</Text>
+              )}
             </LinearGradient>
           </TouchableOpacity>
 
