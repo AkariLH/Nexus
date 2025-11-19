@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
     Animated,
@@ -9,19 +9,35 @@ import {
     TextInput,
     TouchableOpacity,
     View,
+    ActivityIndicator,
 } from "react-native";
 import { Header } from "../components/layout/Header";
 import { GradientButton } from "../components/ui/GradientButton";
+import { ErrorModal } from "../components/ErrorModal";
+import { authService } from "../../services/auth.service";
 
 export default function VerifyEmailScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const email = params.email as string;
+
   const [code, setCode] = useState(["", "", "", "", "", ""]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [errorModal, setErrorModal] = useState({ 
+    visible: false, 
+    message: "",
+    type: "error" as "error" | "expired"
+  });
 
   const inputs = useRef<TextInput[]>([]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
 
   useEffect(() => {
+    console.log("📧 Email recibido en verify-email:", email);
+    console.log("📦 Params completos:", params);
+    
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -49,6 +65,120 @@ export default function VerifyEmailScreen() {
     }
   };
 
+  const handleKeyPress = (index: number, key: string) => {
+    if (key === 'Backspace' && !code[index] && index > 0) {
+      inputs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleVerify = async () => {
+    if (!isComplete || isLoading) return;
+
+    const verificationCode = code.join("");
+    
+    console.log("🔍 Verificando - Email:", email);
+    console.log("🔍 Verificando - Código:", verificationCode);
+    
+    if (!email) {
+      console.error("❌ Email no encontrado en params");
+      setErrorModal({
+        visible: true,
+        message: "No se encontró el email. Por favor regresa al registro.",
+        type: "error"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      console.log("📤 Verificando código...");
+      const result = await authService.verifyEmail({
+        email: email,
+        code: verificationCode,
+      });
+
+      if (result.error) {
+        console.error("❌ Error:", result.error);
+        const errorMessage = result.error.message || "Error al verificar el código";
+        
+        // FA01: Código incorrecto
+        // FA02: Código expirado
+        const isExpired = errorMessage.toLowerCase().includes("expirado") || 
+                         errorMessage.toLowerCase().includes("expired");
+        
+        setErrorModal({
+          visible: true,
+          message: errorMessage,
+          type: isExpired ? "expired" : "error"
+        });
+        
+        // Si el código está mal, limpiar los inputs
+        if (!isExpired) {
+          setCode(["", "", "", "", "", ""]);
+          inputs.current[0]?.focus();
+        }
+      } else {
+        console.log("✅ Verificación exitosa:", result.data);
+        // Éxito - redirigir a pantalla de bienvenida
+        router.replace({
+          pathname: "/(auth)/welcome-verified",
+          params: { 
+            displayName: result.data?.nickname || result.data?.displayName || email 
+          }
+        });
+      }
+    } catch (error) {
+      console.error("💥 Error inesperado:", error);
+      setErrorModal({
+        visible: true,
+        message: "Ocurrió un error inesperado. Intenta nuevamente.",
+        type: "error"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    if (isResending || !email) return;
+
+    setIsResending(true);
+    console.log("🔄 Reenviando código a:", email);
+
+    try {
+      const result = await authService.resendVerificationCode(email);
+
+      if (result.error) {
+        setErrorModal({
+          visible: true,
+          message: result.error.message || "Error al reenviar el código",
+          type: "error"
+        });
+      } else {
+        // Limpiar el código actual
+        setCode(["", "", "", "", "", ""]);
+        inputs.current[0]?.focus();
+        
+        // Mostrar mensaje de éxito
+        setErrorModal({
+          visible: true,
+          message: "Se ha enviado un nuevo código a tu correo",
+          type: "error" // Usamos el mismo modal pero con mensaje positivo
+        });
+      }
+    } catch (error) {
+      console.error("💥 Error al reenviar código:", error);
+      setErrorModal({
+        visible: true,
+        message: "Error al reenviar el código. Intenta nuevamente.",
+        type: "error"
+      });
+    } finally {
+      setIsResending(false);
+    }
+  };
+
   const isComplete = code.every((d) => d);
 
   return (
@@ -73,7 +203,8 @@ export default function VerifyEmailScreen() {
 
         <Text style={styles.title}>Verifica tu correo</Text>
         <Text style={styles.subtitle}>
-          Ingresa el código de 6 dígitos que enviamos a tu correo electrónico
+          Ingresa el código de 6 dígitos que enviamos a{"\n"}
+          <Text style={styles.emailHighlight}>{email || "tu correo"}</Text>
         </Text>
 
         {/* Inputs del código */}
@@ -88,9 +219,13 @@ export default function VerifyEmailScreen() {
               }}
               value={digit}
               onChangeText={(value) => handleCodeChange(index, value)}
+              onKeyPress={({ nativeEvent }) => handleKeyPress(index, nativeEvent.key)}
               keyboardType="numeric"
               maxLength={1}
-              style={styles.codeInput}
+              style={[
+                styles.codeInput,
+                digit && styles.codeInputFilled,
+              ]}
             />
           ))}
         </View>
@@ -98,20 +233,48 @@ export default function VerifyEmailScreen() {
         {/* Submit button */}
         <View style={styles.buttonContainer}>
           <GradientButton
-            title="Verificar código"
-            disabled={!isComplete}
-            onPress={() => router.replace("/(tabs)")}
+            title={isLoading ? "Verificando..." : "Verificar código"}
+            disabled={!isComplete || isLoading}
+            onPress={handleVerify}
           />
+          {isLoading && (
+            <ActivityIndicator
+              size="small"
+              color="#FF4F81"
+              style={styles.loader}
+            />
+          )}
         </View>
 
         {/* Reenviar código */}
         <View style={styles.resendWrapper}>
           <Text style={styles.resendText}>¿No recibiste el código? </Text>
-          <TouchableOpacity>
-            <Text style={styles.resendLink}>Reenviar</Text>
+          <TouchableOpacity 
+            onPress={handleResendCode} 
+            disabled={isLoading || isResending}
+          >
+            <Text style={[styles.resendLink, (isResending || isLoading) && styles.resendLinkDisabled]}>
+              {isResending ? "Reenviando..." : "Reenviar"}
+            </Text>
           </TouchableOpacity>
         </View>
       </Animated.View>
+
+      {/* Modal de error */}
+      <ErrorModal
+        visible={errorModal.visible}
+        message={errorModal.message}
+        onClose={() => {
+          setErrorModal({ visible: false, message: "", type: "error" });
+        }}
+        actionButton={errorModal.type === "expired" ? {
+          text: "Solicitar nuevo código",
+          onPress: () => {
+            setErrorModal({ visible: false, message: "", type: "error" });
+            handleResendCode();
+          }
+        } : undefined}
+      />
     </View>
   );
 }
@@ -147,6 +310,11 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 32,
     paddingHorizontal: 12,
+    lineHeight: 20,
+  },
+  emailHighlight: {
+    color: "#FF4F81",
+    fontWeight: "600",
   },
   codeContainer: {
     flexDirection: "row",
@@ -165,8 +333,18 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "transparent",
   },
+  codeInputFilled: {
+    borderColor: "#FF4F81",
+    backgroundColor: "#FFF",
+  },
   buttonContainer: {
     width: "100%",
+    position: "relative",
+  },
+  loader: {
+    position: "absolute",
+    right: 20,
+    top: 18,
   },
   resendWrapper: {
     flexDirection: "row",
@@ -179,5 +357,8 @@ const styles = StyleSheet.create({
   resendLink: {
     color: "#FF4F81",
     fontWeight: "600",
+  },
+  resendLinkDisabled: {
+    opacity: 0.5,
   },
 });

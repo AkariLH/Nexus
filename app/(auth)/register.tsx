@@ -631,12 +631,16 @@ export default function RegisterScreen() {
       {/* Modal de éxito */}
       <SuccessModal
         visible={showSuccessModal}
+        title="¡Cuenta creada exitosamente!"
+        message={`Hemos enviado un código de verificación a ${successData?.email || email.trim()}. Revisa tu bandeja de entrada y spam.`}
+        buttonText="Verificar ahora"
         onClose={() => {
           setShowSuccessModal(false);
-          router.push('/(auth)/verify-email');
+          router.push({
+            pathname: '/(auth)/verify-email',
+            params: { email: successData?.email || email.trim() }
+          });
         }}
-        email={successData?.email || ''}
-        displayName={successData?.displayName || ''}
       />
 
       {/* Modal de error */}

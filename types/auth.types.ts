@@ -30,6 +30,44 @@ export interface ErrorResponse {
   validationErrors?: Record<string, string>;
 }
 
+export interface VerifyEmailRequest {
+  email: string;
+  code: string;
+}
+
+export interface VerifyEmailResponse {
+  success: boolean;
+  message: string;
+  userId: number;
+  email: string;
+  displayName: string;
+  nickname: string;
+  emailConfirmed: boolean;
+}
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ForgotPasswordResponse {
+  success: boolean;
+  message: string;
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  email: string;
+  code: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface ResetPasswordResponse {
+  success: boolean;
+  message: string;
+  email: string;
+}
+
 export interface ApiResponse<T> {
   data?: T;
   error?: ErrorResponse;

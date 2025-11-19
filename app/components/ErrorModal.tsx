@@ -7,9 +7,13 @@ interface ErrorModalProps {
   onClose: () => void;
   title?: string;
   message: string;
+  actionButton?: {
+    text: string;
+    onPress: () => void;
+  };
 }
 
-export function ErrorModal({ visible, onClose, title = "Error", message }: ErrorModalProps) {
+export function ErrorModal({ visible, onClose, title = "Error", message, actionButton }: ErrorModalProps) {
   return (
     <Modal
       visible={visible}
@@ -37,20 +41,44 @@ export function ErrorModal({ visible, onClose, title = "Error", message }: Error
           {/* Mensaje */}
           <Text style={styles.message}>{message}</Text>
 
-          {/* Botón */}
+          {/* Botón de acción (si existe) */}
+          {actionButton && (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              style={[styles.buttonWrapper, styles.actionButtonWrapper]}
+              onPress={actionButton.onPress}
+            >
+              <LinearGradient
+                colors={["#FF4F81", "#8A2BE2"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.button}
+              >
+                <Text style={styles.buttonText}>{actionButton.text}</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
+
+          {/* Botón Cerrar */}
           <TouchableOpacity
             activeOpacity={0.9}
-            style={styles.buttonWrapper}
+            style={[styles.buttonWrapper, actionButton && styles.secondaryButtonWrapper]}
             onPress={onClose}
           >
-            <LinearGradient
-              colors={["#FF4F81", "#8A2BE2"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.button}
-            >
-              <Text style={styles.buttonText}>Entendido</Text>
-            </LinearGradient>
+            {actionButton ? (
+              <View style={styles.secondaryButton}>
+                <Text style={styles.secondaryButtonText}>Cerrar</Text>
+              </View>
+            ) : (
+              <LinearGradient
+                colors={["#FF4F81", "#8A2BE2"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.button}
+              >
+                <Text style={styles.buttonText}>Entendido</Text>
+              </LinearGradient>
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -122,6 +150,27 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "#FFF",
     fontWeight: "700",
+    fontSize: 16,
+  },
+  actionButtonWrapper: {
+    marginBottom: 12,
+  },
+  secondaryButtonWrapper: {
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  secondaryButton: {
+    height: 56,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "transparent",
+    borderWidth: 2,
+    borderColor: "#E0E0E0",
+    borderRadius: 24,
+  },
+  secondaryButtonText: {
+    color: "#666",
+    fontWeight: "600",
     fontSize: 16,
   },
 });
