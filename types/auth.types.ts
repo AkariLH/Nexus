@@ -68,6 +68,23 @@ export interface ResetPasswordResponse {
   email: string;
 }
 
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  success: boolean;
+  message: string;
+  userId?: number;
+  email: string;
+  displayName?: string;
+  nickname?: string;
+  linkCode?: string;
+  emailConfirmed: boolean;
+  token?: string;
+}
+
 export interface ApiResponse<T> {
   data?: T;
   error?: ErrorResponse;

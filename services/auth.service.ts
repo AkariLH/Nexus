@@ -9,6 +9,8 @@ import type {
   ForgotPasswordResponse,
   ResetPasswordRequest,
   ResetPasswordResponse,
+  LoginRequest,
+  LoginResponse,
   ApiResponse,
   ErrorResponse,
 } from '../types/auth.types';
@@ -137,6 +139,24 @@ export const authService = {
       return { data: response.data };
     } catch (error) {
       console.error('💥 Error al restablecer contraseña:', error);
+      return { error: error as ErrorResponse };
+    }
+  },
+
+  /**
+   * Iniciar sesión
+   */
+  login: async (data: LoginRequest): Promise<ApiResponse<LoginResponse>> => {
+    try {
+      console.log('🔐 Iniciando sesión para:', data.email);
+      const response = await apiClient.post<LoginResponse>(
+        API_CONFIG.ENDPOINTS.AUTH.LOGIN,
+        data
+      );
+      console.log('✅ Inicio de sesión exitoso');
+      return { data: response.data };
+    } catch (error) {
+      console.error('💥 Error en inicio de sesión:', error);
       return { error: error as ErrorResponse };
     }
   },
