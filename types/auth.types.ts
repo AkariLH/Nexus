@@ -89,3 +89,22 @@ export interface ApiResponse<T> {
   data?: T;
   error?: ErrorResponse;
 }
+
+// Tipos para Perfil de Usuario
+
+export interface UpdateProfileRequest {
+  displayName: string;
+  nickname?: string;
+  email: string;
+}
+
+export interface UpdateProfileResponse {
+  userId: number;
+  email: string;
+  displayName: string;
+  nickname?: string;
+  emailConfirmed: boolean;
+  emailChanged: boolean;
+  message: string;
+  updatedAt: string;
+}

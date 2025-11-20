@@ -4,7 +4,7 @@ import Constants from 'expo-constants';
 // Detectar automáticamente la URL correcta según la plataforma
 const getBaseUrl = () => {
   // IP de tu computadora en la red local (cambiar si tu IP cambia)
-  const LOCAL_NETWORK_IP = '192.168.1.94';
+  const LOCAL_NETWORK_IP = '192.168.1.95';
   
   // Para Expo Go, siempre usar la IP de red local
   const expoConfig = Constants.expoConfig;
@@ -32,6 +32,11 @@ export const API_CONFIG = {
       RESEND_RESET_CODE: '/auth/resend-reset-code',
       RESET_PASSWORD: '/auth/reset-password',
       HEALTH: '/auth/health',
+    },
+    PROFILE: {
+      UPDATE: '/profile/:userId',
+      UPDATE_AVATAR: '/profile/:userId/avatar',
+      GET_AVATAR: '/profile/:userId/avatar',
     },
   },
   

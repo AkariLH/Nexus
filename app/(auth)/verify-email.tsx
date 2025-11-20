@@ -184,7 +184,7 @@ export default function VerifyEmailScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <Header onBack={() => router.push("/(auth)/register")} />
+      <Header onBack={() => router.push("/(auth)/welcome")} />
 
       {/* Content */}
       <Animated.View

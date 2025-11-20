@@ -20,9 +20,11 @@ import { GradientButton } from "../components/ui/GradientButton";
 import { ErrorModal } from "../components/ErrorModal";
 import { SuccessModal } from "../components/SuccessModal";
 import { authService } from "../../services/auth.service";
+import { useAuth } from "../../context/AuthContext";
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -144,14 +146,20 @@ export default function LoginScreen() {
           });
         }
       } else {
-        // Login exitoso
+        // Login exitoso - Guardar usuario en contexto
+        await login({
+          userId: result.data!.userId!,
+          email: result.data!.email,
+          displayName: result.data!.displayName!,
+          nickname: result.data?.nickname,
+          linkCode: result.data!.linkCode!,
+          emailConfirmed: result.data!.emailConfirmed,
+        });
+        
         setSuccessModal({
           visible: true,
           message: `¡Bienvenido de vuelta, ${result.data?.displayName || ""}!`,
         });
-        
-        // Guardar datos del usuario si es necesario (AsyncStorage, Context, etc.)
-        // TODO: Implementar guardado de sesión
         
         // Redirigir al panel principal después de un breve delay
         setTimeout(() => {
