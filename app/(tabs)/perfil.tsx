@@ -14,6 +14,7 @@ import {
   Alert,
   Image,
 } from "react-native";
+import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 import { Header } from "../components/layout/Header";
 import { GradientButton } from "../components/ui/GradientButton";
@@ -31,6 +32,7 @@ export default function PerfilScreen() {
   const [displayName, setDisplayName] = useState(user?.displayName || "Usuario de Prueba");
   const [nickname, setNickname] = useState(user?.nickname || "usuario_prueba");
   const [email, setEmail] = useState(user?.email || "usuario@prueba.com");
+  const [birthDate, setBirthDate] = useState<string>("2000-01-01");
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   
   // Actualizar estados cuando cambie el usuario
@@ -48,11 +50,13 @@ export default function PerfilScreen() {
   const [editDisplayName, setEditDisplayName] = useState(displayName);
   const [editNickname, setEditNickname] = useState(nickname);
   const [editEmail, setEditEmail] = useState(email);
+  const [editBirthDate, setEditBirthDate] = useState(birthDate);
   
   // Estados UI
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [errorModal, setErrorModal] = useState({ visible: false, message: "" });
   const [successModal, setSuccessModal] = useState({ visible: false, message: "" });
 
@@ -60,6 +64,20 @@ export default function PerfilScreen() {
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
+  };
+
+  // Manejar cambio de fecha desde el DatePicker
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(Platform.OS === 'ios'); // En iOS se mantiene visible
+    
+    if (selectedDate) {
+      // Formatear fecha a YYYY-MM-DD
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      const formattedDate = `${year}-${month}-${day}`;
+      setEditBirthDate(formattedDate);
+    }
   };
 
   // Seleccionar y subir imagen
@@ -176,6 +194,7 @@ export default function PerfilScreen() {
     setEditDisplayName(displayName);
     setEditNickname(nickname);
     setEditEmail(email);
+    setEditBirthDate(birthDate);
     setIsEditing(true);
   };
 
@@ -184,6 +203,7 @@ export default function PerfilScreen() {
     setEditDisplayName(displayName);
     setEditNickname(nickname);
     setEditEmail(email);
+    setEditBirthDate(birthDate);
     setIsEditing(false);
   };
 
@@ -202,6 +222,33 @@ export default function PerfilScreen() {
       setErrorModal({
         visible: true,
         message: "El nombre debe tener al menos 2 caracteres",
+      });
+      return;
+    }
+
+    // Validar formato de fecha de nacimiento
+    if (!editBirthDate || !/^\d{4}-\d{2}-\d{2}$/.test(editBirthDate)) {
+      setErrorModal({
+        visible: true,
+        message: "La fecha de nacimiento debe tener el formato YYYY-MM-DD",
+      });
+      return;
+    }
+
+    // RN-01: Validar mayoría de edad (18 años)
+    const birthDateObj = new Date(editBirthDate);
+    const today = new Date();
+    let age = today.getFullYear() - birthDateObj.getFullYear();
+    const monthDiff = today.getMonth() - birthDateObj.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDateObj.getDate())) {
+      age--;
+    }
+    
+    if (age < 18) {
+      setErrorModal({
+        visible: true,
+        message: "Debes ser mayor de edad (18 años o más) para usar esta aplicación",
       });
       return;
     }
@@ -230,13 +277,21 @@ export default function PerfilScreen() {
         displayName: editDisplayName.trim(),
         nickname: editNickname.trim() || undefined,
         email: editEmail.trim(),
+        birthDate: editBirthDate,
       };
 
       const result = await profileService.updateProfile(user.userId, request);
 
       if (result.error) {
+        // Error de mayoría de edad
+        if (result.error.message?.includes("mayor de edad")) {
+          setErrorModal({
+            visible: true,
+            message: "Debes ser mayor de edad (18 años o más) para usar esta aplicación",
+          });
+        }
         // FA03: Email ya registrado (RN-25)
-        if (result.error.message?.includes("ya está registrado")) {
+        else if (result.error.message?.includes("ya está registrado")) {
           setErrorModal({
             visible: true,
             message: "El correo electrónico ya está registrado por otro usuario",
@@ -253,6 +308,7 @@ export default function PerfilScreen() {
         setDisplayName(result.data!.displayName);
         setNickname(result.data!.nickname || "");
         setEmail(result.data!.email);
+        setBirthDate(editBirthDate);
         
         // Actualizar contexto global
         await updateUser({
@@ -497,6 +553,62 @@ export default function PerfilScreen() {
               </View>
             )}
           </View>
+
+          {/* Fecha de Nacimiento */}
+          <View style={styles.fieldContainer}>
+            <Text style={styles.fieldLabel}>Fecha de nacimiento</Text>
+            {isEditing ? (
+              <>
+                <TouchableOpacity
+                  style={[
+                    styles.inputContainer,
+                    styles.inputContainerEditing,
+                  ]}
+                  onPress={() => setShowDatePicker(true)}
+                  disabled={isLoading}
+                >
+                  <Ionicons
+                    name="calendar-outline"
+                    size={20}
+                    color="#1A1A1A66"
+                    style={styles.inputIcon}
+                  />
+                  <Text style={styles.inputText}>{editBirthDate}</Text>
+                  <Ionicons
+                    name="chevron-down"
+                    size={20}
+                    color="#1A1A1A66"
+                  />
+                </TouchableOpacity>
+                <Text style={styles.fieldHint}>
+                  Toca para seleccionar la fecha. Debes ser mayor de 18 años.
+                </Text>
+                
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={editBirthDate ? new Date(editBirthDate) : new Date(2000, 0, 1)}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={handleDateChange}
+                    maximumDate={new Date()}
+                    minimumDate={new Date(1900, 0, 1)}
+                    accentColor="#FF4F81"
+                    textColor="#1A1A1A"
+                  />
+                )}
+              </>
+            ) : (
+              <View style={styles.inputContainer}>
+                <Ionicons
+                  name="calendar-outline"
+                  size={20}
+                  color="#1A1A1A66"
+                  style={styles.inputIcon}
+                />
+                <Text style={styles.inputText}>{birthDate}</Text>
+              </View>
+            )}
+          </View>
         </View>
 
         {/* Save Button (visible cuando está editando) */}
@@ -703,6 +815,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
     color: "#1A1A1A",
+  },
+  fieldHint: {
+    fontSize: 12,
+    color: "#1A1A1A99",
+    marginTop: 6,
+    fontStyle: "italic",
   },
   inputContainer: {
     flexDirection: "row",

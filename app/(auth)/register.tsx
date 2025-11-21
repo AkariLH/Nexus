@@ -565,10 +565,12 @@ export default function RegisterScreen() {
             <DateTimePicker
               value={birthDate || new Date(2000, 0, 1)}
               mode="date"
-              display="spinner"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
               onChange={onDateChange}
               maximumDate={new Date()}
               minimumDate={new Date(1900, 0, 1)}
+              accentColor="#FF4F81"
+              textColor="#1A1A1A"
             />
           )}
 

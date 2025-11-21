@@ -96,6 +96,7 @@ export interface UpdateProfileRequest {
   displayName: string;
   nickname?: string;
   email: string;
+  birthDate: string; // formato: "YYYY-MM-DD"
 }
 
 export interface UpdateProfileResponse {
