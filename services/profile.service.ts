@@ -82,4 +82,73 @@ export const profileService = {
   getAvatarUrl: (userId: number): string => {
     return `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PROFILE.GET_AVATAR.replace(':userId', userId.toString())}`;
   },
+
+  /**
+   * Elimina el avatar del usuario
+   */
+  deleteAvatar: async (
+    userId: number
+  ): Promise<ApiResponse<{ success: boolean; message: string }>> => {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.PROFILE.DELETE_AVATAR.replace(':userId', userId.toString());
+      console.log('📤 Eliminando avatar:', { userId, endpoint });
+      
+      const response = await apiClient.delete(endpoint);
+      
+      console.log('✅ Avatar eliminado:', response.data);
+      return { data: response.data };
+    } catch (error: any) {
+      console.error('❌ Error al eliminar avatar:', error);
+      
+      if (error.response?.data) {
+        return { error: error.response.data };
+      }
+      
+      return {
+        error: {
+          status: 500,
+          error: 'Error',
+          message: error.message || 'Error al eliminar avatar',
+          timestamp: new Date().toISOString(),
+          path: '/profile/avatar'
+        }
+      };
+    }
+  },
+
+  /**
+   * Elimina la cuenta del usuario (CU07)
+   */
+  deleteAccount: async (
+    userId: number,
+    password: string
+  ): Promise<ApiResponse<{ message: string; deletedEmail: string }>> => {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.PROFILE.DELETE.replace(':userId', userId.toString());
+      console.log('📤 Eliminando cuenta:', { userId, endpoint });
+      
+      const response = await apiClient.delete(endpoint, {
+        data: { password }
+      });
+      
+      console.log('✅ Cuenta eliminada:', response.data);
+      return { data: response.data };
+    } catch (error: any) {
+      console.error('❌ Error al eliminar cuenta:', error);
+      
+      if (error.response?.data) {
+        return { error: error.response.data };
+      }
+      
+      return {
+        error: {
+          status: 500,
+          error: 'Error',
+          message: error.message || 'Error al eliminar cuenta',
+          timestamp: new Date().toISOString(),
+          path: '/profile'
+        }
+      };
+    }
+  },
 };

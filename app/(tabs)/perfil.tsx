@@ -20,6 +20,7 @@ import { Header } from "../components/layout/Header";
 import { GradientButton } from "../components/ui/GradientButton";
 import { ErrorModal } from "../components/ErrorModal";
 import { SuccessModal } from "../components/SuccessModal";
+import { ActionModal } from "../components/ActionModal";
 import { profileService } from "../../services/profile.service";
 import { useAuth } from "../../context/AuthContext";
 import type { UpdateProfileRequest } from "../../types/auth.types";
@@ -41,8 +42,9 @@ export default function PerfilScreen() {
       setDisplayName(user.displayName);
       setNickname(user.nickname || "");
       setEmail(user.email);
-      // Cargar avatar si existe
-      setAvatarUri(profileService.getAvatarUrl(user.userId));
+      // Intentar cargar avatar si existe, si falla o es null, quedará null
+      const avatarUrl = profileService.getAvatarUrl(user.userId);
+      setAvatarUri(avatarUrl);
     }
   }, [user]);
   
@@ -57,6 +59,7 @@ export default function PerfilScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [errorModal, setErrorModal] = useState({ visible: false, message: "" });
   const [successModal, setSuccessModal] = useState({ visible: false, message: "" });
 
@@ -77,6 +80,42 @@ export default function PerfilScreen() {
       const day = String(selectedDate.getDate()).padStart(2, '0');
       const formattedDate = `${year}-${month}-${day}`;
       setEditBirthDate(formattedDate);
+    }
+  };
+
+  // Eliminar foto de perfil
+  const handleRemoveAvatar = async () => {
+    if (!user) {
+      setErrorModal({
+        visible: true,
+        message: "No hay sesión activa",
+      });
+      return;
+    }
+
+    try {
+      setIsUploadingAvatar(true);
+      const response = await profileService.deleteAvatar(user.userId);
+      
+      if (response.error) {
+        setErrorModal({
+          visible: true,
+          message: response.error.message || "Error al eliminar la imagen",
+        });
+      } else {
+        setAvatarUri(null);
+        setSuccessModal({
+          visible: true,
+          message: "Foto de perfil eliminada correctamente",
+        });
+      }
+    } catch (error: any) {
+      setErrorModal({
+        visible: true,
+        message: error.message || "Error al eliminar la imagen",
+      });
+    } finally {
+      setIsUploadingAvatar(false);
     }
   };
 
@@ -422,7 +461,13 @@ export default function PerfilScreen() {
           </View>
           <TouchableOpacity 
             style={styles.cameraButton} 
-            onPress={handlePickImage}
+            onPress={() => {
+              if (avatarUri) {
+                setShowAvatarModal(true);
+              } else {
+                handlePickImage();
+              }
+            }}
             disabled={isUploadingAvatar}
           >
             {isUploadingAvatar ? (
@@ -644,56 +689,30 @@ export default function PerfilScreen() {
               </View>
               <Ionicons name="chevron-forward" size={20} color="#1A1A1A66" />
             </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={async () => {
-                Alert.alert(
-                  "Cerrar sesión",
-                  "¿Estás seguro que deseas cerrar sesión?",
-                  [
-                    { text: "Cancelar", style: "cancel" },
-                    {
-                      text: "Cerrar sesión",
-                      style: "destructive",
-                      onPress: async () => {
-                        await logout();
-                        router.replace("/(auth)/welcome");
-                      },
-                    },
-                  ]
-                );
-              }}
-              disabled={isLoading}
-            >
-              <View>
-                <Text style={styles.actionTitle}>Cerrar sesión</Text>
-                <Text style={styles.actionSubtitle}>
-                  Salir de tu cuenta
-                </Text>
-              </View>
-              <Ionicons name="log-out-outline" size={20} color="#1A1A1A66" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.actionButton, styles.dangerButton]}
-              disabled={isLoading}
-            >
-              <View>
-                <Text style={[styles.actionTitle, styles.dangerText]}>
-                  Eliminar cuenta
-                </Text>
-                <Text style={styles.actionSubtitle}>
-                  Esta acción es permanente
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#EF4444" />
-            </TouchableOpacity>
           </View>
         )}
       </ScrollView>
 
       {/* Modales */}
+      <ActionModal
+        visible={showAvatarModal}
+        onClose={() => setShowAvatarModal(false)}
+        title="Foto de perfil"
+        actions={[
+          {
+            label: "Cambiar foto",
+            icon: "images-outline",
+            onPress: handlePickImage,
+          },
+          {
+            label: "Eliminar foto",
+            icon: "trash-outline",
+            destructive: true,
+            onPress: handleRemoveAvatar,
+          },
+        ]}
+      />
+
       <ErrorModal
         visible={errorModal.visible}
         message={errorModal.message}

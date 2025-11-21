@@ -1,14 +1,16 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useRouter, useFocusEffect } from "expo-router";
+import { useState, useCallback } from "react";
 import {
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
+  ActivityIndicator
 } from "react-native";
+import { useAuth } from "../../context/AuthContext";
 
 type ViewMode = "month" | "week" | "day";
 
@@ -39,10 +41,88 @@ const mockEvents: Event[] = [
 ];
 
 export default function CalendarioScreen() {
+  const { user } = useAuth();
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [hasActiveLink, setHasActiveLink] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>("month");
   const [events] = useState<Event[]>(mockEvents);
+
+  const checkLinkStatus = useCallback(async () => {
+    if (!user?.userId) return;
+
+    try {
+      const response = await fetch(`http://192.168.1.95:8080/api/link/status/${user.userId}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        setHasActiveLink(data.hasActiveLink);
+      }
+    } catch (error) {
+      console.error('Error verificando estado del vínculo:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.userId]);
+
+  // Verificar cada vez que el tab obtiene foco
+  useFocusEffect(
+    useCallback(() => {
+      checkLinkStatus();
+    }, [checkLinkStatus])
+  );
+
+  // Vista cuando no hay vínculo activo
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Calendario</Text>
+        </View>
+        <View style={styles.emptyStateContainer}>
+          <ActivityIndicator size="large" color="#FF4F81" />
+        </View>
+      </View>
+    );
+  }
+
+  if (!hasActiveLink) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Calendario</Text>
+        </View>
+        <View style={styles.emptyStateContainer}>
+          <LinearGradient
+            colors={["#FF4F8120", "#8A2BE220"]}
+            style={styles.emptyStateCard}
+          >
+            <Ionicons name="calendar-outline" size={64} color="#FF4F81" style={styles.emptyIcon} />
+            <Text style={styles.emptyTitle}>Calendario no disponible</Text>
+            <Text style={styles.emptyText}>
+              Necesitas establecer un vínculo con tu pareja para acceder al calendario compartido
+            </Text>
+            <TouchableOpacity 
+              style={styles.linkButton}
+              onPress={() => router.push('/(tabs)/link')}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={["#FF4F81", "#8A2BE2"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.linkButtonGradient}
+              >
+                <Ionicons name="heart" size={20} color="#FFF" />
+                <Text style={styles.linkButtonText}>Establecer vínculo</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </LinearGradient>
+        </View>
+      </View>
+    );
+  }
 
   const monthNames = [
     "Enero",
@@ -536,6 +616,53 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     borderBottomColor: "#F5F5F5",
     paddingTop: 50,
+  },
+  emptyStateContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyStateCard: {
+    borderRadius: 24,
+    padding: 32,
+    alignItems: 'center',
+    width: '100%',
+  },
+  emptyIcon: {
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptyText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  linkButton: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    width: '100%',
+  },
+  linkButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+  },
+  linkButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '700',
   },
   headerTop: {
     flexDirection: "row",

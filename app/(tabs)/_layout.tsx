@@ -19,8 +19,8 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Inicio",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home" color={color} size={size} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "home" : "home-outline"} color={color} size={24} />
           ),
         }}
       />
@@ -28,8 +28,8 @@ export default function TabLayout() {
         name="calendario"
         options={{
           title: "Calendario",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar" color={color} size={size} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "calendar" : "calendar-outline"} color={color} size={24} />
           ),
         }}
       />
@@ -37,8 +37,17 @@ export default function TabLayout() {
         name="perfil"
         options={{
           title: "Perfil",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person" color={color} size={size} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "person" : "person-outline"} color={color} size={24} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="link"
+        options={{
+          title: "Vinculo",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "link" : "link-outline"} color={color} size={24} />
           ),
         }}
       />
@@ -46,17 +55,8 @@ export default function TabLayout() {
         name="configuraciones"
         options={{
           title: "Configuraciones",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="settings" color={color} size={size} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name= "link"
-        options={{
-          title: "Vinculo",
-          tabBarIcon: ({ color, size}) =>(
-            <Ionicons name="link" color={color} size={size}/>
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "settings" : "settings-outline"} color={color} size={24} />
           ),
         }}
       />

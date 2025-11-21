@@ -8,6 +8,7 @@ interface UserData {
   nickname?: string;
   linkCode: string;
   emailConfirmed: boolean;
+  profilePhoto?: string;
 }
 
 interface AuthContextType {

@@ -37,6 +37,14 @@ export const API_CONFIG = {
       UPDATE: '/profile/:userId',
       UPDATE_AVATAR: '/profile/:userId/avatar',
       GET_AVATAR: '/profile/:userId/avatar',
+      DELETE_AVATAR: '/profile/:userId/avatar',
+      DELETE: '/profile/:userId',
+    },
+    LINK: {
+      GENERATE_CODE: '/link/generate/:userId',
+      ESTABLISH_LINK: '/link/establish/:userId',
+      GET_STATUS: '/link/status/:userId',
+      DELETE_LINK: '/link/:userId',
     },
   },
   

@@ -45,9 +45,9 @@ export default function WelcomeVerifiedScreen() {
   ).current;
 
   useEffect(() => {
-    // Redirección automática después de 8 segundos
+    // Redirección automática después de 5 segundos
     const redirectTimer = setTimeout(() => {
-      router.replace("/(tabs)");
+      router.replace("/(auth)/login");
     }, 5000);
 
     // Animación del check
@@ -188,7 +188,7 @@ export default function WelcomeVerifiedScreen() {
   }, []);
 
   const handleContinue = () => {
-    router.replace("/(tabs)");
+    router.replace("/(auth)/login");
   };
 
   return (
@@ -299,7 +299,7 @@ export default function WelcomeVerifiedScreen() {
           <Text style={styles.welcomeText}>
             Bienvenido a Nexus{displayName ? `, ${displayName}` : ""}
           </Text>
-          <Text style={styles.subtitle}>Tu cuenta está lista para usar</Text>
+          <Text style={styles.subtitle}>Ahora puedes iniciar sesión</Text>
         </Animated.View>
 
         {/* Botón Continuar */}
@@ -308,7 +308,7 @@ export default function WelcomeVerifiedScreen() {
             onPress={handleContinue}
             activeOpacity={0.8}
           >
-            <Text style={styles.buttonText}>Continuar</Text>
+            <Text style={styles.buttonText}>Ir a iniciar sesión</Text>
           </TouchableOpacity>
         </Animated.View>
       </View>

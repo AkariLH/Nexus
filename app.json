@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "MiPrimeraApp",
-    "slug": "MiPrimeraApp",
+    "name": "Nexus",
+    "slug": "nexus-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "miprimeraapp",
+    "scheme": "nexus",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -16,6 +16,7 @@
       }
     },
     "android": {
+      "package": "com.nexusapp.pareja",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -29,7 +30,8 @@
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.CAMERA"
-      ]
+      ],
+      "googleServicesFile": "./android/app/google-services.json"
     },
     "web": {
       "output": "static",
