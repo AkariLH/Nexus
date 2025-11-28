@@ -83,6 +83,7 @@ export interface LoginResponse {
   linkCode?: string;
   emailConfirmed: boolean;
   token?: string;
+  questionnaireCompleted?: boolean; // Flag para saber si completó el cuestionario
 }
 
 export interface ApiResponse<T> {

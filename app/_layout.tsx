@@ -1,21 +1,43 @@
-import { Stack, useRouter } from "expo-router";
-import { useEffect } from "react";
+import { Stack, useRouter, useSegments } from "expo-router";
+import { useEffect, useState } from "react";
 import { AuthProvider, useAuth } from "../context/AuthContext";
+import { QuestionnaireProvider } from "../context/QuestionnaireContext";
 import notificationService from "../services/firebase.service";
 
 function RootNavigator() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
+  const segments = useSegments();
+  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
 
+  // Manejar autenticación y redirección inicial
+  useEffect(() => {
+    if (isLoading) return;
+
+    const inAuthGroup = segments[0] === "(auth)";
+
+    if (!user && !inAuthGroup) {
+      // No autenticado, enviar a login
+      router.replace("/(auth)/login");
+    } else if (user && inAuthGroup && hasCheckedAuth) {
+      // Ya autenticado y en pantallas de auth, ir a tabs
+      // El QuestionnaireProvider manejará la lógica del cuestionario
+      router.replace("/(tabs)");
+    }
+
+    if (!hasCheckedAuth && user) {
+      setHasCheckedAuth(true);
+    }
+  }, [user, segments, isLoading, hasCheckedAuth]);
+
+  // Inicializar sistema de notificaciones
   useEffect(() => {
     if (!user?.userId) return;
 
-    // Inicializar sistema de notificaciones y configurar listeners
     const initNotifications = async () => {
       const unsubscribe = await notificationService.initialize(
         user.userId,
         (partnerName) => {
-          // Callback cuando se establece un vínculo
           console.log('🎉 Vínculo establecido con:', partnerName);
           router.replace({
             pathname: '/(link)/link-success',
@@ -23,9 +45,7 @@ function RootNavigator() {
           });
         },
         (partnerName) => {
-          // Callback cuando se elimina un vínculo
           console.log('💔 Vínculo eliminado por:', partnerName);
-          // Redirigir al tab de vínculo para que vea el estado actualizado
           router.push('/(tabs)/link');
         }
       );
@@ -39,6 +59,11 @@ function RootNavigator() {
       cleanup.then((unsub) => unsub?.());
     };
   }, [user?.userId, router]);
+
+  // Mostrar null mientras carga (Expo Router maneja la pantalla de carga)
+  if (isLoading) {
+    return null;
+  }
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
@@ -55,7 +80,9 @@ function RootNavigator() {
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <RootNavigator />
+      <QuestionnaireProvider>
+        <RootNavigator />
+      </QuestionnaireProvider>
     </AuthProvider>
   );
 }

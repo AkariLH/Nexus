@@ -9,6 +9,7 @@ import linkService from "../../services/link.service";
 import { ActionModal } from "../components/ActionModal";
 import { ErrorModal } from "../components/ErrorModal";
 import { SuccessModal } from "../components/SuccessModal";
+import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
 
 interface LinkStatusData {
   hasActiveLink: boolean;
@@ -22,6 +23,7 @@ interface LinkStatusData {
 }
 
 export default function LinkScreen() {
+  useQuestionnaireGuard();
   const { user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);

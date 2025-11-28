@@ -5,6 +5,7 @@ import { useState, useCallback } from "react";
 import { StyleSheet, Text, TouchableOpacity, View, ScrollView, ActivityIndicator } from "react-native";
 import { MotiView } from "moti";
 import { useAuth } from "../../context/AuthContext";
+import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
 
 interface LinkStatus {
   hasActiveLink: boolean;
@@ -17,6 +18,7 @@ interface LinkStatus {
 }
 
 export default function HomeScreen() {
+  useQuestionnaireGuard();
   const router = useRouter();
   const { user } = useAuth();
   const [linkStatus, setLinkStatus] = useState<LinkStatus | null>(null);

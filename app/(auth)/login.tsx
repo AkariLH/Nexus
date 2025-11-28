@@ -161,10 +161,8 @@ export default function LoginScreen() {
           message: `¡Bienvenido de vuelta, ${result.data?.displayName || ""}!`,
         });
         
-        // Redirigir al panel principal después de un breve delay
-        setTimeout(() => {
-          router.replace("/(tabs)");
-        }, 1500);
+        // El _layout.tsx se encargará de verificar el cuestionario y redirigir
+        // No hacemos router.replace aquí para evitar conflictos
       }
     } catch (error) {
       // FA06: Error general

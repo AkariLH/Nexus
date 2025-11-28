@@ -10,8 +10,10 @@ import { ConfirmModal } from "../components/ConfirmModal";
 import { PasswordConfirmModal } from "../components/PasswordConfirmModal";
 import { profileService } from "../../services/profile.service";
 import { useAuth } from "../../context/AuthContext";
+import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
 
 export default function ConfiguracionesScreen() {
+  useQuestionnaireGuard();
   const router = useRouter();
   const { user, logout: logoutContext } = useAuth();
   const [isLoading, setIsLoading] = useState(false);

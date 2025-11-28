@@ -24,8 +24,10 @@ import { ActionModal } from "../components/ActionModal";
 import { profileService } from "../../services/profile.service";
 import { useAuth } from "../../context/AuthContext";
 import type { UpdateProfileRequest } from "../../types/auth.types";
+import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
 
 export default function PerfilScreen() {
+  useQuestionnaireGuard();
   const router = useRouter();
   const { user, updateUser, logout } = useAuth();
   
@@ -677,6 +679,20 @@ export default function PerfilScreen() {
         {/* Account Actions (solo visible cuando no está editando) */}
         {!isEditing && (
           <View style={styles.actionsContainer}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => router.push('/(tabs)/preferences')}
+              disabled={isLoading}
+            >
+              <View>
+                <Text style={styles.actionTitle}>Mis preferencias</Text>
+                <Text style={styles.actionSubtitle}>
+                  Edita tus preferencias de bienestar
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#1A1A1A66" />
+            </TouchableOpacity>
+
             <TouchableOpacity
               style={styles.actionButton}
               disabled={isLoading}

@@ -11,6 +11,7 @@ import {
   ActivityIndicator
 } from "react-native";
 import { useAuth } from "../../context/AuthContext";
+import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
 
 type ViewMode = "month" | "week" | "day";
 
@@ -41,6 +42,7 @@ const mockEvents: Event[] = [
 ];
 
 export default function CalendarioScreen() {
+  useQuestionnaireGuard();
   const { user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
