@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { WellnessDimension, PREFERENCE_OPTIONS } from '../../types/preferences.types';
 import { DimensionQuestionnaire } from '../../components/DimensionQuestionnaire';
+import { ConfirmModal } from '../components/ConfirmModal';
 import preferenceService from '../../services/preference.service';
 import type { PreferenceCategory, UserPreferenceRequest, UserPreference } from '../../types/preferences.api.types';
 import { useAuth } from '../../context/AuthContext';
@@ -26,6 +27,10 @@ export default function PreferencesScreen() {
   const [userPreferences, setUserPreferences] = useState<UserPreference[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  
+  // Estados para modales
+  const [errorModal, setErrorModal] = useState<{visible: boolean, message: string}>({visible: false, message: ""});
+  const [successModal, setSuccessModal] = useState(false);
 
   const userId = user?.userId;
 
@@ -46,7 +51,7 @@ export default function PreferencesScreen() {
         console.log('✅ Categorías cargadas:', response.data.length);
       } else if (response.error) {
         console.error('❌ Error cargando categorías:', response.error);
-        Alert.alert('Error', 'No se pudieron cargar las categorías de preferencias');
+        setErrorModal({visible: true, message: 'No se pudieron cargar las categorías de preferencias'});
       }
     } catch (error) {
       console.error('💥 Error inesperado:', error);
@@ -109,7 +114,7 @@ export default function PreferencesScreen() {
     preferences: UserPreferenceRequest[]
   ) => {
     if (!userId) {
-      Alert.alert('Error', 'No se pudo identificar el usuario');
+      setErrorModal({visible: true, message: 'No se pudo identificar el usuario'});
       return;
     }
     
@@ -130,14 +135,14 @@ export default function PreferencesScreen() {
         await loadUserPreferences();
         
         setSelectedDimension(null);
-        Alert.alert('¡Éxito!', 'Tus preferencias han sido guardadas');
+        setSuccessModal(true);
       } else if (response.error) {
         console.error('❌ Error guardando:', response.error);
-        Alert.alert('Error', 'No se pudieron guardar las preferencias. Intenta de nuevo.');
+        setErrorModal({visible: true, message: 'No se pudieron guardar las preferencias. Intenta de nuevo.'});
       }
     } catch (error) {
       console.error('💥 Error inesperado:', error);
-      Alert.alert('Error', 'Ocurrió un error inesperado');
+      setErrorModal({visible: true, message: 'Ocurrió un error inesperado'});
     } finally {
       setSaving(false);
     }
@@ -311,6 +316,27 @@ export default function PreferencesScreen() {
             </View>
           )}
         </ScrollView>
+        
+        {/* Modales */}
+        <ConfirmModal
+          visible={errorModal.visible}
+          type="error"
+          title="Error"
+          message={errorModal.message}
+          confirmText="Entendido"
+          showCancel={false}
+          onConfirm={() => setErrorModal({visible: false, message: ""})}
+        />
+        
+        <ConfirmModal
+          visible={successModal}
+          type="success"
+          title="¡Éxito!"
+          message="Tus preferencias han sido guardadas"
+          confirmText="Continuar"
+          showCancel={false}
+          onConfirm={() => setSuccessModal(false)}
+        />
       </SafeAreaView>
     );
   }

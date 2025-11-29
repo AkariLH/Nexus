@@ -46,6 +46,21 @@ export const API_CONFIG = {
       GET_STATUS: '/link/status/:userId',
       DELETE_LINK: '/link/:userId',
     },
+    PREFERENCES: {
+      GET_STATUS: '/preferences/status/:userId',
+      GET_CATEGORIES: '/preferences/categories',
+      SAVE: '/preferences/:userId',
+      GET_USER_PREFERENCES: '/preferences/:userId',
+    },
+    EVENTS: {
+      CREATE: '/events/create/:userId',
+      GET_USER_EVENTS: '/events/user/:userId',
+      GET_PENDING_APPROVAL: '/events/user/:userId/pending-approval',
+      APPROVE: '/events/:eventId/approve/:userId',
+      REJECT: '/events/:eventId/reject/:userId',
+      UPDATE: '/events/:eventId/user/:userId',
+      DELETE: '/events/:eventId/user/:userId',
+    },
   },
   
   TIMEOUT: 30000, // 30 segundos para dar tiempo al envío de email

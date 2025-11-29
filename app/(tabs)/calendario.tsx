@@ -12,6 +12,9 @@ import {
 } from "react-native";
 import { useAuth } from "../../context/AuthContext";
 import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
+import eventService, { EventResponse } from "../../services/event.service";
+import { expandRecurringEvent } from "../../utils/recurrenceUtils";
+import { EventDetailsModal } from "../components/EventDetailsModal";
 
 type ViewMode = "month" | "week" | "day";
 
@@ -19,27 +22,11 @@ interface Event {
   id: string;
   title: string;
   date: Date;
+  endDate: Date;
   color: string;
   isShared: boolean;
+  isAllDay: boolean;
 }
-
-// Mock events - reemplaza con tus datos reales
-const mockEvents: Event[] = [
-  {
-    id: "1",
-    title: "Cita romántica",
-    date: new Date(2025, 10, 20, 19, 0),
-    color: "#FF4F81",
-    isShared: true,
-  },
-  {
-    id: "2",
-    title: "Aniversario",
-    date: new Date(2025, 10, 25, 12, 0),
-    color: "#8A2BE2",
-    isShared: true,
-  },
-];
 
 export default function CalendarioScreen() {
   useQuestionnaireGuard();
@@ -49,7 +36,10 @@ export default function CalendarioScreen() {
   const [hasActiveLink, setHasActiveLink] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>("month");
-  const [events] = useState<Event[]>(mockEvents);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<EventResponse | null>(null);
+  const [showEventModal, setShowEventModal] = useState(false);
+  const [fullEventsData, setFullEventsData] = useState<EventResponse[]>([]);
 
   const checkLinkStatus = useCallback(async () => {
     if (!user?.userId) return;
@@ -68,11 +58,146 @@ export default function CalendarioScreen() {
     }
   }, [user?.userId]);
 
+  const loadApprovedEvents = useCallback(async () => {
+    if (!user?.userId) return;
+
+    try {
+      const userEvents = await eventService.getUserEvents(user.userId);
+      // Guardar eventos completos para el modal
+      setFullEventsData(userEvents);
+      
+      // Filtrar solo eventos completamente aprobados
+      const approvedEvents = userEvents.filter((event: EventResponse) => event.fullyApproved);
+      
+      // Calcular rango de expansión: 6 meses antes y 12 meses después
+      const startRange = new Date();
+      startRange.setMonth(startRange.getMonth() - 6);
+      const endRange = new Date();
+      endRange.setMonth(endRange.getMonth() + 12);
+
+      console.log('=== CALENDARIO DEBUG ===');
+      console.log('Total eventos aprobados:', approvedEvents.length);
+      console.log('Rango expansión:', startRange.toISOString(), 'hasta', endRange.toISOString());
+
+      // Expandir eventos recurrentes
+      const formattedEvents: Event[] = [];
+      
+      approvedEvents.forEach((event: EventResponse) => {
+        console.log('\n--- Evento:', event.id, event.title);
+        console.log('isRecurring:', event.isRecurring, 'pattern:', event.recurrencePattern);
+        console.log('Fecha inicio:', event.startDateTime);
+        
+        // Verificar si es evento de todo el día
+        const startDate = new Date(event.startDateTime);
+        const endDate = new Date(event.endDateTime);
+        const isAllDay = startDate.getHours() === 0 && startDate.getMinutes() === 0 &&
+                        endDate.getHours() === 23 && endDate.getMinutes() === 59;
+        
+        if (event.isRecurring && event.recurrencePattern) {
+          // Expandir el evento recurrente en múltiples ocurrencias
+          const occurrences = expandRecurringEvent(
+            {
+              startDateTime: event.startDateTime,
+              endDateTime: event.endDateTime,
+              isRecurring: event.isRecurring,
+              recurrencePattern: event.recurrencePattern,
+            },
+            startRange,
+            endRange
+          );
+
+          console.log('Ocurrencias generadas:', occurrences.length);
+          
+          // Convertir las fechas de excepción a timestamps para comparación
+          const exceptionTimestamps = (event.exceptionDates || []).map(dateStr => {
+            const exceptionDate = new Date(dateStr);
+            // Normalizar a medianoche para comparar solo la fecha
+            return new Date(exceptionDate.getFullYear(), exceptionDate.getMonth(), exceptionDate.getDate()).getTime();
+          });
+          
+          // Crear un evento para cada ocurrencia (filtrando excepciones)
+          occurrences.forEach(occurrenceDate => {
+            // Normalizar la fecha de ocurrencia a medianoche para comparar
+            const normalizedOccurrence = new Date(
+              occurrenceDate.getFullYear(),
+              occurrenceDate.getMonth(),
+              occurrenceDate.getDate()
+            ).getTime();
+            
+            // Saltar esta ocurrencia si está en la lista de excepciones
+            if (exceptionTimestamps.includes(normalizedOccurrence)) {
+              console.log('Saltando ocurrencia excluida:', occurrenceDate);
+              return;
+            }
+            
+            // Calcular endDate manteniendo la misma duración
+            const duration = endDate.getTime() - startDate.getTime();
+            const occurrenceEnd = new Date(occurrenceDate.getTime() + duration);
+            
+            formattedEvents.push({
+              id: `${event.id}-${occurrenceDate.getTime()}`,
+              title: event.title,
+              date: occurrenceDate,
+              endDate: occurrenceEnd,
+              color: event.color || '#8B5CF6',
+              isShared: true,
+              isAllDay: isAllDay,
+            });
+          });
+        } else {
+          // Evento normal (no recurrente)
+          formattedEvents.push({
+            id: event.id.toString(),
+            title: event.title,
+            date: startDate,
+            endDate: endDate,
+            color: event.color || '#8B5CF6',
+            isShared: true,
+            isAllDay: isAllDay,
+          });
+        }
+      });
+
+      setEvents(formattedEvents);
+    } catch (error) {
+      console.error('Error cargando eventos aprobados:', error);
+    }
+  }, [user?.userId]);
+
+  const handleEventPress = (eventId: string) => {
+    // Extraer el ID real del evento (quitar timestamp si es recurrente)
+    const realEventId = eventId.includes('-') ? eventId.split('-')[0] : eventId;
+    const fullEvent = fullEventsData.find(e => e.id === parseInt(realEventId));
+    
+    if (fullEvent) {
+      setSelectedEvent(fullEvent);
+      setShowEventModal(true);
+    }
+  };
+
+  const handleEditEvent = (eventId: number) => {
+    router.push(`/(events)/edit-event?eventId=${eventId}`);
+  };
+  
+  const handleDeleteEvent = async (eventId: number) => {
+    if (!user?.userId) return;
+    
+    try {
+      await eventService.deleteEvent(eventId, user.userId);
+      // Recargar eventos después de eliminar
+      await loadApprovedEvents();
+    } catch (error: any) {
+      console.error('Error eliminando evento:', error);
+      throw error; // Re-throw para que el modal maneje el error
+    }
+  };
+
   // Verificar cada vez que el tab obtiene foco
   useFocusEffect(
     useCallback(() => {
       checkLinkStatus();
-    }, [checkLinkStatus])
+      loadApprovedEvents();
+    }, [checkLinkStatus, loadApprovedEvents])
   );
 
   // Vista cuando no hay vínculo activo
@@ -273,12 +398,20 @@ export default function CalendarioScreen() {
             date.getFullYear() === today.getFullYear();
 
           return (
-            <View
+            <TouchableOpacity
               key={index}
               style={[
                 styles.dayCell,
                 isToday && styles.todayCell,
               ]}
+              disabled={!date}
+              onPress={() => {
+                if (date) {
+                  setCurrentDate(date);
+                  setViewMode("day");
+                }
+              }}
+              activeOpacity={0.7}
             >
               {date && (
                 <View style={styles.dayCellContent}>
@@ -286,26 +419,22 @@ export default function CalendarioScreen() {
                     {date.getDate()}
                   </Text>
                   <View style={styles.eventDots}>
-                    {dayEvents.slice(0, 2).map((event) => (
+                    {dayEvents.slice(0, 3).map((event) => (
                       <View
                         key={event.id}
                         style={[
                           styles.eventDot,
                           { backgroundColor: event.color },
                         ]}
-                      >
-                        {event.isShared && (
-                          <Ionicons name="heart" size={8} color="white" />
-                        )}
-                      </View>
+                      />
                     ))}
-                    {dayEvents.length > 2 && (
-                      <Text style={styles.moreEvents}>+{dayEvents.length - 2}</Text>
+                    {dayEvents.length > 3 && (
+                      <Text style={styles.moreEvents}>+{dayEvents.length - 3}</Text>
                     )}
                   </View>
                 </View>
               )}
-            </View>
+            </TouchableOpacity>
           );
         })}
       </View>
@@ -321,9 +450,7 @@ export default function CalendarioScreen() {
             <TouchableOpacity
               key={event.id}
               style={styles.eventCard}
-              onPress={() => {
-                // Navegar a detalles del evento
-              }}
+              onPress={() => handleEventPress(event.id)}
             >
               <View
                 style={[styles.eventColorBox, { backgroundColor: event.color }]}
@@ -347,140 +474,263 @@ export default function CalendarioScreen() {
               )}
             </TouchableOpacity>
           ))}
+        {events.filter((e) => e.date >= today).length === 0 && (
+          <View style={styles.noEventsContainer}>
+            <Ionicons name="calendar-outline" size={32} color="#999" />
+            <Text style={styles.noEventsText}>No hay eventos próximos</Text>
+          </View>
+        )}
       </View>
     </ScrollView>
   );
 
-  const renderWeekView = () => (
-    <ScrollView style={styles.scrollView}>
-      {/* Week header */}
-      <View style={styles.weekViewHeader}>
-        {weekDays.map((date, index) => {
-          const isToday =
-            date.getDate() === today.getDate() &&
-            date.getMonth() === today.getMonth() &&
-            date.getFullYear() === today.getFullYear();
+  const renderWeekView = () => {
+    // Separar eventos de todo el día y eventos con hora
+    const allDayEvents = events.filter(e => 
+      e.isAllDay && weekDays.some(d => 
+        d.getDate() === e.date.getDate() &&
+        d.getMonth() === e.date.getMonth() &&
+        d.getFullYear() === e.date.getFullYear()
+      )
+    );
 
-          return (
-            <View key={index} style={styles.weekDayHeader}>
-              <Text style={styles.weekDayName}>{daysOfWeek[index]}</Text>
-              <View
-                style={[
-                  styles.weekDayNumber,
-                  isToday && styles.weekDayNumberToday,
-                ]}
-              >
-                <Text
+    return (
+      <View style={styles.weekViewContainer}>
+        {/* Week header con días */}
+        <View style={styles.weekViewHeader}>
+          <View style={styles.weekTimeGutter} />
+          {weekDays.map((date, index) => {
+            const isToday =
+              date.getDate() === today.getDate() &&
+              date.getMonth() === today.getMonth() &&
+              date.getFullYear() === today.getFullYear();
+
+            return (
+              <View key={index} style={styles.weekDayHeader}>
+                <Text style={[styles.weekDayName, isToday && styles.weekDayNameToday]}>
+                  {daysOfWeek[index].substring(0, 3)}
+                </Text>
+                <View
                   style={[
-                    styles.weekDayNumberText,
-                    isToday && styles.weekDayNumberTextToday,
+                    styles.weekDayNumber,
+                    isToday && styles.weekDayNumberToday,
                   ]}
                 >
-                  {date.getDate()}
-                </Text>
+                  <Text
+                    style={[
+                      styles.weekDayNumberText,
+                      isToday && styles.weekDayNumberTextToday,
+                    ]}
+                  >
+                    {date.getDate()}
+                  </Text>
+                </View>
               </View>
+            );
+          })}
+        </View>
+
+        {/* Eventos de todo el día */}
+        {allDayEvents.length > 0 && (
+          <View style={styles.allDaySection}>
+            <View style={styles.allDayLabel}>
+              <Text style={styles.allDayLabelText}>Todo el día</Text>
             </View>
-          );
-        })}
-      </View>
+            <View style={styles.allDayEventsContainer}>
+              {weekDays.map((date, dayIndex) => {
+                const dayAllDayEvents = allDayEvents.filter(e =>
+                  e.date.getDate() === date.getDate() &&
+                  e.date.getMonth() === date.getMonth() &&
+                  e.date.getFullYear() === date.getFullYear()
+                );
 
-      {/* Week grid */}
-      <View style={styles.weekGrid}>
-        {weekDays.map((date, index) => {
-          const dayEvents = getEventsForDay(date);
-          const isToday =
-            date.getDate() === today.getDate() &&
-            date.getMonth() === today.getMonth() &&
-            date.getFullYear() === today.getFullYear();
-
-          return (
-            <View
-              key={index}
-              style={[styles.weekDayColumn, isToday && styles.weekDayColumnToday]}
-            >
-              {dayEvents.map((event) => (
-                <TouchableOpacity
-                  key={event.id}
-                  style={[styles.weekEventCard, { backgroundColor: event.color }]}
-                >
-                  <Text style={styles.weekEventTitle}>{event.title}</Text>
-                  <View style={styles.weekEventTime}>
-                    <Text style={styles.weekEventTimeText}>
-                      {event.date.toLocaleTimeString("es", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </Text>
-                    {event.isShared && (
-                      <Ionicons name="heart" size={12} color="white" />
-                    )}
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
-          );
-        })}
-      </View>
-    </ScrollView>
-  );
-
-  const renderDayView = () => (
-    <ScrollView style={styles.scrollView}>
-      {/* Day header */}
-      <View style={styles.dayViewHeader}>
-        <Text style={styles.dayViewDayName}>
-          {daysOfWeek[currentDate.getDay()]}
-        </Text>
-        <Text style={styles.dayViewDate}>{currentDate.getDate()}</Text>
-      </View>
-
-      {/* Timeline */}
-      <View style={styles.timeline}>
-        {Array.from({ length: 24 }, (_, i) => i).map((hour) => {
-          const hourEvents = getEventsForHour(currentDate, hour);
-          const hourString = hour.toString().padStart(2, "0") + ":00";
-
-          return (
-            <View key={hour} style={styles.timelineRow}>
-              <View style={styles.timelineHour}>
-                <Text style={styles.timelineHourText}>{hourString}</Text>
-              </View>
-              <View style={styles.timelineContent}>
-                {hourEvents.length > 0 ? (
-                  <View style={styles.timelineEvents}>
-                    {hourEvents.map((event) => (
+                return (
+                  <View key={dayIndex} style={styles.allDayColumn}>
+                    {dayAllDayEvents.map((event) => (
                       <TouchableOpacity
                         key={event.id}
-                        style={[
-                          styles.timelineEventCard,
-                          { backgroundColor: event.color },
-                        ]}
+                        style={[styles.allDayEvent, { backgroundColor: event.color }]}
+                        onPress={() => handleEventPress(event.id)}
                       >
-                        <View style={styles.timelineEventContent}>
-                          <Text style={styles.timelineEventTitle}>
-                            {event.title}
-                          </Text>
-                          <Text style={styles.timelineEventTime}>
-                            {event.date.toLocaleTimeString("es", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </Text>
-                        </View>
-                        {event.isShared && (
-                          <Ionicons name="heart" size={20} color="white" />
-                        )}
+                        <Text style={styles.allDayEventText} numberOfLines={1}>
+                          {event.title}
+                        </Text>
                       </TouchableOpacity>
                     ))}
                   </View>
-                ) : null}
-              </View>
+                );
+              })}
             </View>
-          );
-        })}
+          </View>
+        )}
+
+        {/* Timeline con horas */}
+        <ScrollView style={styles.weekScrollView}>
+          <View style={styles.weekTimelineContainer}>
+            {Array.from({ length: 24 }, (_, hour) => {
+              const hourString = hour.toString().padStart(2, "0") + ":00";
+
+              return (
+                <View key={hour} style={styles.weekTimelineRow}>
+                  {/* Columna de hora */}
+                  <View style={styles.weekTimeColumn}>
+                    <Text style={styles.weekTimeText}>{hourString}</Text>
+                  </View>
+
+                  {/* Columnas de días */}
+                  {weekDays.map((date, dayIndex) => {
+                    const isToday =
+                      date.getDate() === today.getDate() &&
+                      date.getMonth() === today.getMonth() &&
+                      date.getFullYear() === today.getFullYear();
+
+                    // Obtener eventos de esta hora que NO sean de todo el día
+                    const hourEvents = events.filter(
+                      (event) =>
+                        !event.isAllDay &&
+                        event.date.getDate() === date.getDate() &&
+                        event.date.getMonth() === date.getMonth() &&
+                        event.date.getFullYear() === date.getFullYear() &&
+                        event.date.getHours() === hour
+                    );
+
+                    return (
+                      <View
+                        key={dayIndex}
+                        style={[
+                          styles.weekDayCell,
+                          isToday && styles.weekDayCellToday,
+                        ]}
+                      >
+                        {hourEvents.map((event) => (
+                          <TouchableOpacity
+                            key={event.id}
+                            style={[
+                              styles.weekTimeEvent,
+                              { backgroundColor: event.color },
+                            ]}
+                            onPress={() => handleEventPress(event.id)}
+                          >
+                            <Text style={styles.weekTimeEventTitle} numberOfLines={1}>
+                              {event.title}
+                            </Text>
+                            <Text style={styles.weekTimeEventTime}>
+                              {event.date.toLocaleTimeString("es", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    );
+                  })}
+                </View>
+              );
+            })}
+          </View>
+        </ScrollView>
       </View>
-    </ScrollView>
-  );
+    );
+  };
+
+  const renderDayView = () => {
+    // Separar eventos de todo el día
+    const dayAllDayEvents = events.filter(e => 
+      e.isAllDay &&
+      e.date.getDate() === currentDate.getDate() &&
+      e.date.getMonth() === currentDate.getMonth() &&
+      e.date.getFullYear() === currentDate.getFullYear()
+    );
+
+    return (
+      <View style={styles.dayViewContainer}>
+        {/* Day header */}
+        <View style={styles.dayViewHeader}>
+          <Text style={styles.dayViewDayName}>
+            {daysOfWeek[currentDate.getDay()]}
+          </Text>
+          <Text style={styles.dayViewDate}>{currentDate.getDate()}</Text>
+        </View>
+
+        {/* Eventos de todo el día */}
+        {dayAllDayEvents.length > 0 && (
+          <View style={styles.dayAllDaySection}>
+            <Text style={styles.dayAllDayTitle}>Todo el día</Text>
+            {dayAllDayEvents.map((event) => (
+              <TouchableOpacity
+                key={event.id}
+                style={[styles.dayAllDayEvent, { backgroundColor: event.color }]}
+                onPress={() => handleEventPress(event.id)}
+              >
+                <Text style={styles.dayAllDayEventText}>{event.title}</Text>
+                {event.isShared && (
+                  <Ionicons name="heart" size={16} color="white" />
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
+        {/* Timeline */}
+        <ScrollView style={styles.scrollView}>
+          <View style={styles.timeline}>
+            {Array.from({ length: 24 }, (_, i) => i).map((hour) => {
+              // Filtrar eventos que NO sean de todo el día
+              const hourEvents = events.filter(
+                (event) =>
+                  !event.isAllDay &&
+                  event.date.getDate() === currentDate.getDate() &&
+                  event.date.getMonth() === currentDate.getMonth() &&
+                  event.date.getFullYear() === currentDate.getFullYear() &&
+                  event.date.getHours() === hour
+              );
+              const hourString = hour.toString().padStart(2, "0") + ":00";
+
+              return (
+                <View key={hour} style={styles.timelineRow}>
+                  <View style={styles.timelineHour}>
+                    <Text style={styles.timelineHourText}>{hourString}</Text>
+                  </View>
+                  <View style={styles.timelineContent}>
+                    {hourEvents.length > 0 ? (
+                      <View style={styles.timelineEvents}>
+                        {hourEvents.map((event) => (
+                          <TouchableOpacity
+                            key={event.id}
+                            style={[
+                              styles.timelineEventCard,
+                              { backgroundColor: event.color },
+                            ]}
+                            onPress={() => handleEventPress(event.id)}
+                          >
+                            <View style={styles.timelineEventContent}>
+                              <Text style={styles.timelineEventTitle}>
+                                {event.title}
+                              </Text>
+                              <Text style={styles.timelineEventTime}>
+                                {event.date.toLocaleTimeString("es", {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </Text>
+                            </View>
+                            {event.isShared && (
+                              <Ionicons name="heart" size={20} color="white" />
+                            )}
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    ) : null}
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        </ScrollView>
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -494,7 +744,15 @@ export default function CalendarioScreen() {
             <Ionicons name="chevron-back" size={20} color="#1A1A1A" />
           </TouchableOpacity>
 
-          <Text style={styles.headerTitle}>{getHeaderTitle()}</Text>
+          <View style={styles.headerTitleContainer}>
+            <Text style={styles.headerTitle}>{getHeaderTitle()}</Text>
+            <TouchableOpacity
+              style={styles.todayButton}
+              onPress={() => setCurrentDate(new Date())}
+            >
+              <Text style={styles.todayButtonText}>Hoy</Text>
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity
             style={styles.navButton}
@@ -505,9 +763,7 @@ export default function CalendarioScreen() {
 
           <TouchableOpacity
             style={styles.addButton}
-            onPress={() => {
-              // Navegar a crear evento
-            }}
+            onPress={() => router.push('/(events)/create-event')}
           >
             <LinearGradient
               colors={["#FF4F81", "#8A2BE2"]}
@@ -605,6 +861,18 @@ export default function CalendarioScreen() {
       {viewMode === "month" && renderMonthView()}
       {viewMode === "week" && renderWeekView()}
       {viewMode === "day" && renderDayView()}
+
+      {/* Modal de detalles del evento */}
+      <EventDetailsModal
+        visible={showEventModal}
+        event={selectedEvent}
+        onClose={() => {
+          setShowEventModal(false);
+          setSelectedEvent(null);
+        }}
+        onEdit={handleEditEvent}
+        onDelete={handleDeleteEvent}
+      />
     </View>
   );
 }
@@ -676,12 +944,27 @@ const styles = StyleSheet.create({
   navButton: {
     padding: 8,
   },
+  headerTitleContainer: {
+    flex: 1,
+    alignItems: "center",
+    gap: 4,
+  },
   headerTitle: {
     fontSize: 18,
     color: "#1A1A1A",
     fontWeight: "600",
-    minWidth: 180,
     textAlign: "center",
+  },
+  todayButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    backgroundColor: "#FF4F8120",
+    borderRadius: 12,
+  },
+  todayButtonText: {
+    fontSize: 12,
+    color: "#FF4F81",
+    fontWeight: "600",
   },
   addButton: {
     width: 40,
@@ -835,26 +1118,50 @@ const styles = StyleSheet.create({
     color: "#1A1A1A66",
     marginTop: 2,
   },
+  noEventsContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 32,
+  },
+  noEventsText: {
+    fontSize: 14,
+    color: "#999",
+    marginTop: 8,
+  },
+  // Vista Semanal - Estilo Google Calendar
+  weekViewContainer: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
   weekViewHeader: {
     flexDirection: "row",
-    backgroundColor: "#F5F5F5",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    gap: 8,
+    backgroundColor: "#FFFFFF",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E5E5",
+    paddingVertical: 8,
+  },
+  weekTimeGutter: {
+    width: 60,
   },
   weekDayHeader: {
     flex: 1,
     alignItems: "center",
+    paddingVertical: 8,
   },
   weekDayName: {
-    fontSize: 12,
-    color: "#1A1A1A66",
+    fontSize: 11,
+    color: "#666",
+    textTransform: "uppercase",
     marginBottom: 4,
   },
+  weekDayNameToday: {
+    color: "#FF4F81",
+    fontWeight: "600",
+  },
   weekDayNumber: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -862,13 +1169,101 @@ const styles = StyleSheet.create({
     backgroundColor: "#FF4F81",
   },
   weekDayNumberText: {
-    fontSize: 16,
+    fontSize: 18,
     color: "#1A1A1A",
+    fontWeight: "500",
   },
   weekDayNumberTextToday: {
     color: "white",
     fontWeight: "600",
   },
+  // Sección de eventos de todo el día
+  allDaySection: {
+    backgroundColor: "#F9FAFB",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E5E5",
+  },
+  allDayLabel: {
+    width: 60,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+  },
+  allDayLabelText: {
+    fontSize: 10,
+    color: "#666",
+    textTransform: "uppercase",
+  },
+  allDayEventsContainer: {
+    flexDirection: "row",
+    paddingHorizontal: 60,
+    paddingBottom: 8,
+  },
+  allDayColumn: {
+    flex: 1,
+    paddingHorizontal: 2,
+  },
+  allDayEvent: {
+    borderRadius: 4,
+    padding: 6,
+    marginBottom: 4,
+  },
+  allDayEventText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  // Timeline de horas
+  weekScrollView: {
+    flex: 1,
+  },
+  weekTimelineContainer: {
+    flexDirection: "column",
+  },
+  weekTimelineRow: {
+    flexDirection: "row",
+    height: 60,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0F0F0",
+  },
+  weekTimeColumn: {
+    width: 60,
+    paddingTop: 4,
+    paddingRight: 8,
+    alignItems: "flex-end",
+  },
+  weekTimeText: {
+    fontSize: 11,
+    color: "#999",
+  },
+  weekDayCell: {
+    flex: 1,
+    borderLeftWidth: 1,
+    borderLeftColor: "#F0F0F0",
+    position: "relative",
+  },
+  weekDayCellToday: {
+    backgroundColor: "rgba(255, 79, 129, 0.02)",
+  },
+  weekTimeEvent: {
+    position: "absolute",
+    left: 2,
+    right: 2,
+    top: 2,
+    borderRadius: 4,
+    padding: 4,
+    zIndex: 1,
+  },
+  weekTimeEventTitle: {
+    fontSize: 11,
+    color: "#FFFFFF",
+    fontWeight: "600",
+    marginBottom: 2,
+  },
+  weekTimeEventTime: {
+    fontSize: 10,
+    color: "rgba(255, 255, 255, 0.9)",
+  },
+  // Mantener estilos antiguos para compatibilidad
   weekGrid: {
     flexDirection: "row",
     padding: 16,
@@ -967,4 +1362,36 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "rgba(255, 255, 255, 0.8)",
   },
+  // Day view - all-day events styles
+  dayViewContainer: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
+  dayAllDaySection: {
+    backgroundColor: "#F9FAFB",
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E5E5",
+  },
+  dayAllDayTitle: {
+    fontSize: 12,
+    color: "#666666",
+    fontWeight: "600",
+    marginBottom: 8,
+    textTransform: "uppercase",
+  },
+  dayAllDayEvent: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+  },
+  dayAllDayEventText: {
+    fontSize: 14,
+    color: "#FFFFFF",
+    fontWeight: "600",
+    flex: 1,
+  },
 });
+

@@ -6,6 +6,7 @@ import { StyleSheet, Text, TouchableOpacity, View, ScrollView, ActivityIndicator
 import { MotiView } from "moti";
 import { useAuth } from "../../context/AuthContext";
 import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
+import eventService from "../../services/event.service";
 
 interface LinkStatus {
   hasActiveLink: boolean;
@@ -23,6 +24,7 @@ export default function HomeScreen() {
   const { user } = useAuth();
   const [linkStatus, setLinkStatus] = useState<LinkStatus | null>(null);
   const [loading, setLoading] = useState(true);
+  const [pendingCount, setPendingCount] = useState(0);
 
   const fetchLinkStatus = useCallback(async () => {
     if (!user?.userId) return;
@@ -40,12 +42,25 @@ export default function HomeScreen() {
     }
   }, [user?.userId]);
 
+  const loadPendingCount = useCallback(async () => {
+    if (!user?.userId) return;
+
+    try {
+      const pendingEvents = await eventService.getPendingApprovalEvents(user.userId);
+      setPendingCount(pendingEvents.length);
+    } catch (error: any) {
+      // Si hay error (por ejemplo, sin vínculo activo), establecer contador en 0
+      setPendingCount(0);
+    }
+  }, [user?.userId]);
+
   // Verificar cada vez que el tab obtiene foco
   useFocusEffect(
     useCallback(() => {
       console.log('📍 Tab de inicio enfocado - verificando estado...');
       fetchLinkStatus();
-    }, [fetchLinkStatus])
+      loadPendingCount();
+    }, [fetchLinkStatus, loadPendingCount])
   );
 
   const isLinked = linkStatus?.hasActiveLink || false;
@@ -60,10 +75,27 @@ export default function HomeScreen() {
         transition={{ type: "timing", duration: 600 }}
         style={styles.header}
       >
-        <Text style={styles.greeting}>Hola, {user?.displayName || user?.nickname || "Usuario"} 👋</Text>
-        <Text style={styles.subtitle}>
-          {isLinked ? `Conectado con ${partnerName} ❤️` : "Bienvenido a Nexus"}
-        </Text>
+        <View style={styles.headerContent}>
+          <View>
+            <Text style={styles.greeting}>Hola, {user?.displayName || user?.nickname || "Usuario"} 👋</Text>
+            <Text style={styles.subtitle}>
+              {isLinked ? `Conectado con ${partnerName} ❤️` : "Bienvenido a Nexus"}
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={styles.notificationButton}
+            onPress={() => router.push('/(events)/notifications')}
+          >
+            <Ionicons name="notifications-outline" size={26} color="#333" />
+            {pendingCount > 0 && (
+              <View style={styles.notificationBadge}>
+                <Text style={styles.notificationBadgeText}>
+                  {pendingCount > 9 ? '9+' : pendingCount}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
       </MotiView>
 
       {loading ? (
@@ -80,42 +112,21 @@ export default function HomeScreen() {
           >
             <Text style={styles.sectionTitle}>Accesos rápidos</Text>
             <View style={styles.quickActionsGrid}>
-              {/* Vínculo */}
-              <TouchableOpacity
-                style={styles.quickActionCard}
-                onPress={() => router.push("/(tabs)/link")}
-                activeOpacity={0.8}
-              >
-                <LinearGradient
-                  colors={["#FF4F81", "#8A2BE2"]}
-                  style={styles.quickActionGradient}
-                >
-                  <Ionicons name="heart" size={32} color="#FFF" />
-                </LinearGradient>
-                <Text style={styles.quickActionLabel}>Vínculo</Text>
-                {isLinked && (
-                  <View style={styles.statusBadge}>
-                    <View style={styles.statusDot} />
-                    <Text style={styles.statusText}>Activo</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-
-              {/* Calendario */}
+              {/* Mis Eventos */}
               <TouchableOpacity
                 style={[styles.quickActionCard, !isLinked && styles.quickActionDisabled]}
-                onPress={() => isLinked && router.push("/(tabs)/calendario")}
+                onPress={() => isLinked && router.push("/(events)/my-events")}
                 activeOpacity={0.8}
                 disabled={!isLinked}
               >
                 <LinearGradient
-                  colors={isLinked ? ["#8A2BE2", "#FF4F81"] : ["#CCC", "#999"]}
+                  colors={isLinked ? ["#8B5CF6", "#EC4899"] : ["#CCC", "#999"]}
                   style={styles.quickActionGradient}
                 >
-                  <Ionicons name="calendar" size={32} color="#FFF" />
+                  <Ionicons name="list" size={32} color="#FFF" />
                 </LinearGradient>
                 <Text style={[styles.quickActionLabel, !isLinked && styles.quickActionLabelDisabled]}>
-                  Calendario
+                  Mis Eventos
                 </Text>
                 {!isLinked && (
                   <View style={styles.lockedBadge}>
@@ -124,34 +135,27 @@ export default function HomeScreen() {
                 )}
               </TouchableOpacity>
 
-              {/* Perfil */}
+              {/* Crear Evento */}
               <TouchableOpacity
-                style={styles.quickActionCard}
-                onPress={() => router.push("/(tabs)/perfil")}
+                style={[styles.quickActionCard, !isLinked && styles.quickActionDisabled]}
+                onPress={() => isLinked && router.push("/(events)/create-event")}
                 activeOpacity={0.8}
+                disabled={!isLinked}
               >
                 <LinearGradient
-                  colors={["#FF6B6B", "#FFD93D"]}
+                  colors={isLinked ? ["#FF4F81", "#8A2BE2"] : ["#CCC", "#999"]}
                   style={styles.quickActionGradient}
                 >
-                  <Ionicons name="person" size={32} color="#FFF" />
+                  <Ionicons name="add-circle" size={32} color="#FFF" />
                 </LinearGradient>
-                <Text style={styles.quickActionLabel}>Perfil</Text>
-              </TouchableOpacity>
-
-              {/* Configuración */}
-              <TouchableOpacity
-                style={styles.quickActionCard}
-                onPress={() => router.push("/(tabs)/configuraciones")}
-                activeOpacity={0.8}
-              >
-                <LinearGradient
-                  colors={["#6C63FF", "#4A4AFF"]}
-                  style={styles.quickActionGradient}
-                >
-                  <Ionicons name="settings" size={32} color="#FFF" />
-                </LinearGradient>
-                <Text style={styles.quickActionLabel}>Ajustes</Text>
+                <Text style={[styles.quickActionLabel, !isLinked && styles.quickActionLabelDisabled]}>
+                  Crear Evento
+                </Text>
+                {!isLinked && (
+                  <View style={styles.lockedBadge}>
+                    <Ionicons name="lock-closed" size={12} color="#999" />
+                  </View>
+                )}
               </TouchableOpacity>
             </View>
           </MotiView>
@@ -194,6 +198,11 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: 30,
   },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
   greeting: {
     fontSize: 28,
     fontWeight: "700",
@@ -203,6 +212,39 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: "#666",
+  },
+  notificationButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    backgroundColor: '#FF4F81',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: '#F5F5F5',
+  },
+  notificationBadgeText: {
+    color: '#FFF',
+    fontSize: 11,
+    fontWeight: '700',
   },
   loadingContainer: {
     flex: 1,
