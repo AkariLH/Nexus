@@ -3,6 +3,7 @@ import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
+import { API_CONFIG } from '../config/api.config';
 
 // Configurar cómo se deben manejar las notificaciones cuando la app está en primer plano
 Notifications.setNotificationHandler({
@@ -16,7 +17,7 @@ Notifications.setNotificationHandler({
 });
 
 class NotificationService {
-  private baseUrl = 'http://192.168.1.95:8080/api';
+  private baseUrl = API_CONFIG.BASE_URL;
 
   /**
    * Solicitar permisos de notificación al usuario

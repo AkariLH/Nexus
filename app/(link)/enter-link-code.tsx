@@ -7,6 +7,7 @@ import { StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator 
 import { useAuth } from "../../context/AuthContext";
 import { ErrorModal } from "../components/ErrorModal";
 import { SuccessModal } from "../components/SuccessModal";
+import { API_CONFIG } from "../../config/api.config";
 
 export default function EnterLinkCodeScreen() {
   const router = useRouter();
@@ -31,7 +32,7 @@ export default function EnterLinkCodeScreen() {
 
     setLoading(true);
     try {
-      const response = await fetch(`http://192.168.1.95:8080/api/link/establish/${user.userId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/link/establish/${user.userId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

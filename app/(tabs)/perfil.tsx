@@ -11,7 +11,6 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   Image,
 } from "react-native";
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -21,6 +20,7 @@ import { GradientButton } from "../components/ui/GradientButton";
 import { ErrorModal } from "../components/ErrorModal";
 import { SuccessModal } from "../components/SuccessModal";
 import { ActionModal } from "../components/ActionModal";
+import { ConfirmModal } from "../components/ConfirmModal";
 import { profileService } from "../../services/profile.service";
 import { useAuth } from "../../context/AuthContext";
 import type { UpdateProfileRequest } from "../../types/auth.types";
@@ -64,6 +64,9 @@ export default function PerfilScreen() {
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [errorModal, setErrorModal] = useState({ visible: false, message: "" });
   const [successModal, setSuccessModal] = useState({ visible: false, message: "" });
+  const [showPermissionModal, setShowPermissionModal] = useState(false);
+  const [showEmailVerifyModal, setShowEmailVerifyModal] = useState(false);
+  const [newEmailForVerify, setNewEmailForVerify] = useState('');
 
   // Validación de email (RN-24)
   const validateEmail = (email: string): boolean => {
@@ -136,11 +139,7 @@ export default function PerfilScreen() {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       
       if (status !== 'granted') {
-        Alert.alert(
-          "Permisos necesarios",
-          "Se requieren permisos para acceder a la galería de fotos",
-          [{ text: "OK" }]
-        );
+        setShowPermissionModal(true);
         return;
       }
 
@@ -370,20 +369,8 @@ export default function PerfilScreen() {
         // RN-05: Si cambió el email, mostrar información adicional
         if (result.data!.emailChanged) {
           setTimeout(() => {
-            Alert.alert(
-              "Verifica tu nuevo correo",
-              "Se ha enviado un código de verificación a tu nuevo correo electrónico. Por favor verifícalo para continuar usando tu cuenta.",
-              [
-                {
-                  text: "Verificar ahora",
-                  onPress: () => router.push({
-                    pathname: "/(auth)/verify-email",
-                    params: { email: result.data!.email }
-                  })
-                },
-                { text: "Después", style: "cancel" }
-              ]
-            );
+            setNewEmailForVerify(result.data!.email);
+            setShowEmailVerifyModal(true);
           }, 1500);
         }
       }
@@ -739,6 +726,35 @@ export default function PerfilScreen() {
         visible={successModal.visible}
         message={successModal.message}
         onClose={() => setSuccessModal({ visible: false, message: "" })}
+      />
+
+      {/* Modal de permisos */}
+      <ConfirmModal
+        visible={showPermissionModal}
+        type="info"
+        title="Permisos necesarios"
+        message="Se requieren permisos para acceder a la galería de fotos"
+        confirmText="OK"
+        showCancel={false}
+        onConfirm={() => setShowPermissionModal(false)}
+      />
+
+      {/* Modal de verificación de email */}
+      <ConfirmModal
+        visible={showEmailVerifyModal}
+        type="info"
+        title="Verifica tu nuevo correo"
+        message="Se ha enviado un código de verificación a tu nuevo correo electrónico. Por favor verifícalo para continuar usando tu cuenta."
+        confirmText="Verificar ahora"
+        cancelText="Después"
+        onConfirm={() => {
+          setShowEmailVerifyModal(false);
+          router.push({
+            pathname: "/(auth)/verify-email",
+            params: { email: newEmailForVerify }
+          });
+        }}
+        onCancel={() => setShowEmailVerifyModal(false)}
       />
     </KeyboardAvoidingView>
   );

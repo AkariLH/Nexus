@@ -10,7 +10,6 @@ import {
   TouchableOpacity,
   View,
   ActivityIndicator,
-  Alert,
   Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -19,6 +18,7 @@ import { useAuth } from "../../context/AuthContext";
 import eventService, { EventResponse } from "../../services/event.service";
 import { RecurrenceModal } from "../components/RecurrenceModal";
 import { RemindersModal, Reminder } from "../components/RemindersModal";
+import { ConfirmModal } from "../components/ConfirmModal";
 
 export default function EditEventScreen() {
   const router = useRouter();
@@ -56,6 +56,13 @@ export default function EditEventScreen() {
   const [endDateSelected, setEndDateSelected] = useState(false);
   const [startTimeSelected, setStartTimeSelected] = useState(false);
   const [endTimeSelected, setEndTimeSelected] = useState(false);
+  
+  // Estados para modales de confirmación
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const colors = [
     { name: 'Rosa', value: '#FF4F81' },
@@ -151,7 +158,8 @@ export default function EditEventScreen() {
 
   const loadEvent = async () => {
     if (!user?.userId || !eventId) {
-      Alert.alert('Error', 'No se pudo cargar el evento');
+      setErrorMessage('No se pudo cargar el evento');
+      setShowErrorModal(true);
       router.back();
       return;
     }
@@ -162,7 +170,8 @@ export default function EditEventScreen() {
       const event = events.find(e => e.id === parseInt(eventId));
       
       if (!event) {
-        Alert.alert('Error', 'Evento no encontrado');
+        setErrorMessage('Evento no encontrado');
+        setShowErrorModal(true);
         router.back();
         return;
       }
@@ -223,7 +232,8 @@ export default function EditEventScreen() {
       
     } catch (error: any) {
       console.error('Error cargando evento:', error);
-      Alert.alert('Error', 'No se pudo cargar el evento');
+      setErrorMessage('No se pudo cargar el evento');
+      setShowErrorModal(true);
       router.back();
     } finally {
       setLoading(false);
@@ -274,7 +284,8 @@ export default function EditEventScreen() {
     }
 
     if (!user?.userId || !eventId) {
-      Alert.alert('Error', 'No se pudo identificar el usuario o el evento');
+      setErrorMessage('No se pudo identificar el usuario o el evento');
+      setShowErrorModal(true);
       return;
     }
 
@@ -380,21 +391,14 @@ export default function EditEventScreen() {
 
       await eventService.updateEvent(parseInt(eventId), user.userId, eventData);
       
-      Alert.alert(
-        'Evento Actualizado',
-        'Los cambios han sido guardados y están pendientes de aprobación de tu pareja.',
-        [
-          {
-            text: 'Ver Calendario',
-            onPress: () => router.replace('/(tabs)/calendario')
-          }
-        ]
-      );
+      setSuccessMessage('Los cambios han sido guardados y están pendientes de aprobación de tu pareja.');
+      setShowSuccessModal(true);
       
     } catch (error: any) {
       console.error('Error actualizando evento:', error);
-      const errorMessage = error.message || 'Error al actualizar el evento. Inténtalo de nuevo.';
-      Alert.alert('Error', errorMessage);
+      const errMsg = error.message || 'Error al actualizar el evento. Inténtalo de nuevo.';
+      setErrorMessage(errMsg);
+      setShowErrorModal(true);
     } finally {
       setSaving(false);
     }
@@ -402,31 +406,29 @@ export default function EditEventScreen() {
 
   const handleDeleteEvent = () => {
     if (!user?.userId) {
-      Alert.alert('Error', 'No se pudo identificar el usuario');
+      setErrorMessage('No se pudo identificar el usuario');
+      setShowErrorModal(true);
       return;
     }
 
-    Alert.alert(
-      'Eliminar Evento',
-      '¿Estás seguro de que deseas eliminar este evento?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            if (!user?.userId) return;
-            try {
-              await eventService.deleteEvent(parseInt(eventId), user.userId);
-              Alert.alert('Evento Eliminado', 'El evento ha sido eliminado exitosamente');
-              router.replace('/(tabs)/calendario');
-            } catch (error) {
-              Alert.alert('Error', 'No se pudo eliminar el evento');
-            }
-          }
-        }
-      ]
-    );
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!user?.userId) return;
+    
+    try {
+      setShowDeleteConfirm(false);
+      setSaving(true);
+      await eventService.deleteEvent(parseInt(eventId), user.userId);
+      setSuccessMessage('El evento ha sido eliminado exitosamente');
+      setShowSuccessModal(true);
+    } catch (error) {
+      setErrorMessage('No se pudo eliminar el evento');
+      setShowErrorModal(true);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const onStartDateChange = (event: any, date?: Date) => {
@@ -859,6 +861,44 @@ export default function EditEventScreen() {
           onSave={handleSaveReminders}
           initialReminders={reminders}
           eventStartDate={startDate}
+        />
+
+        {/* Modal de error */}
+        <ConfirmModal
+          visible={showErrorModal}
+          type="error"
+          title="Error"
+          message={errorMessage}
+          confirmText="OK"
+          showCancel={false}
+          onConfirm={() => setShowErrorModal(false)}
+        />
+
+        {/* Modal de éxito */}
+        <ConfirmModal
+          visible={showSuccessModal}
+          type="success"
+          title={successMessage.includes('eliminado') ? 'Evento Eliminado' : 'Evento Actualizado'}
+          message={successMessage}
+          confirmText="Ver Calendario"
+          showCancel={false}
+          onConfirm={() => {
+            setShowSuccessModal(false);
+            router.replace('/(tabs)/calendario');
+          }}
+        />
+
+        {/* Modal de confirmación de eliminación */}
+        <ConfirmModal
+          visible={showDeleteConfirm}
+          type="confirm"
+          title="Eliminar Evento"
+          message="¿Estás seguro de que deseas eliminar este evento?"
+          confirmText="Eliminar"
+          cancelText="Cancelar"
+          onConfirm={confirmDelete}
+          onCancel={() => setShowDeleteConfirm(false)}
+          loading={saving}
         />
       </LinearGradient>
     </SafeAreaView>

@@ -13,6 +13,7 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
 import eventService, { EventResponse } from "../../services/event.service";
+import { API_CONFIG } from "../../config/api.config";
 import { expandRecurringEvent } from "../../utils/recurrenceUtils";
 import { EventDetailsModal } from "../components/EventDetailsModal";
 
@@ -45,7 +46,7 @@ export default function CalendarioScreen() {
     if (!user?.userId) return;
 
     try {
-      const response = await fetch(`http://192.168.1.95:8080/api/link/status/${user.userId}`);
+      const response = await fetch(`${API_CONFIG.BASE_URL}/link/status/${user.userId}`);
       
       if (response.ok) {
         const data = await response.json();
@@ -108,27 +109,40 @@ export default function CalendarioScreen() {
 
           console.log('Ocurrencias generadas:', occurrences.length);
           
+          // Debug: Ver las excepciones del evento
+          console.log(`📋 Evento ${event.id} (${event.title}):`, {
+            isRecurring: event.isRecurring,
+            exceptionDates: event.exceptionDates,
+            exceptionCount: event.exceptionDates?.length || 0
+          });
+          
           // Convertir las fechas de excepción a timestamps para comparación
           const exceptionTimestamps = (event.exceptionDates || []).map(dateStr => {
             const exceptionDate = new Date(dateStr);
-            // Normalizar a medianoche para comparar solo la fecha
-            return new Date(exceptionDate.getFullYear(), exceptionDate.getMonth(), exceptionDate.getDate()).getTime();
+            // Normalizar a medianoche UTC para comparar
+            const normalized = Date.UTC(exceptionDate.getUTCFullYear(), exceptionDate.getUTCMonth(), exceptionDate.getUTCDate());
+            console.log(`  🚫 Excepción: ${dateStr} → timestamp: ${normalized} (${new Date(normalized).toLocaleDateString()})`);
+            return normalized;
           });
           
           // Crear un evento para cada ocurrencia (filtrando excepciones)
           occurrences.forEach(occurrenceDate => {
-            // Normalizar la fecha de ocurrencia a medianoche para comparar
-            const normalizedOccurrence = new Date(
+            // Normalizar la fecha de ocurrencia a medianoche UTC para comparar
+            const normalizedOccurrence = Date.UTC(
               occurrenceDate.getFullYear(),
               occurrenceDate.getMonth(),
               occurrenceDate.getDate()
-            ).getTime();
+            );
+            
+            console.log(`  ⏰ Ocurrencia: ${occurrenceDate.toLocaleDateString()} → timestamp: ${normalizedOccurrence}`);
             
             // Saltar esta ocurrencia si está en la lista de excepciones
             if (exceptionTimestamps.includes(normalizedOccurrence)) {
-              console.log('Saltando ocurrencia excluida:', occurrenceDate);
+              console.log(`  ❌ SALTANDO ocurrencia excluida: ${occurrenceDate.toLocaleDateString()}`);
               return;
             }
+            
+            console.log(`  ✅ Incluyendo ocurrencia: ${occurrenceDate.toLocaleDateString()}`);
             
             // Calcular endDate manteniendo la misma duración
             const duration = endDate.getTime() - startDate.getTime();
@@ -170,7 +184,15 @@ export default function CalendarioScreen() {
     const fullEvent = fullEventsData.find(e => e.id === parseInt(realEventId));
     
     if (fullEvent) {
-      setSelectedEvent(fullEvent);
+      // Si es una instancia recurrente, mantener el ID compuesto
+      if (eventId.includes('-')) {
+        setSelectedEvent({
+          ...fullEvent,
+          id: eventId as any, // Mantener el ID compuesto "eventId-timestamp"
+        });
+      } else {
+        setSelectedEvent(fullEvent);
+      }
       setShowEventModal(true);
     }
   };
@@ -872,6 +894,7 @@ export default function CalendarioScreen() {
         }}
         onEdit={handleEditEvent}
         onDelete={handleDeleteEvent}
+        onRefresh={loadApprovedEvents}
       />
     </View>
   );

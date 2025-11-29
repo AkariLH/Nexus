@@ -21,7 +21,7 @@ const { height } = Dimensions.get("window");
 interface EventDetailsModalProps {
   visible: boolean;
   event: {
-    id: number;
+    id: number | string; // Puede ser number (evento normal) o string (instancia recurrente "eventId-timestamp")
     title: string;
     startDateTime: string;
     endDateTime: string;
@@ -41,9 +41,10 @@ interface EventDetailsModalProps {
   onClose: () => void;
   onEdit: (eventId: number) => void;
   onDelete?: (eventId: number) => void;
+  onRefresh?: () => Promise<void>; // Callback para recargar eventos después de cambios
 }
 
-export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete }: EventDetailsModalProps) {
+export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, onRefresh }: EventDetailsModalProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDeleteRecurringModal, setShowDeleteRecurringModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -159,10 +160,23 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete }:
         );
         
         console.log('✅ Instancia eliminada exitosamente');
+        
+        // Recargar eventos para obtener las excepciones actualizadas
+        console.log('🔄 Recargando eventos para actualizar excepciones...');
+        if (onRefresh) {
+          await onRefresh();
+          console.log('✅ Eventos recargados');
+        }
       } else {
         // Eliminar el evento completo (o toda la serie)
         console.log('Eliminando evento completo o toda la serie...');
-        await onDelete(event.id);
+        // Extraer el ID real si es una instancia recurrente
+        const realId = typeof event.id === 'string' && event.id.includes('-')
+          ? parseInt(event.id.split('-')[0])
+          : typeof event.id === 'number'
+          ? event.id
+          : parseInt(event.id.toString());
+        await onDelete(realId);
       }
       onClose();
     } catch (error) {
@@ -341,7 +355,13 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete }:
                   style={styles.editButton}
                   onPress={() => {
                     onClose();
-                    onEdit(event.id);
+                    // Si es una instancia recurrente, extraer el ID real
+                    const realId = typeof event.id === 'string' && event.id.includes('-')
+                      ? parseInt(event.id.split('-')[0])
+                      : typeof event.id === 'number'
+                      ? event.id
+                      : parseInt(event.id);
+                    onEdit(realId);
                   }}
                   activeOpacity={0.8}
                 >
@@ -409,7 +429,7 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete }:
               >
                 <Ionicons name="document-outline" size={24} color="#8A2BE2" />
                 <View style={styles.choiceTextContainer}>
-                  <Text style={styles.choiceButtonTitle}>Solo esta instancia</Text>
+                  <Text style={styles.choiceButtonTitle}>Solo este evento</Text>
                   <Text style={styles.choiceButtonSubtitle}>Eliminar solo este evento</Text>
                 </View>
               </TouchableOpacity>

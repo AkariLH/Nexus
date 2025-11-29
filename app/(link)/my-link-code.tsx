@@ -8,6 +8,7 @@ import QRCode from "react-native-qrcode-svg";
 import { useAuth } from "../../context/AuthContext";
 import { ErrorModal } from "../components/ErrorModal";
 import { SuccessModal } from "../components/SuccessModal";
+import { API_CONFIG } from "../../config/api.config";
 
 interface LinkCodeData {
   code: string;
@@ -36,7 +37,7 @@ export default function MyLinkCodeScreen() {
     setLoading(true);
     setIsExpired(false);
     try {
-      const response = await fetch(`http://192.168.1.95:8080/api/link/generate/${user.userId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/link/generate/${user.userId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -98,7 +99,7 @@ export default function MyLinkCodeScreen() {
     const checkLinkStatus = async () => {
       try {
         setCheckingLink(true);
-        const response = await fetch(`http://192.168.1.95:8080/api/link/status/${user.userId}`);
+        const response = await fetch(`${API_CONFIG.BASE_URL}/link/status/${user.userId}`);
         
         if (response.ok) {
           const data = await response.json();

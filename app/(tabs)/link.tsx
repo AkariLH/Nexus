@@ -10,6 +10,7 @@ import { ActionModal } from "../components/ActionModal";
 import { ErrorModal } from "../components/ErrorModal";
 import { SuccessModal } from "../components/SuccessModal";
 import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
+import { API_CONFIG } from "../../config/api.config";
 
 interface LinkStatusData {
   hasActiveLink: boolean;
@@ -39,7 +40,7 @@ export default function LinkScreen() {
     if (!user?.userId) return;
 
     try {
-      const response = await fetch(`http://192.168.1.95:8080/api/link/status/${user.userId}`);
+      const response = await fetch(`${API_CONFIG.BASE_URL}/link/status/${user.userId}`);
       
       if (response.ok) {
         const data: LinkStatusData = await response.json();
@@ -194,7 +195,7 @@ export default function LinkScreen() {
   const userInitial = userName.charAt(0).toUpperCase();
   // Agregar timestamp para forzar recarga de imágenes
   const timestamp = Date.now();
-  const userPhoto = user?.userId ? `http://192.168.1.95:8080/api/profile/${user.userId}/avatar?t=${timestamp}` : null;
+  const userPhoto = user?.userId ? `${API_CONFIG.BASE_URL}/profile/${user.userId}/avatar?t=${timestamp}` : null;
   const partnerPhoto = linkStatus.partner?.profilePhoto ? `${linkStatus.partner.profilePhoto}?t=${timestamp}` : null;
 
   return (

@@ -10,7 +10,6 @@ import {
   TouchableOpacity,
   View,
   ActivityIndicator,
-  Alert,
   Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -19,6 +18,7 @@ import { useAuth } from "../../context/AuthContext";
 import eventService, { CreateEventRequest } from "../../services/event.service";
 import { RecurrenceModal } from "../components/RecurrenceModal";
 import { RemindersModal, Reminder } from "../components/RemindersModal";
+import { ConfirmModal } from "../components/ConfirmModal";
 
 export default function CreateEventScreen() {
   const router = useRouter();
@@ -52,6 +52,12 @@ export default function CreateEventScreen() {
   const [endDateSelected, setEndDateSelected] = useState(false);
   const [startTimeSelected, setStartTimeSelected] = useState(false);
   const [endTimeSelected, setEndTimeSelected] = useState(false);
+  
+  // Estados para modales de confirmación
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   const colors = [
     { name: 'Rosa', value: '#FF4F81' },
@@ -115,7 +121,8 @@ export default function CreateEventScreen() {
     }
 
     if (!user?.userId) {
-      Alert.alert('Error', 'No se pudo identificar el usuario');
+      setErrorMessage('No se pudo identificar el usuario');
+      setShowErrorModal(true);
       return;
     }
 
@@ -228,21 +235,14 @@ export default function CreateEventScreen() {
 
       const response = await eventService.createEvent(user.userId, eventData);
       
-      Alert.alert(
-        'Evento Creado',
-        response.message || 'El evento ha sido creado exitosamente y está pendiente de aprobación de tu pareja.',
-        [
-          {
-            text: 'Ver Calendario',
-            onPress: () => router.replace('/(tabs)/calendario')
-          }
-        ]
-      );
+      setSuccessMessage(response.message || 'El evento ha sido creado exitosamente y está pendiente de aprobación de tu pareja.');
+      setShowSuccessModal(true);
       
     } catch (error: any) {
       console.error('Error creando evento:', error);
-      const errorMessage = error.message || 'Error al crear el evento. Inténtalo de nuevo.';
-      Alert.alert('Error', errorMessage);
+      const errMsg = error.message || 'Error al crear el evento. Inténtalo de nuevo.';
+      setErrorMessage(errMsg);
+      setShowErrorModal(true);
     } finally {
       setLoading(false);
     }
@@ -693,6 +693,46 @@ export default function CreateEventScreen() {
         onSave={handleSaveReminders}
         initialReminders={reminders}
         eventStartDate={startDate}
+      />
+
+      {/* Modal de error */}
+      <ConfirmModal
+        visible={showErrorModal}
+        type="error"
+        title="Error"
+        message={errorMessage}
+        confirmText="OK"
+        showCancel={false}
+        onConfirm={() => setShowErrorModal(false)}
+      />
+
+      {/* Modal de éxito */}
+      <ConfirmModal
+        visible={showSuccessModal}
+        type="success"
+        title="Evento Creado"
+        message={successMessage}
+        confirmText="Ver Calendario"
+        cancelText="Crear Otro"
+        onConfirm={() => {
+          setShowSuccessModal(false);
+          router.replace('/(tabs)/calendario');
+        }}
+        onCancel={() => {
+          setShowSuccessModal(false);
+          // Limpiar el formulario para crear otro evento
+          setTitle('');
+          setLocation('');
+          setCategory('');
+          setDescription('');
+          setReminders([]);
+          setIsRecurring(false);
+          setRecurrenceConfig(null);
+          setStartDate(new Date());
+          setEndDate(new Date());
+          setStartTime(new Date());
+          setEndTime(new Date());
+        }}
       />
     </SafeAreaView>
   );

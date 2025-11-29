@@ -142,7 +142,7 @@ const eventService = {
    * Agregar excepción a evento recurrente (eliminar instancia específica)
    */
   addEventException: async (eventId: number, exceptionDate: string, userId: number): Promise<void> => {
-    const endpoint = `${(API_CONFIG.ENDPOINTS.EVENTS as any).BASE}/${eventId}/exceptions`;
+    const endpoint = `${API_CONFIG.BASE_URL}/events/${eventId}/exceptions`;
     await apiClient.post(endpoint, null, {
       params: {
         exceptionDate,
