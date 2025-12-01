@@ -73,9 +73,14 @@ export function PasswordConfirmModal({
     >
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
-          <View style={styles.dangerIconWrapper}>
-            <Ionicons name="shield-checkmark-outline" size={48} color="#EF4444" />
-          </View>
+          <LinearGradient
+            colors={["#FF4F81", "#8A2BE2"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.dangerIconWrapper}
+          >
+            <Ionicons name="shield-checkmark-outline" size={48} color="#FFFFFF" />
+          </LinearGradient>
 
           <Text style={styles.modalTitle}>{title}</Text>
           <Text style={styles.modalMessage}>{message}</Text>
@@ -182,7 +187,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: "#FEE2E2",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 20,

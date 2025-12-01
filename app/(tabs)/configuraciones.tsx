@@ -120,6 +120,24 @@ export default function ConfiguracionesScreen() {
       <Header onBack={() => router.back()} />
 
       <View style={styles.content}>
+        {/* Calendarios Externos */}
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => router.push('/(tabs)/link-external-calendars')}
+          disabled={isLoading}
+        >
+          <View style={styles.actionLeft}>
+            <View style={styles.iconContainer}>
+              <Ionicons name="calendar-outline" size={24} color="#1A1A1A" />
+            </View>
+            <View>
+              <Text style={styles.actionTitle}>Calendarios externos</Text>
+              <Text style={styles.actionSubtitle}>Vincular Google Calendar</Text>
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="#1A1A1A66" />
+        </TouchableOpacity>
+
         {/* Cerrar sesión */}
         <TouchableOpacity
           style={styles.actionButton}

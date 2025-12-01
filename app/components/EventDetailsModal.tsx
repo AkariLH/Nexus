@@ -411,9 +411,14 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, o
         <View style={styles.choiceModalContainer}>
           <View style={styles.choiceModalContent}>
             {/* Icono */}
-            <View style={[styles.iconContainer, { backgroundColor: '#F59E0B20' }]}>
-              <Ionicons name="repeat" size={48} color="#F59E0B" />
-            </View>
+            <LinearGradient
+              colors={["#FF4F81", "#8A2BE2"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.iconContainer}
+            >
+              <Ionicons name="repeat" size={48} color="#FFFFFF" />
+            </LinearGradient>
 
             {/* Título */}
             <Text style={styles.modalTitle}>Evento recurrente</Text>

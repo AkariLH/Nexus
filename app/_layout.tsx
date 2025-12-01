@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { AuthProvider, useAuth } from "../context/AuthContext";
 import { QuestionnaireProvider } from "../context/QuestionnaireContext";
 import notificationService from "../services/firebase.service";
+import { externalCalendarIntegration } from "../services/externalCalendar.integration.service";
 
 function RootNavigator() {
   const { user, isLoading } = useAuth();
@@ -59,6 +60,29 @@ function RootNavigator() {
       cleanup.then((unsub) => unsub?.());
     };
   }, [user?.userId, router]);
+
+  // Sincronización automática de calendarios externos al abrir la app
+  useEffect(() => {
+    if (!user?.userId) return;
+
+    const syncCalendars = async () => {
+      try {
+        console.log('🔄 Sincronizando calendarios externos al iniciar...');
+        await externalCalendarIntegration.performPeriodicSync(user.userId);
+        console.log('✅ Sincronización inicial completada');
+      } catch (error) {
+        console.error('❌ Error en sincronización inicial:', error);
+        // No mostrar error al usuario, es un proceso en segundo plano
+      }
+    };
+
+    // Ejecutar sincronización después de un breve delay para no bloquear la carga inicial
+    const timeoutId = setTimeout(() => {
+      syncCalendars();
+    }, 2000);
+
+    return () => clearTimeout(timeoutId);
+  }, [user?.userId]);
 
   // Mostrar null mientras carga (Expo Router maneja la pantalla de carga)
   if (isLoading) {

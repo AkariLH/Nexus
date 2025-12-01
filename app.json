@@ -12,7 +12,9 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Necesitamos acceso a tu galería para que puedas seleccionar una foto de perfil",
-        "NSCameraUsageDescription": "Necesitamos acceso a la cámara para que puedas tomar una foto de perfil"
+        "NSCameraUsageDescription": "Necesitamos acceso a la cámara para que puedas tomar una foto de perfil",
+        "NSCalendarsUsageDescription": "Necesitamos acceso a tus calendarios para sincronizar eventos con tu pareja",
+        "NSRemindersUsageDescription": "Necesitamos acceso a tus recordatorios para configurar notificaciones de eventos"
       }
     },
     "android": {
@@ -29,7 +31,9 @@
       "permissions": [
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.CAMERA"
+        "android.permission.CAMERA",
+        "android.permission.READ_CALENDAR",
+        "android.permission.WRITE_CALENDAR"
       ],
       "googleServicesFile": "./android/app/google-services.json"
     },

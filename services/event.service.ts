@@ -37,6 +37,9 @@ export interface EventResponse {
   partnerApprovedAt?: string;
   isRecurring?: boolean;
   recurrencePattern?: string;
+  rruleDtstartUtc?: string; // Fecha de inicio de la recurrencia (DTSTART)
+  rruleUntilUtc?: string;   // Fecha de fin de la recurrencia (UNTIL)
+  rruleCount?: number;      // Número de ocurrencias (COUNT)
   reminderMinutes?: number;
   reminders?: Array<{ minutesBefore: number; label: string }>; // Múltiples recordatorios
   color?: string;

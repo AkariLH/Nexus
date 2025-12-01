@@ -4,7 +4,7 @@ import Constants from 'expo-constants';
 // Detectar automáticamente la URL correcta según la plataforma
 const getBaseUrl = () => {
   // IP de tu computadora en la red local (cambiar si tu IP cambia)
-  const LOCAL_NETWORK_IP = '192.168.0.26';
+  const LOCAL_NETWORK_IP = '192.168.1.95';
   
   // Para Expo Go, siempre usar la IP de red local
   const expoConfig = Constants.expoConfig;
@@ -60,6 +60,17 @@ export const API_CONFIG = {
       REJECT: '/events/:eventId/reject/:userId',
       UPDATE: '/events/:eventId/user/:userId',
       DELETE: '/events/:eventId/user/:userId',
+    },
+    EXTERNAL_CALENDARS: {
+      LINK: '/calendars/external/link/:userId',
+      UNLINK: '/calendars/external/unlink/:userId/:deviceCalendarId',
+      GET_USER_CALENDARS: '/calendars/external/:userId',
+      UPDATE_SETTINGS: '/calendars/external/:userId/:deviceCalendarId',
+      SYNC_EVENTS: '/calendars/external/sync/:userId',
+      GET_EVENTS: '/calendars/external/events/:userId',
+      GET_AVAILABILITY: '/calendars/external/availability/:userId',
+      GET_MUTUAL_AVAILABILITY: '/calendars/external/mutual-availability',
+      HEALTH: '/calendars/external/health',
     },
   },
   

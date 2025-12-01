@@ -16,6 +16,8 @@ import eventService, { EventResponse } from "../../services/event.service";
 import { API_CONFIG } from "../../config/api.config";
 import { expandRecurringEvent } from "../../utils/recurrenceUtils";
 import { EventDetailsModal } from "../components/EventDetailsModal";
+import { externalCalendarIntegration, ExternalEventDTO } from "../../services/externalCalendar.integration.service";
+import { ExternalEventDetailModal, ExternalEventDetail } from "../components/ExternalEventDetailModal";
 
 type ViewMode = "month" | "week" | "day";
 
@@ -27,6 +29,8 @@ interface Event {
   color: string;
   isShared: boolean;
   isAllDay: boolean;
+  isExternal?: boolean; // Marca si viene de calendario externo
+  isReadOnly?: boolean; // Marca si es solo lectura
 }
 
 export default function CalendarioScreen() {
@@ -41,6 +45,10 @@ export default function CalendarioScreen() {
   const [selectedEvent, setSelectedEvent] = useState<EventResponse | null>(null);
   const [showEventModal, setShowEventModal] = useState(false);
   const [fullEventsData, setFullEventsData] = useState<EventResponse[]>([]);
+  const [partnerId, setPartnerId] = useState<number | null>(null);
+  const [externalEventDetails, setExternalEventDetails] = useState<ExternalEventDetail | null>(null);
+  const [showExternalEventModal, setShowExternalEventModal] = useState(false);
+  const [externalEventsData, setExternalEventsData] = useState<ExternalEventDTO[]>([]);
 
   const checkLinkStatus = useCallback(async () => {
     if (!user?.userId) return;
@@ -51,6 +59,13 @@ export default function CalendarioScreen() {
       if (response.ok) {
         const data = await response.json();
         setHasActiveLink(data.hasActiveLink);
+        
+        // Guardar partnerId para cargar sus eventos externos
+        if (data.hasActiveLink && data.partner) {
+          setPartnerId(data.partner.userId);
+        } else {
+          setPartnerId(null);
+        }
       }
     } catch (error) {
       console.error('Error verificando estado del vínculo:', error);
@@ -67,8 +82,43 @@ export default function CalendarioScreen() {
       // Guardar eventos completos para el modal
       setFullEventsData(userEvents);
       
-      // Filtrar solo eventos completamente aprobados
-      const approvedEvents = userEvents.filter((event: EventResponse) => event.fullyApproved);
+      console.log('=== DEBUG CARGA DE EVENTOS ===');
+      console.log(`Total eventos del usuario: ${userEvents.length}`);
+      
+      // Mostrar detalles de cada evento
+      userEvents.forEach((event: EventResponse, index: number) => {
+        console.log(`\nEvento ${index + 1}:`, {
+          id: event.id,
+          title: event.title,
+          status: event.status,
+          creatorApproved: event.creatorApproved,
+          partnerApproved: event.partnerApproved,
+          fullyApproved: event.fullyApproved,
+          startDateTime: event.startDateTime,
+          isRecurring: event.isRecurring,
+          recurrencePattern: event.recurrencePattern,
+          // Verificar tipos
+          typeOfIsRecurring: typeof event.isRecurring,
+          typeOfPattern: typeof event.recurrencePattern,
+        });
+        
+        // Alertar si hay inconsistencias
+        if (event.isRecurring && !event.recurrencePattern) {
+          console.warn(`⚠️ EVENTO ${event.id}: Marcado como recurrente pero SIN patrón`);
+        }
+        if (!event.isRecurring && event.recurrencePattern) {
+          console.warn(`⚠️ EVENTO ${event.id}: Tiene patrón pero NO marcado como recurrente`);
+        }
+      });
+      
+      // Filtrar eventos que deben mostrarse en el calendario:
+      // - Eventos completamente aprobados (ambos usuarios aprobaron)
+      // - Eventos propios aprobados por el creador (creatorApproved) independientemente del estado de la pareja
+      const approvedEvents = userEvents.filter((event: EventResponse) => 
+        event.fullyApproved || event.creatorApproved
+      );
+      
+      console.log(`\nEventos filtrados para mostrar: ${approvedEvents.length}`);
       
       // Calcular rango de expansión: 6 meses antes y 12 meses después
       const startRange = new Date();
@@ -88,13 +138,59 @@ export default function CalendarioScreen() {
         console.log('isRecurring:', event.isRecurring, 'pattern:', event.recurrencePattern);
         console.log('Fecha inicio:', event.startDateTime);
         
-        // Verificar si es evento de todo el día
-        const startDate = new Date(event.startDateTime);
-        const endDate = new Date(event.endDateTime);
-        const isAllDay = startDate.getHours() === 0 && startDate.getMinutes() === 0 &&
-                        endDate.getHours() === 23 && endDate.getMinutes() === 59;
+        // Parsear fechas del backend (formato UTC ISO)
+        let startDate: Date;
+        let endDate: Date;
+        
+        // Verificar si es evento de todo el día comparando las horas en UTC
+        const tempStart = new Date(event.startDateTime);
+        const tempEnd = new Date(event.endDateTime);
+        
+        console.log(`🔍 Verificando si es todo el día:`);
+        console.log(`   Start UTC: ${event.startDateTime} -> ${tempStart.getUTCHours()}:${tempStart.getUTCMinutes()}`);
+        console.log(`   End UTC: ${event.endDateTime} -> ${tempEnd.getUTCHours()}:${tempEnd.getUTCMinutes()}`);
+        
+        // Evento de todo el día si:
+        // - Empieza a medianoche UTC (00:00)
+        // - Y termina a las 23:59 UTC del mismo día
+        const startsAtMidnight = tempStart.getUTCHours() === 0 && tempStart.getUTCMinutes() === 0;
+        const endsAt2359 = tempEnd.getUTCHours() === 23 && tempEnd.getUTCMinutes() === 59;
+        
+        // TAMBIÉN aceptar eventos que abarcan 24 horas completas (creados antes del fix)
+        // Por ejemplo: 2025-12-14 06:00:00 hasta 2025-12-15 05:59:59 en zona UTC-6
+        const durationHours = (tempEnd.getTime() - tempStart.getTime()) / (1000 * 60 * 60);
+        const isFullDayDuration = Math.abs(durationHours - 24) < 0.1; // ~24 horas
+        
+        const isAllDay = (startsAtMidnight && endsAt2359) || isFullDayDuration;
+        
+        console.log(`   Es todo el día: ${isAllDay} (midnight: ${startsAtMidnight}, ends2359: ${endsAt2359}, duration: ${durationHours}h)`);
+        
+        if (isAllDay) {
+          // Para eventos de todo el día, extraer fecha sin conversión de zona horaria
+          const startISO = event.startDateTime.substring(0, 10);
+          const endISO = event.endDateTime.substring(0, 10);
+          
+          const [startYear, startMonth, startDay] = startISO.split('-').map(Number);
+          const [endYear, endMonth, endDay] = endISO.split('-').map(Number);
+          
+          startDate = new Date(startYear, startMonth - 1, startDay, 0, 0, 0, 0);
+          endDate = new Date(endYear, endMonth - 1, endDay, 23, 59, 59, 999);
+          
+          console.log(`📅 Evento todo el día regular: ${event.title} -> ${startDate.toLocaleDateString()}`);
+        } else {
+          // Para eventos con hora específica, usar conversión estándar UTC -> local
+          startDate = new Date(event.startDateTime);
+          endDate = new Date(event.endDateTime);
+        }
         
         if (event.isRecurring && event.recurrencePattern) {
+          console.log('🔄 Expandiendo evento recurrente:', {
+            id: event.id,
+            title: event.title,
+            pattern: event.recurrencePattern,
+            start: event.startDateTime
+          });
+          
           // Expandir el evento recurrente en múltiples ocurrencias
           const occurrences = expandRecurringEvent(
             {
@@ -102,12 +198,16 @@ export default function CalendarioScreen() {
               endDateTime: event.endDateTime,
               isRecurring: event.isRecurring,
               recurrencePattern: event.recurrencePattern,
+              rruleDtstartUtc: event.rruleDtstartUtc,
             },
             startRange,
             endRange
           );
 
-          console.log('Ocurrencias generadas:', occurrences.length);
+          console.log('✅ Ocurrencias generadas:', occurrences.length);
+          if (occurrences.length === 0) {
+            console.warn('⚠️ No se generaron ocurrencias para evento recurrente:', event.id, event.title);
+          }
           
           // Debug: Ver las excepciones del evento
           console.log(`📋 Evento ${event.id} (${event.title}):`, {
@@ -172,13 +272,190 @@ export default function CalendarioScreen() {
         }
       });
 
+      // Cargar eventos externos del backend (RF-23)
+      try {
+        console.log('📅 Cargando eventos externos...');
+        const externalEvents = await externalCalendarIntegration.getExternalEvents(
+          user.userId,
+          startRange,
+          endRange,
+          partnerId || undefined // Pasar partnerId para obtener también sus eventos
+        );
+        
+        console.log(`✅ Eventos externos cargados: ${externalEvents.length}`);
+        
+        // Guardar eventos externos completos para el modal
+        setExternalEventsData(externalEvents);
+        
+        // Convertir eventos externos a formato Event
+        externalEvents.forEach((extEvent: ExternalEventDTO) => {
+          // El backend envía Instant (ISO string en UTC), convertir a fecha local
+          // Para eventos de todo el día, mantener la fecha sin ajuste de zona
+          let startDate: Date;
+          let endDate: Date;
+          
+          if (extEvent.isAllDay) {
+            // Para eventos de todo el día, extraer la fecha sin conversión de zona horaria
+            // El backend envía: "2025-12-03T00:00:00.000Z"
+            // Queremos: 3 de diciembre (sin importar la zona horaria)
+            
+            // Extraer año-mes-día del string ISO
+            const startISO = extEvent.startDatetime.substring(0, 10); // "2025-12-03"
+            const endISO = extEvent.endDatetime.substring(0, 10);
+            
+            const [startYear, startMonth, startDay] = startISO.split('-').map(Number);
+            const [endYear, endMonth, endDay] = endISO.split('-').map(Number);
+            
+            // Crear fecha local con esos componentes (mes es 0-indexed)
+            startDate = new Date(startYear, startMonth - 1, startDay, 0, 0, 0, 0);
+            endDate = new Date(endYear, endMonth - 1, endDay, 23, 59, 59, 999);
+            
+            console.log(`📅 Evento todo el día: ${extEvent.title}`);
+            console.log(`   ISO: ${startISO} -> Local: ${startDate.toLocaleDateString()} (${startDate.getDate()}/${startDate.getMonth()}/${startDate.getFullYear()})`);
+          } else {
+            // Para eventos con hora, usar la conversión estándar (UTC -> local)
+            startDate = new Date(extEvent.startDatetime);
+            endDate = new Date(extEvent.endDatetime);
+          }
+          
+          // Si la privacidad es BUSY_ONLY, ocultar detalles
+          const isBusyOnly = extEvent.visibility === 'BUSY_ONLY';
+          
+          // Determinar si el evento es del usuario o de la pareja
+          const isOwnEvent = extEvent.ownerId === user.userId;
+          
+          // Si el evento tiene recurrencia, expandirlo
+          if (extEvent.recurrenceRule) {
+            try {
+              console.log(`🔁 Expandiendo evento externo recurrente: ${extEvent.title}`);
+              console.log(`   Start UTC: ${extEvent.startDatetime}`);
+              console.log(`   Start Local: ${startDate.toISOString()}`);
+              console.log(`   Pattern: ${extEvent.recurrenceRule}`);
+              console.log(`   RRULE DTSTART: ${extEvent.rruleDtstartUtc}`);
+              console.log(`   RRULE UNTIL: ${extEvent.rruleUntilUtc}`);
+              console.log(`   RRULE COUNT: ${extEvent.rruleCount}`);
+              
+              // Convertir las fechas locales a formato ISO local (sin el offset)
+              // Para que expandRecurringEvent use las horas correctas
+              const localStartISO = new Date(
+                startDate.getTime() - (startDate.getTimezoneOffset() * 60000)
+              ).toISOString();
+              
+              const localEndISO = new Date(
+                endDate.getTime() - (endDate.getTimezoneOffset() * 60000)
+              ).toISOString();
+              
+              // Usar rruleDtstartUtc si está disponible, pero convertido a local
+              let rruleDtstartLocal: string | undefined;
+              if (extEvent.rruleDtstartUtc) {
+                const rruleStart = new Date(extEvent.rruleDtstartUtc);
+                rruleDtstartLocal = new Date(
+                  rruleStart.getTime() - (rruleStart.getTimezoneOffset() * 60000)
+                ).toISOString();
+                console.log(`   RRULE DTSTART convertido a local: ${rruleDtstartLocal}`);
+              }
+              
+              const occurrences = expandRecurringEvent(
+                {
+                  startDateTime: localStartISO,
+                  endDateTime: localEndISO,
+                  isRecurring: true,
+                  recurrencePattern: extEvent.recurrenceRule,
+                  rruleDtstartUtc: rruleDtstartLocal,
+                },
+                startRange,
+                endRange
+              );
+
+              console.log(`✅ Evento externo "${extEvent.title}" expandido a ${occurrences.length} ocurrencias`);
+              
+              // Crear un evento para cada ocurrencia
+              const duration = endDate.getTime() - startDate.getTime();
+              
+              occurrences.forEach(occurrenceDate => {
+                const occurrenceEnd = new Date(occurrenceDate.getTime() + duration);
+                
+                formattedEvents.push({
+                  id: `external-${extEvent.id}-${occurrenceDate.getTime()}`,
+                  title: isBusyOnly ? '🔒 Ocupado' : extEvent.title,
+                  date: occurrenceDate,
+                  endDate: occurrenceEnd,
+                  color: isBusyOnly ? '#94A3B8' : (isOwnEvent ? '#10B981' : '#3B82F6'),
+                  isShared: !isOwnEvent,
+                  isAllDay: extEvent.isAllDay,
+                  isExternal: true,
+                  isReadOnly: true,
+                });
+              });
+            } catch (error) {
+              console.error(`❌ Error expandiendo evento externo recurrente "${extEvent.title}":`, error);
+              // Si falla la expansión, agregar al menos el evento base
+              formattedEvents.push({
+                id: `external-${extEvent.id}`,
+                title: isBusyOnly ? '🔒 Ocupado' : extEvent.title,
+                date: startDate,
+                endDate: endDate,
+                color: isBusyOnly ? '#94A3B8' : (isOwnEvent ? '#10B981' : '#3B82F6'),
+                isShared: !isOwnEvent,
+                isAllDay: extEvent.isAllDay,
+                isExternal: true,
+                isReadOnly: true,
+              });
+            }
+          } else {
+            // Evento no recurrente
+            formattedEvents.push({
+              id: `external-${extEvent.id}`,
+              title: isBusyOnly ? '🔒 Ocupado' : extEvent.title,
+              date: startDate,
+              endDate: endDate,
+              color: isBusyOnly ? '#94A3B8' : (isOwnEvent ? '#10B981' : '#3B82F6'),
+              isShared: !isOwnEvent,
+              isAllDay: extEvent.isAllDay,
+              isExternal: true,
+              isReadOnly: true,
+            });
+          }
+        });
+        
+        console.log(`📊 Total eventos (locales + externos): ${formattedEvents.length}`);
+      } catch (error) {
+        console.error('❌ Error cargando eventos externos:', error);
+        // Continuar sin eventos externos
+      }
+
       setEvents(formattedEvents);
     } catch (error) {
       console.error('Error cargando eventos aprobados:', error);
     }
-  }, [user?.userId]);
+  }, [user?.userId, partnerId]); // Agregar partnerId como dependencia
 
   const handleEventPress = (eventId: string) => {
+    // Verificar si es un evento externo
+    if (eventId.startsWith('external-')) {
+      // Extraer el ID del evento externo (formato: "external-{id}" o "external-{id}-{timestamp}")
+      const externalIdPart = eventId.replace('external-', '');
+      const realExternalId = externalIdPart.includes('-') ? externalIdPart.split('-')[0] : externalIdPart;
+      
+      // Buscar el evento en los datos externos completos
+      const externalEvent = externalEventsData.find(e => e.id === parseInt(realExternalId));
+      
+      if (externalEvent && externalEvent.visibility === 'FULL_DETAILS') {
+        // Solo mostrar detalles si la privacidad lo permite
+        setExternalEventDetails({
+          title: externalEvent.title,
+          description: externalEvent.description || undefined,
+          location: externalEvent.location || undefined,
+          startDate: externalEvent.startDatetime,
+          endDate: externalEvent.endDatetime,
+          allDay: externalEvent.isAllDay,
+          recurrenceRule: externalEvent.recurrenceRule || undefined,
+        });
+        setShowExternalEventModal(true);
+      }
+      return;
+    }
+    
     // Extraer el ID real del evento (quitar timestamp si es recurrente)
     const realEventId = eventId.includes('-') ? eventId.split('-')[0] : eventId;
     const fullEvent = fullEventsData.find(e => e.id === parseInt(realEventId));
@@ -217,8 +494,11 @@ export default function CalendarioScreen() {
   // Verificar cada vez que el tab obtiene foco
   useFocusEffect(
     useCallback(() => {
-      checkLinkStatus();
-      loadApprovedEvents();
+      const loadData = async () => {
+        await checkLinkStatus(); // Primero obtener partnerId
+        await loadApprovedEvents(); // Luego cargar eventos con partnerId actualizado
+      };
+      loadData();
     }, [checkLinkStatus, loadApprovedEvents])
   );
 
@@ -312,26 +592,46 @@ export default function CalendarioScreen() {
   const getWeekDays = (date: Date) => {
     const day = date.getDay();
     const diff = date.getDate() - day;
-    const sunday = new Date(date);
-    sunday.setDate(diff);
-
+    
     const week = [];
     for (let i = 0; i < 7; i++) {
-      const weekDay = new Date(sunday);
-      weekDay.setDate(sunday.getDate() + i);
+      // Crear cada día a medianoche para evitar problemas de zona horaria
+      const weekDay = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        diff + i,
+        0, 0, 0, 0
+      );
       week.push(weekDay);
     }
+    
     return week;
+  };
+
+  // Comparación robusta de fecha (día, mes, año) en hora local
+  const isSameLocalDay = (a: Date, b: Date) => {
+    return (
+      a.getFullYear() === b.getFullYear() &&
+      a.getMonth() === b.getMonth() &&
+      a.getDate() === b.getDate()
+    );
   };
 
   const getEventsForDay = (date: Date | null) => {
     if (!date) return [];
-    return events.filter(
+    const filtered = events.filter(
       (event) =>
         event.date.getDate() === date.getDate() &&
         event.date.getMonth() === date.getMonth() &&
         event.date.getFullYear() === date.getFullYear()
     );
+    
+    // Debug: mostrar eventos para días con muchos eventos
+    if (filtered.length > 5) {
+      console.log(`📅 ${date.toLocaleDateString()}: ${filtered.length} eventos`);
+    }
+    
+    return filtered;
   };
 
   const getEventsForHour = (date: Date, hour: number) => {
@@ -473,12 +773,21 @@ export default function CalendarioScreen() {
               key={event.id}
               style={styles.eventCard}
               onPress={() => handleEventPress(event.id)}
+              disabled={event.isReadOnly}
             >
               <View
                 style={[styles.eventColorBox, { backgroundColor: event.color }]}
               />
               <View style={styles.eventInfo}>
-                <Text style={styles.eventTitle}>{event.title}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Text style={styles.eventTitle}>{event.title}</Text>
+                  {event.isExternal && (
+                    <Ionicons name="cloud-outline" size={16} color="#10B981" />
+                  )}
+                  {event.isReadOnly && (
+                    <Ionicons name="lock-closed-outline" size={14} color="#64748B" />
+                  )}
+                </View>
                 <Text style={styles.eventDate}>
                   {event.date.toLocaleDateString("es", {
                     month: "short",
@@ -509,11 +818,7 @@ export default function CalendarioScreen() {
   const renderWeekView = () => {
     // Separar eventos de todo el día y eventos con hora
     const allDayEvents = events.filter(e => 
-      e.isAllDay && weekDays.some(d => 
-        d.getDate() === e.date.getDate() &&
-        d.getMonth() === e.date.getMonth() &&
-        d.getFullYear() === e.date.getFullYear()
-      )
+      e.isAllDay && weekDays.some(d => isSameLocalDay(d, e.date))
     );
 
     return (
@@ -555,33 +860,41 @@ export default function CalendarioScreen() {
         {/* Eventos de todo el día */}
         {allDayEvents.length > 0 && (
           <View style={styles.allDaySection}>
-            <View style={styles.allDayLabel}>
-              <Text style={styles.allDayLabelText}>Todo el día</Text>
-            </View>
-            <View style={styles.allDayEventsContainer}>
-              {weekDays.map((date, dayIndex) => {
-                const dayAllDayEvents = allDayEvents.filter(e =>
-                  e.date.getDate() === date.getDate() &&
-                  e.date.getMonth() === date.getMonth() &&
-                  e.date.getFullYear() === date.getFullYear()
-                );
+            <View style={{ flexDirection: 'row' }}>
+              <View style={styles.allDayLabel}>
+                <Text style={styles.allDayLabelText}>Todo el día</Text>
+              </View>
+              <View style={styles.allDayEventsContainer}>
+                {weekDays.map((date, dayIndex) => {
+                  const dayAllDayEvents = allDayEvents.filter(e => isSameLocalDay(e.date, date));
 
-                return (
-                  <View key={dayIndex} style={styles.allDayColumn}>
-                    {dayAllDayEvents.map((event) => (
-                      <TouchableOpacity
-                        key={event.id}
-                        style={[styles.allDayEvent, { backgroundColor: event.color }]}
-                        onPress={() => handleEventPress(event.id)}
-                      >
-                        <Text style={styles.allDayEventText} numberOfLines={1}>
-                          {event.title}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                );
-              })}
+                  return (
+                    <View key={dayIndex} style={styles.allDayColumn}>
+                      {dayAllDayEvents.map((event) => (
+                        <TouchableOpacity
+                          key={event.id}
+                          style={[
+                            styles.allDayEvent, 
+                            { backgroundColor: event.color },
+                            event.isReadOnly && { opacity: 0.85 }
+                          ]}
+                          onPress={() => handleEventPress(event.id)}
+                          disabled={event.isReadOnly}
+                        >
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                            <Text style={styles.allDayEventText} numberOfLines={1}>
+                              {event.title}
+                            </Text>
+                            {event.isExternal && (
+                              <Ionicons name="cloud-outline" size={10} color="white" />
+                            )}
+                          </View>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  );
+                })}
+              </View>
             </View>
           </View>
         )}
@@ -601,20 +914,51 @@ export default function CalendarioScreen() {
 
                   {/* Columnas de días */}
                   {weekDays.map((date, dayIndex) => {
-                    const isToday =
-                      date.getDate() === today.getDate() &&
-                      date.getMonth() === today.getMonth() &&
-                      date.getFullYear() === today.getFullYear();
+                    const isToday = isSameLocalDay(date, today);
 
                     // Obtener eventos de esta hora que NO sean de todo el día
                     const hourEvents = events.filter(
                       (event) =>
                         !event.isAllDay &&
-                        event.date.getDate() === date.getDate() &&
-                        event.date.getMonth() === date.getMonth() &&
-                        event.date.getFullYear() === date.getFullYear() &&
+                        isSameLocalDay(event.date, date) &&
                         event.date.getHours() === hour
                     );
+
+                    // Detectar eventos que se superponen y asignar columnas
+                    const eventsWithColumns: Array<{ event: typeof hourEvents[0], column: number, totalColumns: number }> = [];
+                    
+                    hourEvents.forEach((event, index) => {
+                      const eventStart = event.date.getTime();
+                      const eventEnd = event.endDate.getTime();
+                      
+                      // Encontrar qué columnas ya están ocupadas por eventos que se superponen
+                      const usedColumns = new Set<number>();
+                      
+                      eventsWithColumns.forEach(({ event: existingEvent, column }) => {
+                        const existingStart = existingEvent.date.getTime();
+                        const existingEnd = existingEvent.endDate.getTime();
+                        
+                        // Si hay superposición, marcar esa columna como ocupada
+                        if ((eventStart < existingEnd) && (existingStart < eventEnd)) {
+                          usedColumns.add(column);
+                        }
+                      });
+                      
+                      // Asignar la primera columna disponible
+                      let column = 0;
+                      while (usedColumns.has(column)) {
+                        column++;
+                      }
+                      
+                      eventsWithColumns.push({ event, column, totalColumns: 1 });
+                    });
+                    
+                    // Calcular el total de columnas necesarias
+                    const maxColumn = eventsWithColumns.reduce((max, e) => Math.max(max, e.column), 0);
+                    const totalColumns = maxColumn + 1;
+                    
+                    // Actualizar totalColumns para todos los eventos
+                    eventsWithColumns.forEach(e => e.totalColumns = totalColumns);
 
                     return (
                       <View
@@ -624,26 +968,54 @@ export default function CalendarioScreen() {
                           isToday && styles.weekDayCellToday,
                         ]}
                       >
-                        {hourEvents.map((event) => (
+                        {eventsWithColumns.map(({ event, column, totalColumns }) => {
+                          const minute = event.date.getMinutes();
+                          const minuteOffset = (minute / 60) * 60; // Offset en px desde el inicio de la hora
+                          
+                          // Calcular altura basada en duración
+                          const durationMs = event.endDate.getTime() - event.date.getTime();
+                          const durationHours = durationMs / (1000 * 60 * 60);
+                          const eventHeight = Math.max(40, durationHours * 60); // Mínimo 40px
+                          
+                          // Posicionamiento horizontal basado en columna asignada
+                          const eventWidthPercent = totalColumns > 1 ? 95 / totalColumns : 100;
+                          const marginLeftPercent = column * (100 / totalColumns);
+                          
+                          return (
                           <TouchableOpacity
                             key={event.id}
                             style={[
                               styles.weekTimeEvent,
-                              { backgroundColor: event.color },
+                              { 
+                                backgroundColor: event.color, 
+                                minHeight: eventHeight,
+                                width: `${eventWidthPercent}%`,
+                                marginLeft: `${marginLeftPercent}%`,
+                                position: 'absolute',
+                                top: minuteOffset,
+                              },
+                              event.isReadOnly && { opacity: 0.85 }
                             ]}
-                            onPress={() => handleEventPress(event.id)}
-                          >
-                            <Text style={styles.weekTimeEventTitle} numberOfLines={1}>
-                              {event.title}
-                            </Text>
-                            <Text style={styles.weekTimeEventTime}>
-                              {event.date.toLocaleTimeString("es", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                            </Text>
-                          </TouchableOpacity>
-                        ))}
+                              onPress={() => handleEventPress(event.id)}
+                              disabled={event.isReadOnly}
+                            >
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                                <Text style={styles.weekTimeEventTitle} numberOfLines={1}>
+                                  {event.title}
+                                </Text>
+                                {event.isExternal && (
+                                  <Ionicons name="cloud-outline" size={12} color="white" />
+                                )}
+                              </View>
+                              <Text style={styles.weekTimeEventTime}>
+                                {event.date.toLocaleTimeString("es", {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </Text>
+                            </TouchableOpacity>
+                            );
+                        })}
                       </View>
                     );
                   })}
@@ -684,8 +1056,14 @@ export default function CalendarioScreen() {
                 key={event.id}
                 style={[styles.dayAllDayEvent, { backgroundColor: event.color }]}
                 onPress={() => handleEventPress(event.id)}
+                disabled={event.isReadOnly}
               >
-                <Text style={styles.dayAllDayEventText}>{event.title}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Text style={styles.dayAllDayEventText}>{event.title}</Text>
+                  {event.isExternal && (
+                    <Ionicons name="cloud-outline" size={14} color="white" />
+                  )}
+                </View>
                 {event.isShared && (
                   <Ionicons name="heart" size={16} color="white" />
                 )}
@@ -707,6 +1085,43 @@ export default function CalendarioScreen() {
                   event.date.getFullYear() === currentDate.getFullYear() &&
                   event.date.getHours() === hour
               );
+              
+              // Detectar eventos que se superponen y asignar columnas
+              const eventsWithColumns: Array<{ event: typeof hourEvents[0], column: number, totalColumns: number }> = [];
+              
+              hourEvents.forEach((event, index) => {
+                const eventStart = event.date.getTime();
+                const eventEnd = event.endDate.getTime();
+                
+                // Encontrar qué columnas ya están ocupadas por eventos que se superponen
+                const usedColumns = new Set<number>();
+                
+                eventsWithColumns.forEach(({ event: existingEvent, column }) => {
+                  const existingStart = existingEvent.date.getTime();
+                  const existingEnd = existingEvent.endDate.getTime();
+                  
+                  // Si hay superposición, marcar esa columna como ocupada
+                  if ((eventStart < existingEnd) && (existingStart < eventEnd)) {
+                    usedColumns.add(column);
+                  }
+                });
+                
+                // Asignar la primera columna disponible
+                let column = 0;
+                while (usedColumns.has(column)) {
+                  column++;
+                }
+                
+                eventsWithColumns.push({ event, column, totalColumns: 1 });
+              });
+              
+              // Calcular el total de columnas necesarias
+              const maxColumn = eventsWithColumns.reduce((max, e) => Math.max(max, e.column), 0);
+              const totalColumns = maxColumn + 1;
+              
+              // Actualizar totalColumns para todos los eventos
+              eventsWithColumns.forEach(e => e.totalColumns = totalColumns);
+              
               const hourString = hour.toString().padStart(2, "0") + ":00";
 
               return (
@@ -717,19 +1132,46 @@ export default function CalendarioScreen() {
                   <View style={styles.timelineContent}>
                     {hourEvents.length > 0 ? (
                       <View style={styles.timelineEvents}>
-                        {hourEvents.map((event) => (
+                        {eventsWithColumns.map(({ event, column, totalColumns }) => {
+                          const minute = event.date.getMinutes();
+                          const minuteOffset = (minute / 60) * 60; // Offset en px desde el inicio de la hora
+                          
+                          // Calcular altura basada en duración (1 hora = 60px)
+                          const durationMs = event.endDate.getTime() - event.date.getTime();
+                          const durationHours = durationMs / (1000 * 60 * 60);
+                          const eventHeight = Math.max(60, durationHours * 60); // Mínimo 60px
+                          
+                          // Posicionamiento horizontal basado en columna asignada
+                          const eventWidthPercent = totalColumns > 1 ? 95 / totalColumns : 100;
+                          const marginLeftPercent = column * (100 / totalColumns);
+                          
+                          return (
                           <TouchableOpacity
                             key={event.id}
                             style={[
                               styles.timelineEventCard,
-                              { backgroundColor: event.color },
+                              { 
+                                backgroundColor: event.color, 
+                                minHeight: eventHeight,
+                                width: `${eventWidthPercent}%`,
+                                marginLeft: `${marginLeftPercent}%`,
+                                position: 'absolute',
+                                top: minuteOffset,
+                              },
+                              event.isReadOnly && { opacity: 0.85 }
                             ]}
                             onPress={() => handleEventPress(event.id)}
+                            disabled={event.isReadOnly}
                           >
                             <View style={styles.timelineEventContent}>
-                              <Text style={styles.timelineEventTitle}>
-                                {event.title}
-                              </Text>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                <Text style={styles.timelineEventTitle} numberOfLines={1}>
+                                  {event.title}
+                                </Text>
+                                {event.isExternal && (
+                                  <Ionicons name="cloud-outline" size={14} color="white" />
+                                )}
+                              </View>
                               <Text style={styles.timelineEventTime}>
                                 {event.date.toLocaleTimeString("es", {
                                   hour: "2-digit",
@@ -741,7 +1183,8 @@ export default function CalendarioScreen() {
                               <Ionicons name="heart" size={20} color="white" />
                             )}
                           </TouchableOpacity>
-                        ))}
+                          );
+                        })}
                       </View>
                     ) : null}
                   </View>
@@ -895,6 +1338,16 @@ export default function CalendarioScreen() {
         onEdit={handleEditEvent}
         onDelete={handleDeleteEvent}
         onRefresh={loadApprovedEvents}
+      />
+
+      {/* Modal de detalles de evento externo */}
+      <ExternalEventDetailModal
+        visible={showExternalEventModal}
+        event={externalEventDetails}
+        onClose={() => {
+          setShowExternalEventModal(false);
+          setExternalEventDetails(null);
+        }}
       />
     </View>
   );
@@ -1217,8 +1670,8 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   allDayEventsContainer: {
+    flex: 1,
     flexDirection: "row",
-    paddingHorizontal: 60,
     paddingBottom: 8,
   },
   allDayColumn: {
@@ -1363,7 +1816,9 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   timelineEvents: {
-    gap: 8,
+    position: 'relative',
+    minHeight: 60,
+    width: '100%',
   },
   timelineEventCard: {
     flexDirection: "row",

@@ -78,12 +78,14 @@ export function expandRecurringEvent(
     endDateTime: string;
     isRecurring?: boolean;
     recurrencePattern?: string;
+    rruleDtstartUtc?: string; // Fecha de inicio de la regla de recurrencia (DTSTART)
   },
   startRange: Date,
   endRange: Date
 ): Date[] {
   console.log('\n=== expandRecurringEvent ===');
   console.log('Event start:', event.startDateTime);
+  console.log('RRULE DTSTART:', event.rruleDtstartUtc);
   console.log('Pattern:', event.recurrencePattern);
   console.log('Range:', startRange.toISOString(), 'to', endRange.toISOString());
   
@@ -99,23 +101,44 @@ export function expandRecurringEvent(
     console.log('Pattern inválido, devolviendo fecha original');
     return [new Date(event.startDateTime)];
   }
+  
+  // Log detallado del patrón
+  if (pattern.BYDAY) {
+    console.log('🎯 BYDAY encontrado:', pattern.BYDAY);
+  } else {
+    console.log('⚠️ BYDAY no encontrado en el patrón');
+  }
 
   const occurrences: Date[] = [];
-  const eventStart = new Date(event.startDateTime);
-  const eventEnd = new Date(event.endDateTime);
-  const duration = eventEnd.getTime() - eventStart.getTime();
   
-  console.log('Event start Date:', eventStart.toISOString());
-  console.log('Event start local:', eventStart.toLocaleDateString(), eventStart.toLocaleTimeString());
+  // Usar rruleDtstartUtc si está disponible, sino usar startDateTime
+  // DTSTART es la fecha donde comienza la recurrencia según el calendario externo
+  const startISO = event.rruleDtstartUtc || event.startDateTime;
+  const endISO = event.endDateTime;
+  
+  console.log('📅 Usando DTSTART:', startISO);
+  
+  // Parsear fecha ISO a componentes locales directamente
+  // Si la fecha es "2024-12-15T10:00:00Z", queremos que sea 15 dic a las 10:00 LOCAL
+  // Soporta: 2024-12-15T10:00:00, 2024-12-15T10:00:00Z, 2024-12-15T10:00:00.000Z
+  const startMatch = startISO.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/);
+  if (!startMatch) {
+    console.error('Formato de fecha inválido:', startISO);
+    console.error('Intentando parse estándar...');
+    // Fallback: usar parse estándar
+    const fallbackDate = new Date(event.startDateTime);
+    console.log('Fecha parseada (fallback):', fallbackDate.toISOString());
+    return [fallbackDate];
+  }
+  
+  let year = parseInt(startMatch[1]);
+  let month = parseInt(startMatch[2]) - 1; // Month is 0-indexed
+  let day = parseInt(startMatch[3]);
+  let hours = parseInt(startMatch[4]);
+  let minutes = parseInt(startMatch[5]);
+  
+  console.log('Fecha parseada (componentes locales):', { year, month: month + 1, day, hours, minutes });
   console.log('FREQ:', pattern.FREQ, 'INTERVAL:', pattern.INTERVAL);
-  
-  // Trabajar con fechas locales para evitar problemas de zona horaria
-  // Para eventos anuales/mensuales, usar el día del patrón, no el de la fecha guardada
-  let year = eventStart.getFullYear();
-  let month = eventStart.getMonth();
-  let day = eventStart.getDate();
-  let hours = eventStart.getHours();
-  let minutes = eventStart.getMinutes();
   
   // Ajustar mes y día según el patrón para evitar problemas de conversión UTC
   if (pattern.FREQ === 'YEARLY' || pattern.FREQ === 'MONTHLY') {
@@ -127,10 +150,48 @@ export function expandRecurringEvent(
     }
   }
   
-  // Crear fecha actual usando componentes locales
-  let currentDate = new Date(year, month, day, hours, minutes);
+  // Crear fecha del evento usando componentes locales
+  const eventDate = new Date(year, month, day, hours, minutes);
+  console.log('Fecha original del evento:', eventDate.toLocaleDateString(), eventDate.toLocaleTimeString());
   
-  console.log('Fecha inicial ajustada:', currentDate.toLocaleDateString(), currentDate.toLocaleTimeString());
+  // OPTIMIZACIÓN: Comenzar desde el inicio del rango visible, no desde la fecha original
+  // Esto evita iterar por años de ocurrencias pasadas
+  let currentDate = new Date(eventDate);
+  
+  // Si el evento original es anterior al rango, avanzar al inicio del rango
+  if (currentDate < startRange) {
+    console.log('⚡ Evento anterior al rango, avanzando al inicio del rango...');
+    currentDate = new Date(startRange);
+    // Ajustar a la misma hora del evento original
+    currentDate.setHours(hours, minutes, 0, 0);
+    
+    // Para eventos semanales, ajustar al primer día permitido
+    if (pattern.FREQ === 'WEEKLY') {
+      if (pattern.BYDAY && pattern.BYDAY.length > 0) {
+        const allowedDays = pattern.BYDAY.map(icalDayToJsDay);
+        const currentDay = currentDate.getDay();
+        if (!allowedDays.includes(currentDay)) {
+          // Avanzar al primer día permitido
+          const nextAllowedDay = allowedDays.find(d => d >= currentDay) || allowedDays[0];
+          let daysToAdd = (nextAllowedDay - currentDay + 7) % 7;
+          if (daysToAdd === 0 && nextAllowedDay === allowedDays[0]) daysToAdd = 7;
+          currentDate.setDate(currentDate.getDate() + daysToAdd);
+        }
+      }
+      // Si no hay BYDAY, el evento se repite el mismo día de la semana que DTSTART
+      // No necesitamos ajustar nada aquí
+    }
+    
+    // Para eventos mensuales/anuales, ajustar al día correcto
+    if (pattern.FREQ === 'MONTHLY' && pattern.BYMONTHDAY) {
+      currentDate.setDate(pattern.BYMONTHDAY);
+    }
+    if (pattern.FREQ === 'YEARLY' && pattern.BYMONTH && pattern.BYMONTHDAY) {
+      currentDate.setMonth(pattern.BYMONTH - 1, pattern.BYMONTHDAY);
+    }
+  }
+  
+  console.log('Fecha inicial de búsqueda:', currentDate.toLocaleDateString(), currentDate.toLocaleTimeString());
   
   // Límite máximo: la fecha UNTIL del patrón o la fecha final del rango o 2 años desde hoy
   const maxDate = pattern.UNTIL || new Date(endRange);
@@ -138,11 +199,17 @@ export function expandRecurringEvent(
   absoluteMax.setFullYear(absoluteMax.getFullYear() + 2);
   const finalLimit = maxDate < absoluteMax ? maxDate : absoluteMax;
 
+  console.log('📅 Límites de expansión:');
+  console.log('   UNTIL del patrón:', pattern.UNTIL?.toLocaleDateString() || 'N/A');
+  console.log('   Fin del rango visible:', endRange.toLocaleDateString());
+  console.log('   Límite final usado:', finalLimit.toLocaleDateString());
+  console.log('   Máximo absoluto (2 años):', absoluteMax.toLocaleDateString());
+
   console.log('Final limit:', finalLimit.toISOString());
 
   // Límite de iteraciones para evitar bucles infinitos
   let iterations = 0;
-  const maxIterations = 1000;
+  const maxIterations = 2000; // Aumentado para eventos con muchas ocurrencias
 
   while (currentDate <= finalLimit && iterations < maxIterations) {
     iterations++;
@@ -150,12 +217,23 @@ export function expandRecurringEvent(
     // Validar según el tipo de frecuencia (usando componentes locales)
     let isValid = true;
 
-    if (pattern.FREQ === 'WEEKLY' && pattern.BYDAY) {
-      const dayOfWeek = currentDate.getDay();
-      const allowedDays = pattern.BYDAY.map(icalDayToJsDay);
-      isValid = allowedDays.includes(dayOfWeek);
-      if (iterations <= 5) {
-        console.log(`Iter ${iterations}: WEEKLY check - day=${dayOfWeek}, allowed=${allowedDays}, valid=${isValid}`);
+    if (pattern.FREQ === 'WEEKLY') {
+      if (pattern.BYDAY && pattern.BYDAY.length > 0) {
+        // Si hay BYDAY específico, validar que sea uno de esos días
+        const dayOfWeek = currentDate.getDay();
+        const allowedDays = pattern.BYDAY.map(icalDayToJsDay);
+        isValid = allowedDays.includes(dayOfWeek);
+        if (iterations <= 5) {
+          console.log(`Iter ${iterations}: WEEKLY check - day=${dayOfWeek}, allowed=${allowedDays}, valid=${isValid}`);
+        }
+      } else {
+        // Si no hay BYDAY, validar que sea el mismo día de la semana que el evento original
+        const dayOfWeek = currentDate.getDay();
+        const originalDayOfWeek = eventDate.getDay();
+        isValid = dayOfWeek === originalDayOfWeek;
+        if (iterations <= 5) {
+          console.log(`Iter ${iterations}: WEEKLY check (sin BYDAY) - day=${dayOfWeek}, original=${originalDayOfWeek}, valid=${isValid}`);
+        }
       }
     }
 
@@ -198,27 +276,23 @@ export function expandRecurringEvent(
       
       case 'WEEKLY':
         if (pattern.BYDAY && pattern.BYDAY.length > 0) {
-          // Avanzar al siguiente día permitido
-          let daysToAdd = 1;
-          let nextDate = new Date(currentDate);
-          nextDate.setDate(nextDate.getDate() + daysToAdd);
+          const allowedDays = pattern.BYDAY.map(icalDayToJsDay).sort((a, b) => a - b);
+          const currentDay = currentDate.getDay();
+          const interval = pattern.INTERVAL || 1;
           
-          const allowedDays = pattern.BYDAY.map(icalDayToJsDay);
-          const currentDayIndex = allowedDays.indexOf(currentDate.getDay());
+          // Encontrar el siguiente día permitido
+          let nextDay = allowedDays.find(d => d > currentDay);
           
-          if (currentDayIndex === allowedDays.length - 1) {
-            // Es el último día de la semana, saltar al próximo ciclo
-            const daysUntilNextCycle = 7 * (pattern.INTERVAL || 1) - (currentDate.getDay() - allowedDays[0]);
-            nextDate = new Date(currentDate);
-            nextDate.setDate(nextDate.getDate() + daysUntilNextCycle);
+          if (nextDay !== undefined) {
+            // Hay un día permitido más adelante en esta semana
+            const daysToAdd = nextDay - currentDay;
+            currentDate.setDate(currentDate.getDate() + daysToAdd);
           } else {
-            // Avanzar al siguiente día permitido
-            const nextAllowedDay = allowedDays[currentDayIndex + 1];
-            daysToAdd = (nextAllowedDay - currentDate.getDay() + 7) % 7;
-            nextDate.setDate(currentDate.getDate() + daysToAdd);
+            // No hay más días permitidos en esta semana, ir a la próxima semana (con intervalo)
+            const firstAllowedDay = allowedDays[0];
+            const daysToNextWeek = (7 - currentDay + firstAllowedDay) + (7 * (interval - 1));
+            currentDate.setDate(currentDate.getDate() + daysToNextWeek);
           }
-          
-          currentDate = nextDate;
         } else {
           currentDate.setDate(currentDate.getDate() + (7 * (pattern.INTERVAL || 1)));
         }
@@ -254,6 +328,16 @@ export function expandRecurringEvent(
   if (occurrences.length > 0) {
     console.log('Primera ocurrencia:', occurrences[0].toISOString());
     console.log('Última ocurrencia:', occurrences[occurrences.length - 1].toISOString());
+  } else {
+    console.warn('⚠️ NO SE GENERARON OCURRENCIAS');
+    console.warn('Detalles:', {
+      eventStart: event.startDateTime,
+      pattern: event.recurrencePattern,
+      startRange: startRange.toISOString(),
+      endRange: endRange.toISOString(),
+      iterations,
+      currentDateFinal: currentDate.toISOString()
+    });
   }
 
   return occurrences;

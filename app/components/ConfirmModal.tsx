@@ -63,9 +63,14 @@ export function ConfirmModal({
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             {/* Icono */}
-            <View style={[styles.iconContainer, { backgroundColor: `${icon.color}20` }]}>
-              <Ionicons name={icon.name} size={48} color={icon.color} />
-            </View>
+            <LinearGradient
+              colors={["#FF4F81", "#8A2BE2"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.iconContainer}
+            >
+              <Ionicons name={icon.name} size={48} color="#FFFFFF" />
+            </LinearGradient>
 
             {/* Título */}
             <Text style={styles.modalTitle}>{title}</Text>

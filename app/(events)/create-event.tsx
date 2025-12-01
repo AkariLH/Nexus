@@ -134,25 +134,28 @@ export default function CreateEventScreen() {
       let endDateTime: Date;
       
       if (isAllDay) {
-        // Todo el día: inicio 00:00, fin 23:59
-        startDateTime = new Date(
+        // Todo el día: crear fechas en UTC directamente para evitar conversión de zona horaria
+        // Backend espera: 2025-12-14T00:00:00.000Z para el 14 de diciembre
+        startDateTime = new Date(Date.UTC(
           startDate.getFullYear(),
           startDate.getMonth(),
           startDate.getDate(),
           0,
           0,
+          0,
           0
-        );
-        endDateTime = new Date(
+        ));
+        endDateTime = new Date(Date.UTC(
           endDate.getFullYear(),
           endDate.getMonth(),
           endDate.getDate(),
           23,
           59,
-          59
-        );
+          59,
+          999
+        ));
       } else {
-        // Con hora específica
+        // Con hora específica: usar conversión normal (local -> UTC)
         startDateTime = new Date(
           startDate.getFullYear(),
           startDate.getMonth(),
@@ -232,6 +235,14 @@ export default function CreateEventScreen() {
         recurrencePattern: recurrencePattern,
         color: selectedColor,
       };
+
+      console.log('📝 Enviando evento al backend:', {
+        ...eventData,
+        isRecurring: eventData.isRecurring,
+        recurrencePattern: eventData.recurrencePattern,
+        typeOfIsRecurring: typeof eventData.isRecurring,
+        typeOfPattern: typeof eventData.recurrencePattern,
+      });
 
       const response = await eventService.createEvent(user.userId, eventData);
       

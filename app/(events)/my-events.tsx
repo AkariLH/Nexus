@@ -152,13 +152,13 @@ export default function MyEventsScreen() {
       <View style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color="#374151" />
+            <Ionicons name="arrow-back" size={24} color="#1A1A1A" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Mis Eventos</Text>
           <View style={styles.backButton} />
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#8B5CF6" />
+          <ActivityIndicator size="large" color="#FF4F81" />
         </View>
       </View>
     );
@@ -168,7 +168,7 @@ export default function MyEventsScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#374151" />
+          <Ionicons name="arrow-back" size={24} color="#1A1A1A" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Mis Eventos</Text>
         <View style={styles.backButton} />
@@ -195,7 +195,7 @@ export default function MyEventsScreen() {
               onPress={() => router.push('/(events)/create-event')}
             >
               <LinearGradient
-                colors={['#8B5CF6', '#EC4899']}
+                colors={['#FF4F81', '#8A2BE2']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.createButtonGradient}
@@ -248,7 +248,7 @@ export default function MyEventsScreen() {
 
                   <View style={styles.eventDetails}>
                     <View style={styles.eventDetailRow}>
-                      <Ionicons name="calendar-outline" size={16} color="#6B7280" />
+                      <Ionicons name="calendar-outline" size={16} color="#FF4F81" />
                       <Text style={styles.eventDetailText}>
                         {formatDateTime(event.startDateTime)}
                       </Text>
@@ -256,7 +256,7 @@ export default function MyEventsScreen() {
 
                     {event.location && (
                       <View style={styles.eventDetailRow}>
-                        <Ionicons name="location-outline" size={16} color="#6B7280" />
+                        <Ionicons name="location-outline" size={16} color="#FF4F81" />
                         <Text style={styles.eventDetailText} numberOfLines={1}>
                           {event.location}
                         </Text>
@@ -265,7 +265,7 @@ export default function MyEventsScreen() {
 
                     {event.category && (
                       <View style={styles.eventDetailRow}>
-                        <Ionicons name="pricetag-outline" size={16} color="#6B7280" />
+                        <Ionicons name="pricetag-outline" size={16} color="#FF4F81" />
                         <Text style={styles.eventDetailText}>
                           {event.category}
                         </Text>
@@ -274,7 +274,7 @@ export default function MyEventsScreen() {
 
                     {event.partnerName && (
                       <View style={styles.eventDetailRow}>
-                        <Ionicons name="person-outline" size={16} color="#6B7280" />
+                        <Ionicons name="person-outline" size={16} color="#FF4F81" />
                         <Text style={styles.eventDetailText}>
                           Con {event.partnerNickname || event.partnerName}
                         </Text>
@@ -415,7 +415,7 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   createButton: {
-    borderRadius: 12,
+    borderRadius: 24,
     overflow: 'hidden',
   },
   createButtonGradient: {
@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#8B5CF6',
+    color: '#FF4F81',
     marginBottom: 4,
   },
   statLabel: {
@@ -522,7 +522,7 @@ const styles = StyleSheet.create({
   approvalTitle: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#374151',
+    color: '#1A1A1A',
     marginBottom: 6,
   },
   approvalDetails: {

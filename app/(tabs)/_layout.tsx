@@ -109,6 +109,12 @@ export default function TabLayout() {
           href: null, // No mostrar en tabs, accesible desde perfil
         }}
       />
+      <Tabs.Screen
+        name="link-external-calendars"
+        options={{
+          href: null, // No mostrar en tabs, accesible desde configuraciones
+        }}
+      />
     </Tabs>
   );
 }
