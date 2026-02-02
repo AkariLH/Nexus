@@ -106,8 +106,6 @@ export function ConfirmModal({
                     colors={
                       type === "error"
                         ? ["#EF4444", "#DC2626"]
-                        : type === "success"
-                        ? ["#10B981", "#059669"]
                         : ["#FF4F81", "#8A2BE2"]
                     }
                     start={{ x: 0, y: 0 }}

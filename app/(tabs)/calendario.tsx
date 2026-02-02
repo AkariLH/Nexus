@@ -112,13 +112,12 @@ export default function CalendarioScreen() {
       });
       
       // Filtrar eventos que deben mostrarse en el calendario:
-      // - Eventos completamente aprobados (ambos usuarios aprobaron)
-      // - Eventos propios aprobados por el creador (creatorApproved) independientemente del estado de la pareja
+      // SOLO eventos completamente aprobados por ambos miembros de la pareja
       const approvedEvents = userEvents.filter((event: EventResponse) => 
-        event.fullyApproved || event.creatorApproved
+        event.fullyApproved === true
       );
       
-      console.log(`\nEventos filtrados para mostrar: ${approvedEvents.length}`);
+      console.log(`\nEventos filtrados para mostrar (solo aprobados por ambos): ${approvedEvents.length}`);
       
       // Calcular rango de expansión: 6 meses antes y 12 meses después
       const startRange = new Date();
@@ -272,6 +271,54 @@ export default function CalendarioScreen() {
         }
       });
 
+      // Función para detectar si un evento externo es duplicado de uno de Nexus
+      const isDuplicateEvent = (externalEvent: ExternalEventDTO, nexusEvents: EventResponse[]): boolean => {
+        return nexusEvents.some(nexusEvent => {
+          // Comparar título (case insensitive y normalizado)
+          const externalTitle = externalEvent.title.trim().toLowerCase();
+          const nexusTitle = nexusEvent.title.trim().toLowerCase();
+          
+          if (externalTitle !== nexusTitle) {
+            return false;
+          }
+          
+          // Comparar fechas de inicio con tolerancia de ±5 minutos
+          const externalStart = new Date(externalEvent.startDatetime).getTime();
+          const nexusStart = new Date(nexusEvent.startDateTime).getTime();
+          const timeDiff = Math.abs(externalStart - nexusStart);
+          const fiveMinutes = 5 * 60 * 1000;
+          
+          if (timeDiff > fiveMinutes) {
+            return false;
+          }
+          
+          // Verificar duración del evento (opcional, pero aumenta precisión)
+          const externalDuration = new Date(externalEvent.endDatetime).getTime() - externalStart;
+          const nexusDuration = new Date(nexusEvent.endDateTime).getTime() - nexusStart;
+          const durationDiff = Math.abs(externalDuration - nexusDuration);
+          const tenMinutes = 10 * 60 * 1000;
+          
+          if (durationDiff > tenMinutes) {
+            return false;
+          }
+          
+          // Si ubicación está presente en ambos, compararla
+          if (externalEvent.location && nexusEvent.location) {
+            const externalLoc = externalEvent.location.trim().toLowerCase();
+            const nexusLoc = nexusEvent.location.trim().toLowerCase();
+            
+            // Si las ubicaciones son muy diferentes, probablemente no es el mismo evento
+            if (externalLoc !== nexusLoc && !externalLoc.includes(nexusLoc) && !nexusLoc.includes(externalLoc)) {
+              return false;
+            }
+          }
+          
+          // Si título, fecha y duración coinciden (y opcionalmente ubicación), es duplicado
+          console.log(`🔍 Duplicado detectado: "${externalEvent.title}" (${new Date(externalEvent.startDatetime).toLocaleString()}) en calendario externo coincide con evento de Nexus (ID: ${nexusEvent.id})`);
+          return true;
+        });
+      };
+
       // Cargar eventos externos del backend (RF-23)
       try {
         console.log('📅 Cargando eventos externos...');
@@ -284,11 +331,22 @@ export default function CalendarioScreen() {
         
         console.log(`✅ Eventos externos cargados: ${externalEvents.length}`);
         
+        // Filtrar eventos externos que son duplicados de eventos de Nexus
+        const nonDuplicateExternalEvents = externalEvents.filter(extEvent => {
+          const isDuplicate = isDuplicateEvent(extEvent, approvedEvents);
+          if (isDuplicate) {
+            console.log(`⏭️ Omitiendo evento externo duplicado: "${extEvent.title}"`);
+          }
+          return !isDuplicate;
+        });
+        
+        console.log(`📊 Eventos externos después de filtrar duplicados: ${nonDuplicateExternalEvents.length} (omitidos: ${externalEvents.length - nonDuplicateExternalEvents.length})`);
+        
         // Guardar eventos externos completos para el modal
-        setExternalEventsData(externalEvents);
+        setExternalEventsData(nonDuplicateExternalEvents);
         
         // Convertir eventos externos a formato Event
-        externalEvents.forEach((extEvent: ExternalEventDTO) => {
+        nonDuplicateExternalEvents.forEach((extEvent: ExternalEventDTO) => {
           // El backend envía Instant (ISO string en UTC), convertir a fecha local
           // Para eventos de todo el día, mantener la fecha sin ajuste de zona
           let startDate: Date;
@@ -1349,6 +1407,21 @@ export default function CalendarioScreen() {
           setExternalEventDetails(null);
         }}
       />
+
+      {/* Botón flotante de recomendaciones */}
+      <TouchableOpacity
+        style={styles.recommendationsButton}
+        onPress={() => router.push('/(tabs)/recommendations')}
+      >
+        <LinearGradient
+          colors={["#FF4F81", "#8A2BE2"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.recommendationsGradient}
+        >
+          <Ionicons name="bulb" size={24} color="#FFFFFF" />
+        </LinearGradient>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -1870,6 +1943,24 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontWeight: "600",
     flex: 1,
+  },
+  recommendationsButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    borderRadius: 28,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  recommendationsGradient: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

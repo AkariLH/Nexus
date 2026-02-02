@@ -61,18 +61,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="perfil"
-        options={{
-          title: "Perfil",
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "person" : "person-outline"} color={color} size={24} />
-          ),
-        }}
-        listeners={{
-          tabPress: (e) => handleTabPress(e, 'perfil'),
-        }}
-      />
-      <Tabs.Screen
         name="link"
         options={{
           title: "Vinculo",
@@ -84,6 +72,19 @@ export default function TabLayout() {
           tabPress: (e) => handleTabPress(e, 'link'),
         }}
       />
+      <Tabs.Screen
+        name="perfil"
+        options={{
+          title: "Perfil",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "person" : "person-outline"} color={color} size={24} />
+          ),
+        }}
+        listeners={{
+          tabPress: (e) => handleTabPress(e, 'perfil'),
+        }}
+      />
+      
       <Tabs.Screen
         name="configuraciones"
         options={{
@@ -111,6 +112,12 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="link-external-calendars"
+        options={{
+          href: null, // No mostrar en tabs, accesible desde configuraciones
+        }}
+      />
+      <Tabs.Screen
+        name="recommendations"
         options={{
           href: null, // No mostrar en tabs, accesible desde configuraciones
         }}

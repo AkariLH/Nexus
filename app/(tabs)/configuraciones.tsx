@@ -120,6 +120,24 @@ export default function ConfiguracionesScreen() {
       <Header onBack={() => router.back()} />
 
       <View style={styles.content}>
+        {/* Horarios permitidos */}
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => router.push('/(settings)/availability-schedule')}
+          disabled={isLoading}
+        >
+          <View style={styles.actionLeft}>
+            <View style={styles.iconContainer}>
+              <Ionicons name="time-outline" size={24} color="#1A1A1A" />
+            </View>
+            <View>
+              <Text style={styles.actionTitle}>Horarios permitidos</Text>
+              <Text style={styles.actionSubtitle}>Define tu disponibilidad para recomendaciones</Text>
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="#1A1A1A66" />
+        </TouchableOpacity>
+
         {/* Calendarios Externos */}
         <TouchableOpacity
           style={styles.actionButton}

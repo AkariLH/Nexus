@@ -85,12 +85,12 @@ export default function LinkExternalCalendarsScreen() {
 
     setConfirmModal({
       visible: true,
-      message: `¿Deseas desvincular "${calendar.calendarName}"? Los eventos sincronizados se mantendrán en el backend.`,
+      message: `¿Deseas desvincular "${calendar.calendarName}"? Se eliminarán todos los eventos sincronizados de este calendario.`,
       onConfirm: async () => {
         try {
           setLoading(true);
           await externalCalendarIntegration.unlinkCalendar(user.userId, calendar.deviceCalendarId);
-          setSuccessModal({ visible: true, message: 'Calendario desvinculado' });
+          setSuccessModal({ visible: true, message: 'Calendario desvinculado y eventos eliminados' });
           await loadCalendars();
         } catch (error) {
           console.error('Error desvinculando calendario:', error);

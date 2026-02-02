@@ -4,7 +4,7 @@ import Constants from 'expo-constants';
 // Detectar automáticamente la URL correcta según la plataforma
 const getBaseUrl = () => {
   // IP de tu computadora en la red local (cambiar si tu IP cambia)
-  const LOCAL_NETWORK_IP = '192.168.1.95';
+  const LOCAL_NETWORK_IP = '10.100.79.237';
   
   // Para Expo Go, siempre usar la IP de red local
   const expoConfig = Constants.expoConfig;

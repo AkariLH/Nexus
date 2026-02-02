@@ -2,6 +2,7 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import { useEffect, useState } from "react";
 import { AuthProvider, useAuth } from "../context/AuthContext";
 import { QuestionnaireProvider } from "../context/QuestionnaireContext";
+import { AvailabilityProvider } from "../context/AvailabilityContext";
 import notificationService from "../services/firebase.service";
 import { externalCalendarIntegration } from "../services/externalCalendar.integration.service";
 
@@ -105,7 +106,9 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <QuestionnaireProvider>
-        <RootNavigator />
+        <AvailabilityProvider>
+          <RootNavigator />
+        </AvailabilityProvider>
       </QuestionnaireProvider>
     </AuthProvider>
   );
