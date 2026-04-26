@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
+import { processProfilePhoto } from '@/utils/imageProcessor';
 import { Header } from "../components/layout/Header";
 import { GradientButton } from "../components/ui/GradientButton";
 import { ErrorModal } from "../components/ErrorModal";
@@ -149,7 +150,6 @@ export default function PerfilScreen() {
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.3,
-        base64: true,
       });
 
       if (result.canceled) {
@@ -165,36 +165,16 @@ export default function PerfilScreen() {
       }
 
       const asset = result.assets[0];
-      
-      if (!asset.base64) {
-        setErrorModal({
-          visible: true,
-          message: "Error al procesar la imagen",
-        });
-        return;
-      }
 
       setIsUploadingAvatar(true);
 
-      // Detectar tipo MIME
-      const uri = asset.uri;
-      let mimeType = 'image/jpeg';
-      if (uri.toLowerCase().includes('.png')) mimeType = 'image/png';
-      if (uri.toLowerCase().includes('.webp')) mimeType = 'image/webp';
-
-      // Construir data URI
-      const imageBase64 = `data:${mimeType};base64,${asset.base64}`;
-
-      // Validar tamaño
-      const sizeInBytes = asset.base64.length * 0.75;
-      const sizeInKB = Math.round(sizeInBytes / 1024);
-      
-      console.log(`📊 Tamaño de imagen: ${sizeInKB} KB`);
-      
-      if (sizeInBytes > 1024 * 1024) {
+      let imageBase64: string;
+      try {
+        imageBase64 = await processProfilePhoto(asset);
+      } catch {
         setErrorModal({
           visible: true,
-          message: `La imagen es demasiado grande (${sizeInKB} KB). Máximo 1 MB (1024 KB) permitido.`,
+          message: 'No se pudo procesar la imagen. Por favor elige una diferente.',
         });
         setIsUploadingAvatar(false);
         return;
