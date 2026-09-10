@@ -5,8 +5,12 @@ import Constants from 'expo-constants';
  * ruta. Se valida con regex y no con `new URL()` a propósito: la implementación de `URL` en
  * React Native es un polyfill parcial y su comportamiento ante entradas inválidas no es el del
  * estándar. Una regex explícita se comporta igual en Node (jest) y en Hermes.
+ *
+ * El flag `i` es deliberado: RFC 3986 §3.1 declara el esquema insensible a mayúsculas, de modo
+ * que `HTTP://host/api` es una URL válida. Rechazarla sería más estricto que el estándar sin
+ * ganar nada a cambio.
  */
-const API_URL_SHAPE = /^https?:\/\/[^\s/?#]+(?:\/[^\s?#]*)?$/;
+const API_URL_SHAPE = /^https?:\/\/[^\s/?#]+(?:\/[^\s?#]*)?$/i;
 
 /** Puerto en el que escucha el backend Spring en desarrollo. Solo se usa para sugerir. */
 const BACKEND_DEV_PORT = '8080';
