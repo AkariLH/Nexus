@@ -31,7 +31,14 @@ yarn-error.*
 *.pem
 
 # local env files
+# Expo busca las EXPO_PUBLIC_* en Nexus/.env por defecto, asi que ese fichero puede
+# aparecer aqui en cuanto alguien arranque sin `make front-run`. Cubrimos .env y sus
+# variantes igual que el .gitignore de la raiz, que existe porque el proyecto ya sufrio
+# exactamente esta fuga una vez con application.properties.
+.env
+.env.*
 .env*.local
+!.env.example
 
 # typescript
 *.tsbuildinfo
