@@ -19,6 +19,7 @@ import { Header } from '../components/layout/Header';
 import { ErrorModal } from '../components/ErrorModal';
 import { SuccessModal } from '../components/SuccessModal';
 import { ConfirmModal } from '../components/ConfirmModal';
+import { API_CONFIG } from '../../config/api.config';
 
 export default function LinkExternalCalendarsScreen() {
   const { user } = useAuth();
@@ -151,9 +152,9 @@ export default function LinkExternalCalendarsScreen() {
       
       // Mensaje más específico según el tipo de error
       if (error?.code === 'ERR_NETWORK' || error?.message?.includes('Network Error')) {
-        setErrorModal({ 
-          visible: true, 
-          message: 'No se pudo conectar con el servidor. Verifica que el backend esté corriendo en http://192.168.1.95:8080'
+        setErrorModal({
+          visible: true,
+          message: `No se pudo conectar con el servidor. Verifica que el backend esté corriendo en ${API_CONFIG.BASE_URL}`
         });
       } else {
         setErrorModal({ visible: true, message: 'No se pudo sincronizar los calendarios' });

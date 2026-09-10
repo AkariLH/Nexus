@@ -10,7 +10,7 @@ import { ActionModal } from "../components/ActionModal";
 import { ErrorModal } from "../components/ErrorModal";
 import { SuccessModal } from "../components/SuccessModal";
 import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
-import { API_CONFIG } from "../../config/api.config";
+import { API_CONFIG, rebaseApiUrl } from "../../config/api.config";
 
 interface LinkStatusData {
   hasActiveLink: boolean;
@@ -196,7 +196,12 @@ export default function LinkScreen() {
   // Agregar timestamp para forzar recarga de imágenes
   const timestamp = Date.now();
   const userPhoto = user?.userId ? `${API_CONFIG.BASE_URL}/profile/${user.userId}/avatar?t=${timestamp}` : null;
-  const partnerPhoto = linkStatus.partner?.profilePhoto ? `${linkStatus.partner.profilePhoto}?t=${timestamp}` : null;
+  // El backend emite esta URL absoluta con su propio host dentro (LinkService.java:172,206).
+  // Se reapunta a la base configurada; sin esto la foto de la pareja queda rota en cuanto el
+  // host del backend no coincide con el que se compilo en el servidor.
+  const partnerPhoto = linkStatus.partner?.profilePhoto
+    ? `${rebaseApiUrl(linkStatus.partner.profilePhoto, API_CONFIG.BASE_URL)}?t=${timestamp}`
+    : null;
 
   return (
     <SafeAreaView style={styles.container}>

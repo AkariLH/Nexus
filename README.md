@@ -17,7 +17,7 @@ projects/Nexus/
     pom.xml
   Nexus/                           # App Expo (esta carpeta)
     app/                           # Pantallas y rutas (expo-router)
-    config/api.config.ts           # Lógica de BASE_URL del API (LAN/IP)
+    config/api.config.ts           # Resuelve y valida BASE_URL desde EXPO_PUBLIC_API_URL
     services/api.client.ts         # Instancia de Axios + interceptores
     app.json                       # Config de Expo (HTTP claro en Android)
     metro.config.js                # Resolver de Metro para tslib
@@ -107,12 +107,25 @@ Abre en el teléfono con Expo Go (preferentemente conexión LAN).
 
 ### Red en Dispositivo Físico (LAN)
 
-La app usa la IP LAN de tu máquina de desarrollo para llamar a la API. Actualiza esto si cambia la IP de tu PC:
+La URL del backend sale de **una sola variable de entorno**, `EXPO_PUBLIC_API_URL`. Ya no hay ninguna IP escrita en el código: si la variable falta o está mal formada, la app falla al arrancar con un mensaje que dice qué poner y dónde.
 
-- Archivo: `Nexus/config/api.config.ts`
-- Constante: `LOCAL_NETWORK_IP` (actualmente `192.168.0.208`)
+- Fichero: `NEXUSPROJECT/.env` (no se commitea)
+- Variable: `EXPO_PUBLIC_API_URL`
+- Valor: la base **completa** de la API — esquema, host, puerto y el prefijo `/api`, sin barra final
 
-La URL base generada es `http://<LOCAL_NETWORK_IP>:8080` para dispositivos móviles.
+```
+EXPO_PUBLIC_API_URL=http://<TU-IP-LAN>:8080/api
+```
+
+Averigua tu IP LAN con `hostname -I` (Linux/macOS) o `ipconfig` (Windows). Para ejecutar en web, el host es `localhost` en lugar de la IP LAN.
+
+Arranca con `make front-run` desde `NEXUSPROJECT/`: carga el `.env` y comprueba que la variable esté definida antes de llamar a Expo.
+
+Expo **congela** el valor dentro del bundle al empaquetar, así que después de cambiar la variable hay que reiniciar limpiando la caché de Metro:
+
+```
+npx expo start -c
+```
 
 Android (desarrollo) permite HTTP claro adicionalmente:
 
@@ -176,8 +189,8 @@ Invoke-WebRequest -Uri "http://<IP_PC>:8080/api/auth/health" -Method GET
 ## Notas
 
 - `app.frontend-url` en las properties del backend es informativa para futuras funciones (emails, redirecciones). No afecta la conectividad móvil.
-- Si cambia la IP de tu PC, actualiza `LOCAL_NETWORK_IP` en `api.config.ts` y recarga Expo Go.
+- Si cambia la IP de tu PC, actualiza `EXPO_PUBLIC_API_URL` en `NEXUSPROJECT/.env` y reinicia Expo con `npx expo start -c`. Recargar Expo Go no basta: el valor viaja congelado en el bundle.
 
 ---
 
-¡Feliz desarrollo! Si quieres, podemos añadir variables de entorno o un `.env` para evitar editar la IP manualmente durante el desarrollo.
+¡Feliz desarrollo! La IP ya no se edita a mano en el código: vive en `EXPO_PUBLIC_API_URL`, dentro de `NEXUSPROJECT/.env`.
