@@ -14,9 +14,10 @@ const apiClient: AxiosInstance = axios.create({
 // Interceptor para requests - agregar token si existe
 apiClient.interceptors.request.use(
   async (config) => {
-    console.log('🚀 Haciendo petición a:', `${config.baseURL || ''}${config.url || ''}`);
-    console.log('🚀 Método:', config.method);
-    console.log('🚀 Data:', config.data);
+    if (__DEV__) {
+      console.log('🚀 Haciendo petición a:', `${config.baseURL || ''}${config.url || ''}`);
+      console.log('🚀 Método:', config.method);
+    }
     // TODO: Obtener token del AsyncStorage cuando implementemos login
     // const token = await AsyncStorage.getItem('authToken');
     // if (token) {
@@ -25,7 +26,9 @@ apiClient.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error('❌ Error en request interceptor:', error);
+    if (__DEV__) {
+      console.error('❌ Error en request interceptor:', error?.message);
+    }
     return Promise.reject(error);
   }
 );
@@ -33,17 +36,18 @@ apiClient.interceptors.request.use(
 // Interceptor para responses - manejo de errores
 apiClient.interceptors.response.use(
   (response) => {
-    console.log('✅ Respuesta exitosa:', response.status, response.statusText);
-    console.log('✅ Headers:', response.headers);
-    console.log('✅ Data:', JSON.stringify(response.data, null, 2));
+    if (__DEV__) {
+      console.log('✅ Respuesta exitosa:', response.status, response.statusText);
+    }
     return response;
   },
   (error: any) => {
-    console.error('❌ Error interceptado:', error.message);
-    console.error('❌ Error code:', error.code);
-    console.error('❌ Error response:', error.response?.status, error.response?.statusText);
-    console.error('❌ Error data:', error.response?.data);
-    console.error('❌ Error request:', error.request ? 'Request was made' : 'No request');
+    if (__DEV__) {
+      console.error('❌ Error interceptado:', error.message);
+      console.error('❌ Error code:', error.code);
+      console.error('❌ Error response:', error.response?.status, error.response?.statusText);
+      console.error('❌ Error request:', error.request ? 'Request was made' : 'No request');
+    }
     // Formatear error para que sea más fácil de usar
     if (error.response) {
       // El servidor respondió con un error
