@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import preferenceService from '../services/preference.service';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -18,73 +18,46 @@ export function QuestionnaireProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [isCompleted, setIsCompleted] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [cacheTimestamp, setCacheTimestamp] = useState<number>(0);
+  // Marca de la ultima consulta al servidor. Es estado PRIVADO: ningun consumidor lo lee.
+  // En useState re-renderizaba el proveedor -> value nuevo -> re-render de todas las tabs ->
+  // sus efectos de foco volvian a llamar a checkStatus. En useRef la escritura es sincrona,
+  // lo que ademas hace que revalidate() vea el cero que acaba de escribir (nexus-PERF-07).
+  const cacheTimestampRef = useRef<number>(0);
+  // Espejo sincrono de `isCompleted` para los callbacks. No es un valor congelado: se escribe en
+  // el mismo tick que el setState. Existe para que checkStatus / checkStatusInBackground puedan
+  // leer el valor vigente SIN declarar `isCompleted` como dependencia — con ella, su identidad
+  // cambiaba en cada transicion, arrastraba a loadFromCache y volvia a disparar el efecto de
+  // montaje, una peticion de mas por transicion (nexus-PERF-07, R1).
+  const isCompletedRef = useRef<boolean | null>(null);
 
-  // Cargar desde caché persistente al iniciar
-  useEffect(() => {
-    if (user?.userId) {
-      loadFromCache();
-    } else {
-      setIsCompleted(null);
-      setIsLoading(false);
-    }
-  }, [user?.userId]);
+  const applyIsCompleted = useCallback((next: boolean | null) => {
+    isCompletedRef.current = next;
+    setIsCompleted(next);
+  }, []);
 
-  const loadFromCache = async () => {
-    if (!user?.userId) return;
-
-    try {
-      const cached = await AsyncStorage.getItem(`${CACHE_KEY}_${user.userId}`);
-      if (cached) {
-        const { status, timestamp } = JSON.parse(cached);
-        const now = Date.now();
-        
-        // Si el caché es válido (menos de 5 minutos), usarlo
-        if (now - timestamp < CACHE_DURATION) {
-          console.log('⚡ Usando caché persistente del cuestionario:', status);
-          setIsCompleted(status);
-          setCacheTimestamp(timestamp);
-          setIsLoading(false);
-          
-          // Si está incompleto, verificar en segundo plano por si acaso
-          if (!status) {
-            checkStatusInBackground();
-          }
-          return;
-        }
-      }
-      
-      // Si no hay caché válido, verificar
-      await checkStatus();
-    } catch (error) {
-      console.error('❌ Error cargando caché:', error);
-      await checkStatus();
-    }
-  };
-
-  const checkStatusInBackground = async () => {
-    if (!user?.userId) return;
-    
-    try {
-      const response = await preferenceService.getQuestionnaireStatus(user.userId);
-      if (response.data && response.data.completed !== isCompleted) {
-        // Solo actualizar si cambió
-        setIsCompleted(response.data.completed);
-        await saveToCache(response.data.completed);
-        console.log('🔄 Estado del cuestionario actualizado en background:', response.data.completed);
-      }
-    } catch (error) {
-      console.error('⚠️ Error verificando en background:', error);
-    }
-  };
-
-  const checkStatus = async () => {
+  const saveToCache = useCallback(async (status: boolean) => {
     if (!user?.userId) return;
 
     const now = Date.now();
-    
+    cacheTimestampRef.current = now;
+
+    try {
+      await AsyncStorage.setItem(
+        `${CACHE_KEY}_${user.userId}`,
+        JSON.stringify({ status, timestamp: now })
+      );
+    } catch (error) {
+      console.error('❌ Error guardando en caché:', error);
+    }
+  }, [user?.userId]);
+
+  const checkStatus = useCallback(async (): Promise<void> => {
+    if (!user?.userId) return;
+
+    const now = Date.now();
+
     // Evitar verificaciones duplicadas en menos de 10 segundos
-    if (now - cacheTimestamp < 10000 && isCompleted !== null) {
+    if (now - cacheTimestampRef.current < 10000 && isCompletedRef.current !== null) {
       console.log('⚡ Usando caché en memoria reciente');
       setIsLoading(false);
       return;
@@ -94,45 +67,92 @@ export function QuestionnaireProvider({ children }: { children: ReactNode }) {
     try {
       const response = await preferenceService.getQuestionnaireStatus(user.userId);
       if (response.data) {
-        setIsCompleted(response.data.completed);
+        applyIsCompleted(response.data.completed);
         await saveToCache(response.data.completed);
         console.log('✅ Estado cuestionario verificado:', response.data.completed);
       }
     } catch (error) {
       console.error('💥 Error verificando cuestionario:', error);
       // En caso de error, mantener el estado actual si existe
-      if (isCompleted === null) {
-        setIsCompleted(false);
+      if (isCompletedRef.current === null) {
+        applyIsCompleted(false);
       }
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user?.userId, applyIsCompleted, saveToCache]);
 
-  const saveToCache = async (status: boolean) => {
+  const checkStatusInBackground = useCallback(async (): Promise<void> => {
     if (!user?.userId) return;
-    
-    const now = Date.now();
-    setCacheTimestamp(now);
-    
-    try {
-      await AsyncStorage.setItem(
-        `${CACHE_KEY}_${user.userId}`,
-        JSON.stringify({ status, timestamp: now })
-      );
-    } catch (error) {
-      console.error('❌ Error guardando en caché:', error);
-    }
-  };
 
-  const revalidate = async () => {
+    try {
+      const response = await preferenceService.getQuestionnaireStatus(user.userId);
+      if (response.data && response.data.completed !== isCompletedRef.current) {
+        // Solo actualizar si cambió
+        applyIsCompleted(response.data.completed);
+        await saveToCache(response.data.completed);
+        console.log('🔄 Estado del cuestionario actualizado en background:', response.data.completed);
+      }
+    } catch (error) {
+      console.error('⚠️ Error verificando en background:', error);
+    }
+  }, [user?.userId, applyIsCompleted, saveToCache]);
+
+  const loadFromCache = useCallback(async (): Promise<void> => {
+    if (!user?.userId) return;
+
+    try {
+      const cached = await AsyncStorage.getItem(`${CACHE_KEY}_${user.userId}`);
+      if (cached) {
+        const { status, timestamp } = JSON.parse(cached);
+        const now = Date.now();
+
+        // Si el caché es válido (menos de 5 minutos), usarlo
+        if (now - timestamp < CACHE_DURATION) {
+          console.log('⚡ Usando caché persistente del cuestionario:', status);
+          applyIsCompleted(status);
+          cacheTimestampRef.current = timestamp;
+          setIsLoading(false);
+
+          // Si está incompleto, verificar en segundo plano por si acaso
+          if (!status) {
+            checkStatusInBackground();
+          }
+          return;
+        }
+      }
+
+      // Si no hay caché válido, verificar
+      await checkStatus();
+    } catch (error) {
+      console.error('❌ Error cargando caché:', error);
+      await checkStatus();
+    }
+  }, [user?.userId, applyIsCompleted, checkStatus, checkStatusInBackground]);
+
+  // Cargar desde caché persistente al iniciar
+  useEffect(() => {
+    if (user?.userId) {
+      loadFromCache();
+    } else {
+      applyIsCompleted(null);
+      setIsLoading(false);
+    }
+  }, [user?.userId, applyIsCompleted, loadFromCache]);
+
+  const revalidate = useCallback(async (): Promise<void> => {
     console.log('🔄 Revalidando estado del cuestionario (forzado)...');
-    setCacheTimestamp(0); // Invalidar caché
+    cacheTimestampRef.current = 0; // Invalidar caché — sincrono, checkStatus ya lee el cero
     await checkStatus();
-  };
+  }, [checkStatus]);
+
+  const value = useMemo<QuestionnaireContextType>(
+    () => ({ isCompleted, isLoading, revalidate }),
+    [isCompleted, isLoading, revalidate],
+  );
 
   return (
-    <QuestionnaireContext.Provider value={{ isCompleted, isLoading, revalidate }}>
+    <QuestionnaireContext.Provider value={value}>
       {children}
     </QuestionnaireContext.Provider>
   );
