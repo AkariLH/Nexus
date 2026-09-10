@@ -9,7 +9,8 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "test": "jest --coverage"
+    "test": "jest --coverage",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -41,7 +42,6 @@
     "expo-system-ui": "~6.0.8",
     "expo-web-browser": "~15.0.9",
     "framer-motion": "^12.23.24",
-    "jest": "^29.7.0",
     "moti": "^0.30.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
@@ -58,10 +58,15 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
+    "@testing-library/react-native": "^13.3.3",
+    "@types/jest": "^29.5.14",
     "@types/react": "~19.1.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
     "expo-module-scripts": "^5.0.7",
+    "jest": "^29.7.0",
+    "jest-expo": "~54.0.13",
+    "react-test-renderer": "19.1.0",
     "typescript": "~5.9.2"
   },
   "private": true,
@@ -69,6 +74,16 @@
     "preset": "jest-expo",
     "transformIgnorePatterns": [
       "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg)"
+    ],
+    "collectCoverageFrom": [
+      "app/**/*.{ts,tsx}",
+      "components/**/*.{ts,tsx}",
+      "services/**/*.ts",
+      "context/**/*.tsx",
+      "hooks/**/*.ts",
+      "utils/**/*.ts",
+      "!**/*.d.ts",
+      "!**/node_modules/**"
     ]
   }
 }
