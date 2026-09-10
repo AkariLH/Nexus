@@ -4,10 +4,18 @@ import { rebaseApiUrl, resolveApiBaseUrl, suggestApiBaseUrl } from './api.config
  * Tests de la resolución de la base de la API (nexus-OPS-03).
  *
  * `resolveApiBaseUrl` recibe el valor **por parámetro** y no lee `process.env` por dentro. Es
- * deliberado: `babel-preset-expo` inlinea las variables `EXPO_PUBLIC_*` en tiempo de bundle,
- * también bajo `jest-expo`. Un test que asignara `process.env.EXPO_PUBLIC_API_URL` antes de
- * importar el módulo no probaría nada, porque el valor ya estaría sustituido como literal en el
- * código transformado.
+ * deliberado, y la razón es que las dos plataformas no coinciden:
+ *
+ *   - En el bundle real de Expo, `babel-preset-expo` **inlinea** las `EXPO_PUBLIC_*` como
+ *     literales en tiempo de compilación.
+ *   - Bajo `jest-expo` **no** las inlinea: medido el 2026-09-09 transformando este fichero con
+ *     el babel del propio proyecto, `process.env.EXPO_PUBLIC_API_URL` se convierte en
+ *     `_env2.env.EXPO_PUBLIC_API_URL`, donde `_env2 = require("expo/virtual/env")` y ese módulo
+ *     exporta literalmente `process.env`. Es decir, una lectura en tiempo de ejecución.
+ *
+ * Tomar el valor por parámetro hace que estos tests **no dependan de ninguna de las dos**. La
+ * versión anterior de este comentario afirmaba que jest también inlinea; era falso, y el diseño
+ * es correcto igualmente — por eso el comentario se corrige y el código no.
  *
  * Aquí no aparece ninguna IP con esquema: el árbol fuente debe quedar sin literales de host.
  */
@@ -44,6 +52,13 @@ describe('resolveApiBaseUrl', () => {
 
   it('TC-08: trims surrounding whitespace before validating', () => {
     expect(resolveApiBaseUrl(`  ${VALID}  `)).toBe(VALID);
+  });
+
+  // Nota N3 de la revisión: RFC 3986 §3.1 declara el esquema insensible a mayúsculas. La primera
+  // versión rechazaba `HTTP://`, que es más estricto que el estándar sin ganar nada.
+  it('TC-13: accepts an upper-case scheme, per RFC 3986', () => {
+    expect(resolveApiBaseUrl('HTTP://api.test:8080/api')).toBe('HTTP://api.test:8080/api');
+    expect(resolveApiBaseUrl('HttpS://api.test/v1')).toBe('HttpS://api.test/v1');
   });
 });
 
