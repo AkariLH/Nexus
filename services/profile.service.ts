@@ -16,16 +16,21 @@ export const profileService = {
   ): Promise<ApiResponse<UpdateProfileResponse>> => {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.PROFILE.UPDATE.replace(':userId', userId.toString());
-      console.log('📤 Actualizando perfil:', { userId, endpoint, data });
-      
+      if (__DEV__) {
+        console.log('📤 Actualizando perfil:', { userId, endpoint });
+      }
+
       const response = await apiClient.put<UpdateProfileResponse>(endpoint, data);
-      
-      console.log('✅ Perfil actualizado:', response.data);
+
+      if (__DEV__) {
+        console.log('✅ Perfil actualizado');
+      }
       return { data: response.data };
     } catch (error: any) {
-      console.error('❌ Error al actualizar perfil:', error);
-      console.error('❌ Error completo:', JSON.stringify(error, null, 2));
-      
+      if (__DEV__) {
+        console.error('❌ Error al actualizar perfil:', error?.message);
+      }
+
       if (error.response?.data) {
         return { error: error.response.data };
       }
@@ -51,15 +56,21 @@ export const profileService = {
   ): Promise<ApiResponse<{ success: boolean; message: string; avatarUrl: string }>> => {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.PROFILE.UPDATE_AVATAR.replace(':userId', userId.toString());
-      console.log('📤 Actualizando avatar:', { userId, endpoint });
-      
+      if (__DEV__) {
+        console.log('📤 Actualizando avatar:', { userId, endpoint });
+      }
+
       const response = await apiClient.put(endpoint, { imageBase64 });
-      
-      console.log('✅ Avatar actualizado:', response.data);
+
+      if (__DEV__) {
+        console.log('✅ Avatar actualizado');
+      }
       return { data: response.data };
     } catch (error: any) {
-      console.error('❌ Error al actualizar avatar:', error);
-      
+      if (__DEV__) {
+        console.error('❌ Error al actualizar avatar:', error?.message);
+      }
+
       if (error.response?.data) {
         return { error: error.response.data };
       }
@@ -91,15 +102,21 @@ export const profileService = {
   ): Promise<ApiResponse<{ success: boolean; message: string }>> => {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.PROFILE.DELETE_AVATAR.replace(':userId', userId.toString());
-      console.log('📤 Eliminando avatar:', { userId, endpoint });
-      
+      if (__DEV__) {
+        console.log('📤 Eliminando avatar:', { userId, endpoint });
+      }
+
       const response = await apiClient.delete(endpoint);
-      
-      console.log('✅ Avatar eliminado:', response.data);
+
+      if (__DEV__) {
+        console.log('✅ Avatar eliminado');
+      }
       return { data: response.data };
     } catch (error: any) {
-      console.error('❌ Error al eliminar avatar:', error);
-      
+      if (__DEV__) {
+        console.error('❌ Error al eliminar avatar:', error?.message);
+      }
+
       if (error.response?.data) {
         return { error: error.response.data };
       }
@@ -125,17 +142,23 @@ export const profileService = {
   ): Promise<ApiResponse<{ message: string; deletedEmail: string }>> => {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.PROFILE.DELETE.replace(':userId', userId.toString());
-      console.log('📤 Eliminando cuenta:', { userId, endpoint });
-      
+      if (__DEV__) {
+        console.log('📤 Eliminando cuenta:', { userId, endpoint });
+      }
+
       const response = await apiClient.delete(endpoint, {
         data: { password }
       });
-      
-      console.log('✅ Cuenta eliminada:', response.data);
+
+      if (__DEV__) {
+        console.log('✅ Cuenta eliminada');
+      }
       return { data: response.data };
     } catch (error: any) {
-      console.error('❌ Error al eliminar cuenta:', error);
-      
+      if (__DEV__) {
+        console.error('❌ Error al eliminar cuenta:', error?.message);
+      }
+
       if (error.response?.data) {
         return { error: error.response.data };
       }
