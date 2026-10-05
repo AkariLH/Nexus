@@ -221,6 +221,10 @@ export const API_CONFIG = {
       GET_MUTUAL_AVAILABILITY: '/calendars/external/mutual-availability',
       HEALTH: '/calendars/external/health',
     },
+    EMOTIONS: {
+      LOG: '/emotions/:userId',
+      GET_HISTORY: '/emotions/:userId',
+    },
   },
   
   TIMEOUT: 30000, // 30 segundos para dar tiempo al envío de email

@@ -190,6 +190,18 @@ export default function HomeScreen() {
                   </View>
                 )}
               </TouchableOpacity>
+
+              {/* Registrar estado de ánimo (RF-31) */}
+              <TouchableOpacity
+                style={styles.quickActionCard}
+                onPress={() => router.push('/(tabs)/mood-log')}
+                activeOpacity={0.8}
+              >
+                <LinearGradient colors={["#F59E0B", "#EF4444"]} style={styles.quickActionGradient}>
+                  <Ionicons name="happy" size={32} color="#FFF" />
+                </LinearGradient>
+                <Text style={styles.quickActionLabel}>Mi Ánimo</Text>
+              </TouchableOpacity>
             </View>
           </MotiView>
 
