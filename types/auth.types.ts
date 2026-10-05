@@ -83,6 +83,7 @@ export interface LoginResponse {
   linkCode?: string;
   emailConfirmed: boolean;
   token?: string;
+  tokenExpiresAt?: string; // ISO-8601 UTC, ver LoginResponse.java (backend)
   questionnaireCompleted?: boolean; // Flag para saber si completó el cuestionario
 }
 

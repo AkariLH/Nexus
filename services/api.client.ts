@@ -1,6 +1,7 @@
 import axios, { AxiosInstance } from 'axios';
 import { API_CONFIG } from '../config/api.config';
 import type { ErrorResponse } from '../types/auth.types';
+import { getAuthToken } from '../utils/authToken';
 
 // Crear instancia de axios
 const apiClient: AxiosInstance = axios.create({
@@ -14,15 +15,14 @@ const apiClient: AxiosInstance = axios.create({
 // Interceptor para requests - agregar token si existe
 apiClient.interceptors.request.use(
   async (config) => {
+    const token = await getAuthToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     if (__DEV__) {
       console.log('🚀 Haciendo petición a:', `${config.baseURL || ''}${config.url || ''}`);
       console.log('🚀 Método:', config.method);
     }
-    // TODO: Obtener token del AsyncStorage cuando implementemos login
-    // const token = await AsyncStorage.getItem('authToken');
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
     return config;
   },
   (error) => {

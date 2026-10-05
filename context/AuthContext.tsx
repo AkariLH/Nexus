@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { setAuthToken, clearAuthToken } from '../utils/authToken';
 
 interface UserData {
   userId: number;
@@ -15,7 +16,7 @@ interface AuthContextType {
   user: UserData | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (userData: UserData) => Promise<void>;
+  login: (userData: UserData, token: string, tokenExpiresAt?: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (userData: Partial<UserData>) => Promise<void>;
 }
@@ -46,9 +47,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const login = async (userData: UserData) => {
+  const login = async (userData: UserData, token: string, tokenExpiresAt?: string) => {
     try {
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
+      await setAuthToken(token, tokenExpiresAt);
       setUser(userData);
     } catch (error) {
       console.error('Error al guardar usuario:', error);
@@ -59,6 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       await AsyncStorage.removeItem(STORAGE_KEY);
+      await clearAuthToken();
       setUser(null);
     } catch (error) {
       console.error('Error al cerrar sesión:', error);

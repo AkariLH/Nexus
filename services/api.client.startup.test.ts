@@ -20,6 +20,12 @@
  * aquí. En el bundle real está inlineada, pero eso solo hace que el fallo sea aún más temprano.
  */
 
+// api.client.ts importa utils/authToken.ts (header Authorization), que importa AsyncStorage al
+// cargarse. Sin mock, el modulo nativo no existe bajo Jest.
+jest.mock('@react-native-async-storage/async-storage', () =>
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
+);
+
 const VAR = 'EXPO_PUBLIC_API_URL';
 
 describe('garantía de arranque: api.client fuerza la resolución al cargarse', () => {

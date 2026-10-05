@@ -147,14 +147,18 @@ export default function LoginScreen() {
         }
       } else {
         // Login exitoso - Guardar usuario en contexto
-        await login({
-          userId: result.data!.userId!,
-          email: result.data!.email,
-          displayName: result.data!.displayName!,
-          nickname: result.data?.nickname,
-          linkCode: result.data!.linkCode!,
-          emailConfirmed: result.data!.emailConfirmed,
-        });
+        await login(
+          {
+            userId: result.data!.userId!,
+            email: result.data!.email,
+            displayName: result.data!.displayName!,
+            nickname: result.data?.nickname,
+            linkCode: result.data!.linkCode!,
+            emailConfirmed: result.data!.emailConfirmed,
+          },
+          result.data!.token!,
+          result.data?.tokenExpiresAt
+        );
         
         setSuccessModal({
           visible: true,

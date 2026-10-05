@@ -24,6 +24,12 @@ import type { AxiosInstance } from 'axios';
 // los import de ESM se izan por encima de cualquier asignacion.
 process.env.EXPO_PUBLIC_API_URL = 'http://127.0.0.1:8080/api';
 
+// api.client.ts importa utils/authToken.ts (header Authorization), que importa AsyncStorage al
+// cargarse. Sin mock, el modulo nativo no existe bajo Jest.
+jest.mock('@react-native-async-storage/async-storage', () =>
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
+);
+
 const apiClient: AxiosInstance = require('./api.client').default;
 const { authService } = require('./auth.service');
 const { profileService } = require('./profile.service');
