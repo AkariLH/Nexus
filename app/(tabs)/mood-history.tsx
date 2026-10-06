@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../context/AuthContext';
 import { emotionService, EmotionLogResponse } from '../../services/emotion.service';
+import { moodEmoji } from '../../constants/moods';
 
 /** RF-32 - Historial emocional. Privado (RN-28): solo lo ve el propio usuario. */
 export default function MoodHistoryScreen() {
@@ -89,7 +90,7 @@ export default function MoodHistoryScreen() {
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <View style={styles.emptyIconContainer}>
-              <Ionicons name="happy-outline" size={64} color="#D1D5DB" />
+              <Text style={styles.emptyEmoji}>🙂</Text>
             </View>
             <Text style={styles.emptyTitle}>Aún no hay registros</Text>
             <Text style={styles.emptySubtitle}>
@@ -111,7 +112,7 @@ export default function MoodHistoryScreen() {
         renderItem={({ item }) => (
           <View style={styles.entryCard}>
             <View style={styles.entryIcon}>
-              <Ionicons name="happy-outline" size={22} color="#FF4F81" />
+              <Text style={styles.entryEmoji}>{moodEmoji(item.label)}</Text>
             </View>
             <View style={styles.entryBody}>
               <Text style={styles.entryLabel}>{item.label || 'Estado de ánimo'}</Text>
@@ -178,6 +179,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 24,
   },
+  emptyEmoji: {
+    fontSize: 64,
+  },
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
@@ -221,12 +225,15 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   entryIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#FFE4EC',
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: '#FFF0F5',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  entryEmoji: {
+    fontSize: 30,
   },
   entryBody: {
     flex: 1,
