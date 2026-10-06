@@ -6,10 +6,11 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../context/AuthContext';
 import { emotionService, EmotionLogResponse } from '../../services/emotion.service';
 
@@ -19,10 +20,10 @@ export default function MoodHistoryScreen() {
   const { user } = useAuth();
   const [entries, setEntries] = useState<EmotionLogResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadHistory = useCallback(async () => {
     if (!user) return;
-    setLoading(true);
     try {
       const history = await emotionService.getHistory(user.userId);
       setEntries(history);
@@ -35,9 +36,16 @@ export default function MoodHistoryScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      setLoading(true);
       loadHistory();
     }, [loadHistory])
   );
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadHistory();
+    setRefreshing(false);
+  };
 
   const formatDate = (iso: string) => {
     const date = new Date(iso);
@@ -49,64 +57,193 @@ export default function MoodHistoryScreen() {
     });
   };
 
-  return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#11181C" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Tu historial emocional</Text>
-        <View style={{ width: 24 }} />
-      </View>
+  const header = (
+    <View style={styles.header}>
+      <TouchableOpacity style={styles.headerButton} onPress={() => router.back()}>
+        <Ionicons name="arrow-back" size={24} color="#1A1A1A" />
+      </TouchableOpacity>
+      <Text style={styles.headerTitle}>Mi historial</Text>
+      <View style={styles.headerButton} />
+    </View>
+  );
 
-      {loading ? (
-        <View style={styles.centered}>
-          <ActivityIndicator color="#667eea" />
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        {header}
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FF4F81" />
         </View>
-      ) : entries.length === 0 ? (
-        <View style={styles.centered}>
-          <Ionicons name="happy-outline" size={48} color="#c7ccd6" />
-          <Text style={styles.emptyText}>Todavía no registras ningún estado de ánimo.</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={entries}
-          keyExtractor={(item) => String(item.id)}
-          contentContainerStyle={styles.list}
-          renderItem={({ item }) => (
-            <View style={styles.entry}>
-              <Text style={styles.entryLabel}>{item.label || 'Estado de ánimo'}</Text>
-              <Text style={styles.entryDate}>{formatDate(item.loggedAt)}</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      {header}
+      <FlatList
+        data={entries}
+        keyExtractor={(item) => String(item.id)}
+        contentContainerStyle={styles.content}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <View style={styles.emptyIconContainer}>
+              <Ionicons name="happy-outline" size={64} color="#D1D5DB" />
             </View>
-          )}
-        />
-      )}
-    </SafeAreaView>
+            <Text style={styles.emptyTitle}>Aún no hay registros</Text>
+            <Text style={styles.emptySubtitle}>
+              Registra cómo te sientes para empezar tu historial
+            </Text>
+            <TouchableOpacity style={styles.createButton} onPress={() => router.back()}>
+              <LinearGradient
+                colors={['#FF4F81', '#8A2BE2']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.createButtonGradient}
+              >
+                <Ionicons name="add" size={24} color="#FFFFFF" />
+                <Text style={styles.createButtonText}>Registrar ánimo</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        }
+        renderItem={({ item }) => (
+          <View style={styles.entryCard}>
+            <View style={styles.entryIcon}>
+              <Ionicons name="happy-outline" size={22} color="#FF4F81" />
+            </View>
+            <View style={styles.entryBody}>
+              <Text style={styles.entryLabel}>{item.label || 'Estado de ánimo'}</Text>
+              <View style={styles.entryDateRow}>
+                <Ionicons name="calendar-outline" size={14} color="#6B7280" />
+                <Text style={styles.entryDate}>{formatDate(item.loggedAt)}</Text>
+              </View>
+            </View>
+          </View>
+        )}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: {
+    flex: 1,
+    backgroundColor: '#F9FAFB',
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  backButton: { padding: 4 },
-  title: { fontSize: 18, fontWeight: '600', color: '#11181C' },
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  emptyText: { marginTop: 12, color: '#687076', textAlign: 'center' },
-  list: { padding: 16 },
-  entry: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 14,
+    paddingTop: 60,
+    paddingBottom: 16,
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: '#E5E7EB',
   },
-  entryLabel: { fontSize: 16, color: '#11181C', fontWeight: '500' },
-  entryDate: { fontSize: 13, color: '#687076' },
+  headerButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  content: {
+    padding: 16,
+    flexGrow: 1,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 80,
+  },
+  emptyIconContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 32,
+  },
+  createButton: {
+    borderRadius: 24,
+    overflow: 'hidden',
+  },
+  createButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    gap: 8,
+  },
+  createButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  entryCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  entryIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#FFE4EC',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  entryBody: {
+    flex: 1,
+    gap: 4,
+  },
+  entryLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  entryDateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  entryDate: {
+    fontSize: 13,
+    color: '#6B7280',
+  },
 });
