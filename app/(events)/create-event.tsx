@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
   ScrollView,
@@ -19,13 +19,20 @@ import eventService, { CreateEventRequest } from "../../services/event.service";
 import { RecurrenceModal } from "../components/RecurrenceModal";
 import { RemindersModal, Reminder } from "../components/RemindersModal";
 import { ConfirmModal } from "../components/ConfirmModal";
+import { endFromDuration } from "../../utils/ideaFormat";
 
 export default function CreateEventScreen() {
   const router = useRouter();
   const { user } = useAuth();
-  
+  // RF-35: al proponer una idea del banco, llega prellenado (ver utils/ideaFormat.proposalParams).
+  const { ideaTitle, ideaDescription, ideaDuration } = useLocalSearchParams<{
+    ideaTitle?: string;
+    ideaDescription?: string;
+    ideaDuration?: string;
+  }>();
+
   // Estados del formulario
-  const [title, setTitle] = useState('');
+  const [title, setTitle] = useState(ideaTitle ?? '');
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [endDate, setEndDate] = useState<Date>(new Date());
   const [startTime, setStartTime] = useState<Date>(new Date());
@@ -35,8 +42,8 @@ export default function CreateEventScreen() {
   const [showRecurrenceModal, setShowRecurrenceModal] = useState(false);
   const [recurrenceConfig, setRecurrenceConfig] = useState<any>(null);
   const [location, setLocation] = useState('');
-  const [category, setCategory] = useState('');
-  const [description, setDescription] = useState('');
+  const [category, setCategory] = useState(ideaTitle ? 'Cita' : '');
+  const [description, setDescription] = useState(ideaDescription ?? '');
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [showRemindersModal, setShowRemindersModal] = useState(false);
   const [selectedColor, setSelectedColor] = useState('#FF4F81');
@@ -285,6 +292,11 @@ export default function CreateEventScreen() {
     if (time) {
       setStartTime(time);
       setStartTimeSelected(true);
+      // RF-35: si viene de una idea y aun no se eligio fin, sugiere inicio + duracion de la idea.
+      if (ideaDuration && !endTimeSelected) {
+        setEndTime(endFromDuration(time, ideaDuration));
+        setEndTimeSelected(true);
+      }
     }
   };
 

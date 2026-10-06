@@ -202,6 +202,29 @@ export default function HomeScreen() {
                 </LinearGradient>
                 <Text style={styles.quickActionLabel}>¿Cómo estuvo tu día?</Text>
               </TouchableOpacity>
+
+              {/* Banco de ideas (RF-34; RN-29: requiere vínculo) */}
+              <TouchableOpacity
+                style={[styles.quickActionCard, !isLinked && styles.quickActionDisabled]}
+                onPress={() => isLinked && router.push('/(ideas)/idea-bank')}
+                activeOpacity={0.8}
+                disabled={!isLinked}
+              >
+                <LinearGradient
+                  colors={isLinked ? ["#10B981", "#3B82F6"] : ["#CCC", "#999"]}
+                  style={styles.quickActionGradient}
+                >
+                  <Ionicons name="bulb" size={32} color="#FFF" />
+                </LinearGradient>
+                <Text style={[styles.quickActionLabel, !isLinked && styles.quickActionLabelDisabled]}>
+                  Banco de ideas
+                </Text>
+                {!isLinked && (
+                  <View style={styles.lockedBadge}>
+                    <Ionicons name="lock-closed" size={12} color="#999" />
+                  </View>
+                )}
+              </TouchableOpacity>
             </View>
           </MotiView>
 

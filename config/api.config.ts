@@ -225,6 +225,10 @@ export const API_CONFIG = {
       LOG: '/emotions/:userId',
       GET_HISTORY: '/emotions/:userId',
     },
+    IDEAS: {
+      GET_CATEGORIES: '/ideas/categories',
+      GET_IDEAS: '/ideas/:userId',
+    },
   },
   
   TIMEOUT: 30000, // 30 segundos para dar tiempo al envío de email
