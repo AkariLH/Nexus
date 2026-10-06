@@ -39,7 +39,7 @@ export default function MoodLogScreen() {
         <TouchableOpacity style={styles.headerButton} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="#1A1A1A" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Mi Ánimo</Text>
+        <View />
         <TouchableOpacity
           style={styles.headerButton}
           onPress={() => router.push('/(tabs)/mood-history')}
@@ -49,7 +49,7 @@ export default function MoodLogScreen() {
       </View>
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-        <Text style={styles.question}>¿Cómo te sientes hoy?</Text>
+        <Text style={styles.question}>¿Cómo estuvo tu día?</Text>
         <Text style={styles.subtitle}>Solo tú puedes ver lo que registres aquí.</Text>
 
         <View style={styles.grid}>
@@ -74,14 +74,11 @@ export default function MoodLogScreen() {
         </View>
       </ScrollView>
 
-      <View style={styles.footer}>
-        <GradientButton
-          title={selected ? `Guardar: ${selected.label}` : 'Elige cómo te sientes'}
-          onPress={handleSave}
-          disabled={!selected}
-          loading={saving}
-        />
-      </View>
+      {selected && (
+        <View style={styles.footer}>
+          <GradientButton title="Guardar" onPress={handleSave} loading={saving} />
+        </View>
+      )}
 
       <ConfirmModal
         visible={errorModal}
@@ -118,11 +115,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#111827',
   },
   scrollView: {
     flex: 1,

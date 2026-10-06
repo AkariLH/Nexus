@@ -200,7 +200,7 @@ export default function HomeScreen() {
                 <LinearGradient colors={["#F59E0B", "#EF4444"]} style={styles.quickActionGradient}>
                   <Ionicons name="happy" size={32} color="#FFF" />
                 </LinearGradient>
-                <Text style={styles.quickActionLabel}>Mi Ánimo</Text>
+                <Text style={styles.quickActionLabel}>¿Cómo estuvo tu día?</Text>
               </TouchableOpacity>
             </View>
           </MotiView>
