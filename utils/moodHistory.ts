@@ -75,3 +75,12 @@ export function lastSevenDays(entries: EmotionLogResponse[], now: Date = new Dat
     };
   });
 }
+
+/** RN-38: el registro de hoy (uno por dia; si por datos viejos hubiera varios, el mas reciente). */
+export function todayEntry(
+  entries: EmotionLogResponse[],
+  now: Date = new Date()
+): EmotionLogResponse | undefined {
+  const today = dayKey(now);
+  return newestFirst(entries).find((e) => dayKey(new Date(e.loggedAt)) === today);
+}

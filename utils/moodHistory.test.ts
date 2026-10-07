@@ -1,4 +1,4 @@
-import { groupByDay, lastSevenDays } from './moodHistory';
+import { groupByDay, lastSevenDays, todayEntry } from './moodHistory';
 import { moodEmoji } from '../constants/moods';
 
 // Mediodia local para que ningun caso caiga en la frontera de medianoche.
@@ -76,5 +76,20 @@ describe('lastSevenDays (RF-32)', () => {
   it('da la inicial del dia de la semana', () => {
     // 5 oct 2026 es lunes.
     expect(lastSevenDays([], NOW)[6].initial).toBe('L');
+  });
+});
+
+describe('todayEntry (RN-38)', () => {
+  it('encuentra el registro de hoy (el mas reciente si hubiera varios)', () => {
+    const found = todayEntry(
+      [entry(1, 'Triste', at(0, 8)), entry(2, 'Feliz', at(0, 11)), entry(3, 'Cansado/a', at(1, 22))],
+      NOW
+    );
+    expect(found?.id).toBe(2);
+  });
+
+  it('regresa undefined si hoy no hay registro', () => {
+    expect(todayEntry([entry(3, 'Cansado/a', at(1, 22))], NOW)).toBeUndefined();
+    expect(todayEntry([], NOW)).toBeUndefined();
   });
 });

@@ -10,8 +10,13 @@ import { ConfirmModal } from '../components/ConfirmModal';
 import { useAuth } from '../../context/AuthContext';
 import { emotionService } from '../../services/emotion.service';
 import { MOODS, MoodOption } from '../../constants/moods';
+import { todayEntry } from '../../utils/moodHistory';
 
-/** RF-31 - Registro de estado emocional. Las opciones y su mapeo interno viven en constants/moods. */
+/**
+ * RF-31 - Registro de estado emocional del dia. Las opciones y su mapeo interno viven en
+ * constants/moods. RN-38: un registro por dia; si ya hay uno hoy, se muestra y se puede cambiar
+ * (el backend reemplaza el anterior).
+ */
 
 const SAVED_PAUSE_MS = 1100;
 
@@ -23,6 +28,22 @@ export default function MoodLogScreen() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [errorModal, setErrorModal] = useState(false);
+  const [registeredToday, setRegisteredToday] = useState<MoodOption | null>(null);
+
+  // RN-38: si ya registro hoy, arranca con esa carita seleccionada.
+  useEffect(() => {
+    if (!user) return;
+    emotionService
+      .getHistory(user.userId)
+      .then((history) => {
+        const mood = MOODS.find((m) => m.label === todayEntry(history)?.label) ?? null;
+        setRegisteredToday(mood);
+        setSelected((current) => current ?? mood);
+      })
+      .catch(() => {});
+  }, [user]);
+
+  const unchanged = registeredToday !== null && selected?.label === registeredToday.label;
 
   // Tras la confirmacion breve, regresa solo a donde venia la persona.
   useEffect(() => {
@@ -109,6 +130,13 @@ export default function MoodLogScreen() {
           <Ionicons name="lock-closed" size={13} color="#6B7280" />
           <Text style={styles.privacyText}>Solo tú puedes verlo</Text>
         </View>
+        {registeredToday && (
+          <View style={styles.todayNote}>
+            <Text style={styles.todayNoteText}>
+              Ya registraste tu día · puedes cambiarlo si quieres
+            </Text>
+          </View>
+        )}
 
         <View style={styles.grid} accessibilityRole="radiogroup">
           {MOODS.map((mood) => {
@@ -144,7 +172,7 @@ export default function MoodLogScreen() {
       </ScrollView>
 
       <AnimatePresence>
-        {selected && (
+        {selected && !unchanged && (
           <MotiView
             key="save"
             from={{ translateY: 120 }}
@@ -153,7 +181,11 @@ export default function MoodLogScreen() {
             transition={{ type: 'timing', duration: 260 }}
             style={[styles.footer, { paddingBottom: 16 + insets.bottom }]}
           >
-            <GradientButton title="Guardar" onPress={handleSave} loading={saving} />
+            <GradientButton
+              title={registeredToday ? 'Actualizar' : 'Guardar'}
+              onPress={handleSave}
+              loading={saving}
+            />
           </MotiView>
         )}
       </AnimatePresence>
@@ -217,6 +249,20 @@ const styles = StyleSheet.create({
     color: '#111827',
     textAlign: 'center',
     letterSpacing: -0.5,
+  },
+  todayNote: {
+    alignSelf: 'center',
+    marginTop: -16,
+    marginBottom: 24,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 14,
+    backgroundColor: '#FFF0F5',
+  },
+  todayNoteText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#FF4F81',
   },
   privacyRow: {
     flexDirection: 'row',
