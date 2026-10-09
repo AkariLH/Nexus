@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { setAuthToken, clearAuthToken } from '../utils/authToken';
+import { setAuthToken, clearAuthToken, getAuthToken } from '../utils/authToken';
+import { isSessionExpired, onSessionExpired } from '../utils/session';
 
 interface UserData {
   userId: number;
@@ -34,11 +35,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loadUser();
   }, []);
 
+  // El servidor rechazo la sesion (401) a media app: se cierra y el layout raiz lleva al login.
+  useEffect(
+    () =>
+      onSessionExpired(() => {
+        logout().catch(() => {});
+      }),
+    []
+  );
+
   const loadUser = async () => {
     try {
       const userData = await AsyncStorage.getItem(STORAGE_KEY);
       if (userData) {
-        setUser(JSON.parse(userData));
+        // Una sesion guardada con el token vencido (dura 24 h) no se restaura: cada peticion
+        // seria rechazada y la app se quedaria cargando.
+        const token = await getAuthToken();
+        if (token && !isSessionExpired(token)) {
+          setUser(JSON.parse(userData));
+        } else {
+          await AsyncStorage.removeItem(STORAGE_KEY);
+          await clearAuthToken();
+        }
       }
     } catch (error) {
       console.error('Error al cargar usuario:', error);

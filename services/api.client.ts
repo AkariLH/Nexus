@@ -2,6 +2,7 @@ import axios, { AxiosInstance } from 'axios';
 import { API_CONFIG } from '../config/api.config';
 import type { ErrorResponse } from '../types/auth.types';
 import { getAuthToken } from '../utils/authToken';
+import { notifySessionExpired } from '../utils/session';
 
 // Crear instancia de axios
 const apiClient: AxiosInstance = axios.create({
@@ -47,6 +48,11 @@ apiClient.interceptors.response.use(
       console.error('❌ Error code:', error.code);
       console.error('❌ Error response:', error.response?.status, error.response?.statusText);
       console.error('❌ Error request:', error.request ? 'Request was made' : 'No request');
+    }
+    // 401 = el servidor no reconoce la sesion (token ausente, vencido o alterado). Un 403 es un
+    // recurso ajeno y no cierra la sesion.
+    if (error.response?.status === 401) {
+      notifySessionExpired();
     }
     // Formatear error para que sea más fácil de usar
     if (error.response) {
