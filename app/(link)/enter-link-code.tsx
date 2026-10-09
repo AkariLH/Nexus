@@ -7,7 +7,7 @@ import { StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator 
 import { useAuth } from "../../context/AuthContext";
 import { ErrorModal } from "../components/ErrorModal";
 import { SuccessModal } from "../components/SuccessModal";
-import { API_CONFIG } from "../../config/api.config";
+import linkService from "../../services/link.service";
 
 export default function EnterLinkCodeScreen() {
   const router = useRouter();
@@ -32,20 +32,7 @@ export default function EnterLinkCodeScreen() {
 
     setLoading(true);
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/link/establish/${user.userId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ code: cleanCode }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Error al establecer el vínculo");
-      }
-
-      const data = await response.json();
+      const data = await linkService.establishLink(user.userId, cleanCode);
       console.log("Vínculo establecido:", data);
       
       // Obtener el nombre de la pareja del response

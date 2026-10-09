@@ -40,15 +40,11 @@ export default function LinkScreen() {
     if (!user?.userId) return;
 
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/link/status/${user.userId}`);
-      
-      if (response.ok) {
-        const data: LinkStatusData = await response.json();
-        setLinkStatus(data);
-        // Resetear estados de error de imágenes al obtener nuevos datos
-        setUserPhotoError(false);
-        setPartnerPhotoError(false);
-      }
+      const data: LinkStatusData = await linkService.getLinkStatus(user.userId);
+      setLinkStatus(data);
+      // Resetear estados de error de imágenes al obtener nuevos datos
+      setUserPhotoError(false);
+      setPartnerPhotoError(false);
     } catch (error) {
       console.error('Error verificando estado del vínculo:', error);
     } finally {

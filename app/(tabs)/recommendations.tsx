@@ -15,7 +15,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useAvailability } from "../../context/AvailabilityContext";
 import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
 import { findMutualAvailability, MutualAvailabilityResponse } from "../../services/availabilityService";
-import { API_CONFIG } from "../../config/api.config";
+import linkService from "../../services/link.service";
 
 interface LinkStatusData {
   hasActiveLink: boolean;
@@ -41,12 +41,8 @@ export default function RecommendationsScreen() {
     if (!user?.userId) return;
 
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/link/status/${user.userId}`);
-      
-      if (response.ok) {
-        const data: LinkStatusData = await response.json();
-        setLinkStatus(data);
-      }
+      const data: LinkStatusData = await linkService.getLinkStatus(user.userId);
+      setLinkStatus(data);
     } catch (error) {
       console.error('Error verificando estado del vínculo:', error);
     }

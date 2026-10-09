@@ -3,7 +3,7 @@ import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import { API_CONFIG } from '../config/api.config';
+import { apiClient } from './api.client';
 
 // Configurar cómo se deben manejar las notificaciones cuando la app está en primer plano
 Notifications.setNotificationHandler({
@@ -17,7 +17,6 @@ Notifications.setNotificationHandler({
 });
 
 class NotificationService {
-  private baseUrl = API_CONFIG.BASE_URL;
 
   /**
    * Solicitar permisos de notificación al usuario
@@ -126,17 +125,7 @@ class NotificationService {
       console.log(`📤 Registrando token Push para usuario ${userId}`);
       console.log(`📤 Token: ${token.substring(0, 30)}...`);
       
-      const response = await fetch(`${this.baseUrl}/profile/${userId}/fcm-token`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ fcmToken: token }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
+      await apiClient.post(`/profile/${userId}/fcm-token`, { fcmToken: token });
 
       console.log('✅ Token Push registrado exitosamente en el backend');
       return true;

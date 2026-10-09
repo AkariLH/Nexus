@@ -8,7 +8,7 @@ import QRCode from "react-native-qrcode-svg";
 import { useAuth } from "../../context/AuthContext";
 import { ErrorModal } from "../components/ErrorModal";
 import { SuccessModal } from "../components/SuccessModal";
-import { API_CONFIG } from "../../config/api.config";
+import linkService from "../../services/link.service";
 
 interface LinkCodeData {
   code: string;
@@ -37,21 +37,7 @@ export default function MyLinkCodeScreen() {
     setLoading(true);
     setIsExpired(false);
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/link/generate/${user.userId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      console.log("Response status:", response.status);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Error al generar el código");
-      }
-
-      const data: LinkCodeData = await response.json();
+      const data: LinkCodeData = await linkService.generateCode(user.userId);
       console.log("Código generado:", data);
       setLinkCode(data);
     } catch (err: any) {
@@ -99,23 +85,19 @@ export default function MyLinkCodeScreen() {
     const checkLinkStatus = async () => {
       try {
         setCheckingLink(true);
-        const response = await fetch(`${API_CONFIG.BASE_URL}/link/status/${user.userId}`);
+        const data = await linkService.getLinkStatus(user.userId);
         
-        if (response.ok) {
-          const data = await response.json();
+        // Si el usuario ya tiene un vínculo establecido
+        if (data.hasActiveLink && data.partner) {
+          console.log('🎉 ¡Vínculo establecido! Redirigiendo a animación...');
           
-          // Si el usuario ya tiene un vínculo establecido
-          if (data.hasActiveLink && data.partner) {
-            console.log('🎉 ¡Vínculo establecido! Redirigiendo a animación...');
-            
-            const partnerName = data.partner.displayName || data.partner.nickname || 'tu pareja';
-            
-            // Navegar a la pantalla de éxito con animación
-            router.replace({
-              pathname: '/(link)/link-success',
-              params: { partnerName },
-            });
-          }
+          const partnerName = data.partner.displayName || data.partner.nickname || 'tu pareja';
+          
+          // Navegar a la pantalla de éxito con animación
+          router.replace({
+            pathname: '/(link)/link-success',
+            params: { partnerName },
+          });
         }
       } catch (error) {
         console.log('Error verificando estado del vínculo:', error);

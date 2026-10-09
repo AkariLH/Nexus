@@ -7,7 +7,7 @@ import { MotiView } from "moti";
 import { useAuth } from "../../context/AuthContext";
 import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
 import eventService, { EventResponse } from "../../services/event.service";
-import { API_CONFIG } from "../../config/api.config";
+import linkService from "../../services/link.service";
 
 interface LinkStatus {
   hasActiveLink: boolean;
@@ -32,11 +32,8 @@ export default function HomeScreen() {
     if (!user?.userId) return;
 
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/link/status/${user.userId}`);
-      if (response.ok) {
-        const data: LinkStatus = await response.json();
-        setLinkStatus(data);
-      }
+      const data: LinkStatus = await linkService.getLinkStatus(user.userId);
+      setLinkStatus(data);
     } catch (error) {
       console.error("Error al obtener estado del vínculo:", error);
     } finally {

@@ -13,7 +13,7 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
 import eventService, { EventResponse } from "../../services/event.service";
-import { API_CONFIG } from "../../config/api.config";
+import linkService from "../../services/link.service";
 import { expandRecurringEvent } from "../../utils/recurrenceUtils";
 import { EventDetailsModal } from "../components/EventDetailsModal";
 import { externalCalendarIntegration, ExternalEventDTO } from "../../services/externalCalendar.integration.service";
@@ -54,18 +54,14 @@ export default function CalendarioScreen() {
     if (!user?.userId) return;
 
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/link/status/${user.userId}`);
+      const data = await linkService.getLinkStatus(user.userId);
+      setHasActiveLink(data.hasActiveLink);
       
-      if (response.ok) {
-        const data = await response.json();
-        setHasActiveLink(data.hasActiveLink);
-        
-        // Guardar partnerId para cargar sus eventos externos
-        if (data.hasActiveLink && data.partner) {
-          setPartnerId(data.partner.userId);
-        } else {
-          setPartnerId(null);
-        }
+      // Guardar partnerId para cargar sus eventos externos
+      if (data.hasActiveLink && data.partner) {
+        setPartnerId(data.partner.userId);
+      } else {
+        setPartnerId(null);
       }
     } catch (error) {
       console.error('Error verificando estado del vínculo:', error);
