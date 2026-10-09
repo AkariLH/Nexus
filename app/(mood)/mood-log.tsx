@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Pressable } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { MotiView, AnimatePresence } from 'moti';
@@ -11,14 +11,19 @@ import { useAuth } from '../../context/AuthContext';
 import { emotionService } from '../../services/emotion.service';
 import { MOODS, MoodOption } from '../../constants/moods';
 import { todayEntry } from '../../utils/moodHistory';
+import { MOOD_ROW_GAP, moodRows, moodSizing } from '../../utils/moodLayout';
 
 /**
  * RF-31 - Registro de estado emocional del dia. Las opciones y su mapeo interno viven en
  * constants/moods. RN-38: un registro por dia; si ya hay uno hoy, se muestra y se puede cambiar
  * (el backend reemplaza el anterior).
+ *
+ * Todas las opciones caben en una pantalla, sin desplazamiento: la cuadricula ocupa el alto que
+ * queda entre el titulo y el boton, y las caritas se ajustan a ese alto (utils/moodLayout).
  */
 
 const SAVED_PAUSE_MS = 1100;
+const MOOD_ROWS = moodRows(MOODS);
 
 export default function MoodLogScreen() {
   const router = useRouter();
@@ -29,6 +34,8 @@ export default function MoodLogScreen() {
   const [saved, setSaved] = useState(false);
   const [errorModal, setErrorModal] = useState(false);
   const [registeredToday, setRegisteredToday] = useState<MoodOption | null>(null);
+  const [gridHeight, setGridHeight] = useState(0);
+  const { emojiSize, labelSize } = moodSizing(gridHeight, MOOD_ROWS.length);
 
   // RN-38: si ya registro hoy, arranca con esa carita seleccionada.
   useEffect(() => {
@@ -119,10 +126,7 @@ export default function MoodLogScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={[styles.content, { paddingBottom: 120 + insets.bottom }]}
-      >
+      <View style={styles.content}>
         <Text style={styles.question} accessibilityRole="header">
           ¿Cómo estuvo tu día?
         </Text>
@@ -138,57 +142,80 @@ export default function MoodLogScreen() {
           </View>
         )}
 
-        <View style={styles.grid} accessibilityRole="radiogroup">
-          {MOODS.map((mood) => {
-            const isSelected = selected?.label === mood.label;
-            const dimmed = selected !== null && !isSelected;
-            return (
-              <Pressable
-                key={mood.label}
-                onPress={() => choose(mood)}
-                accessibilityRole="radio"
-                accessibilityState={{ selected: isSelected }}
-                accessibilityLabel={mood.label}
-                style={({ pressed }) => [
-                  styles.moodCard,
-                  isSelected && styles.moodCardSelected,
-                  dimmed && styles.moodCardDimmed,
-                  pressed && styles.moodCardPressed,
-                ]}
-              >
-                <MotiView
-                  animate={{ scale: isSelected ? 1.18 : 1 }}
-                  transition={{ type: 'spring', damping: 10, stiffness: 220 }}
-                >
-                  <Text style={styles.moodEmoji}>{mood.emoji}</Text>
-                </MotiView>
-                <Text style={[styles.moodLabel, isSelected && styles.moodLabelSelected]}>
-                  {mood.label}
-                </Text>
-              </Pressable>
-            );
-          })}
+        <View
+          style={styles.grid}
+          accessibilityRole="radiogroup"
+          onLayout={(event) => setGridHeight(event.nativeEvent.layout.height)}
+        >
+          {MOOD_ROWS.map((row) => (
+            <View key={row[0].label} style={styles.gridRow}>
+              {row.map((mood) => {
+                const isSelected = selected?.label === mood.label;
+                const dimmed = selected !== null && !isSelected;
+                return (
+                  <Pressable
+                    key={mood.label}
+                    onPress={() => choose(mood)}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: isSelected }}
+                    accessibilityLabel={mood.label}
+                    style={({ pressed }) => [
+                      styles.moodCard,
+                      isSelected && styles.moodCardSelected,
+                      dimmed && styles.moodCardDimmed,
+                      pressed && styles.moodCardPressed,
+                    ]}
+                  >
+                    <MotiView
+                      animate={{ scale: isSelected ? 1.12 : 1 }}
+                      transition={{ type: 'spring', damping: 10, stiffness: 220 }}
+                    >
+                      <Text
+                        allowFontScaling={false}
+                        style={[styles.moodEmoji, { fontSize: emojiSize }]}
+                      >
+                        {mood.emoji}
+                      </Text>
+                    </MotiView>
+                    <Text
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      style={[
+                        styles.moodLabel,
+                        { fontSize: labelSize },
+                        isSelected && styles.moodLabelSelected,
+                      ]}
+                    >
+                      {mood.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          ))}
         </View>
-      </ScrollView>
+      </View>
 
-      <AnimatePresence>
-        {selected && !unchanged && (
-          <MotiView
-            key="save"
-            from={{ translateY: 120 }}
-            animate={{ translateY: 0 }}
-            exit={{ translateY: 120 }}
-            transition={{ type: 'timing', duration: 260 }}
-            style={[styles.footer, { paddingBottom: 16 + insets.bottom }]}
-          >
-            <GradientButton
-              title={registeredToday ? 'Actualizar' : 'Guardar'}
-              onPress={handleSave}
-              loading={saving}
-            />
-          </MotiView>
-        )}
-      </AnimatePresence>
+      {/* El espacio del boton esta siempre reservado: la cuadricula no salta al elegir. */}
+      <View style={[styles.footer, { paddingBottom: 16 + insets.bottom }]}>
+        <AnimatePresence>
+          {selected && !unchanged && (
+            <MotiView
+              key="save"
+              from={{ opacity: 0, translateY: 12 }}
+              animate={{ opacity: 1, translateY: 0 }}
+              exit={{ opacity: 0, translateY: 12 }}
+              transition={{ type: 'timing', duration: 220 }}
+            >
+              <GradientButton
+                title={registeredToday ? 'Actualizar' : 'Guardar'}
+                onPress={handleSave}
+                loading={saving}
+              />
+            </MotiView>
+          )}
+        </AnimatePresence>
+      </View>
 
       <ConfirmModal
         visible={errorModal}
@@ -236,12 +263,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FF4F81',
   },
-  scrollView: {
-    flex: 1,
-  },
   content: {
+    flex: 1,
     paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingTop: 8,
   },
   question: {
     fontSize: 28,
@@ -252,8 +277,8 @@ const styles = StyleSheet.create({
   },
   todayNote: {
     alignSelf: 'center',
-    marginTop: -16,
-    marginBottom: 24,
+    marginTop: -6,
+    marginBottom: 12,
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 14,
@@ -269,24 +294,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 5,
-    marginTop: 8,
-    marginBottom: 32,
+    marginTop: 6,
+    marginBottom: 16,
   },
   privacyText: {
     fontSize: 13,
     color: '#6B7280',
   },
   grid: {
+    flex: 1,
+    gap: MOOD_ROW_GAP,
+  },
+  gridRow: {
+    flex: 1,
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    rowGap: 14,
+    gap: 12,
   },
   moodCard: {
-    width: '48%',
+    flex: 1,
     alignItems: 'center',
-    paddingTop: 22,
-    paddingBottom: 18,
+    justifyContent: 'center',
+    paddingHorizontal: 8,
     backgroundColor: '#FFFFFF',
     borderRadius: 24,
     borderWidth: 2,
@@ -313,11 +341,9 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.97 }],
   },
   moodEmoji: {
-    fontSize: 52,
-    marginBottom: 10,
+    marginBottom: 4,
   },
   moodLabel: {
-    fontSize: 15,
     fontWeight: '500',
     color: '#4B5563',
   },
@@ -326,20 +352,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   footer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
+    minHeight: 88,
+    justifyContent: 'flex-end',
     paddingHorizontal: 20,
     paddingTop: 16,
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 12,
   },
   savedContainer: {
     alignItems: 'center',
