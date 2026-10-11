@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import { useEffect } from "react";
 import { Animated, Easing, StyleSheet, View } from "react-native";
 import { palette, gradients } from "../../constants/colors";
+import { decorativeLoop } from "../../utils/motion";
 
 export default function SplashScreen() {
   const router = useRouter();
@@ -49,7 +50,7 @@ export default function SplashScreen() {
 
     // Animación de los puntos de carga (pulsación continua)
     const createDotAnimation = (animValue: Animated.Value, delay: number) => {
-      return Animated.loop(
+      return decorativeLoop(
         Animated.sequence([
           Animated.delay(delay),
           Animated.timing(animValue, {
@@ -74,7 +75,7 @@ export default function SplashScreen() {
 
     // Animación de corazones flotantes
     const createHeartAnimation = (animValue: Animated.Value) => {
-      return Animated.loop(
+      return decorativeLoop(
         Animated.sequence([
           Animated.timing(animValue, {
             toValue: 1,

@@ -282,8 +282,6 @@ export default function VerifyEmailScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: palette.surface },
-  header: { paddingHorizontal: 20, paddingTop: 50, paddingBottom: 10 },
-  backButton: { padding: 6, borderRadius: 20 },
   content: {
     flex: 1,
     alignItems: "center",

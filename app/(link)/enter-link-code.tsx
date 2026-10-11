@@ -161,24 +161,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: palette.surface,
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 24,
-    paddingTop: 60,
-    paddingBottom: 16,
-    gap: 16,
-  },
-  backButton: {
-    padding: 8,
-    marginLeft: -8,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "400",
-    color: palette.text,
-    flex: 1,
-  },
   content: {
     flex: 1,
     paddingHorizontal: 24,

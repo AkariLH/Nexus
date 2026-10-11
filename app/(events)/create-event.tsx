@@ -393,7 +393,7 @@ export default function CreateEventScreen() {
             <Ionicons name="time-outline" size={20} color={palette.primary} />
             <Text style={styles.label}>Todo el día</Text>
           </View>
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="switch" accessibilityLabel="Todo el día" accessibilityState={{ checked: isAllDay }}
             style={[styles.switch, isAllDay && styles.switchActive]}
             onPress={() => setIsAllDay(!isAllDay)}
             activeOpacity={0.7}
@@ -491,7 +491,7 @@ export default function CreateEventScreen() {
             <Ionicons name="repeat" size={20} color={palette.primary} />
             <Text style={styles.label}>Evento recurrente</Text>
           </View>
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="switch" accessibilityLabel="Evento recurrente" accessibilityState={{ checked: isRecurring }}
             style={[styles.switch, isRecurring && styles.switchActive]}
             onPress={() => {
               if (!isRecurring) {
@@ -772,27 +772,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: palette.surface,
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: palette.surface,
-    borderBottomWidth: 2,
-    borderBottomColor: palette.divider,
-  },
-  backButton: {
-    padding: 8,
-    marginLeft: -8,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: palette.text,
-    flex: 1,
-    textAlign: "center",
-  },
   headerAction: {
     padding: 8,
   },
@@ -803,9 +782,6 @@ const styles = StyleSheet.create({
   },
   headerActionDisabled: {
     opacity: 0.5,
-  },
-  headerSpacer: {
-    width: 40,
   },
   scrollView: {
     flex: 1,
@@ -888,13 +864,6 @@ const styles = StyleSheet.create({
   switchThumbActive: {
     transform: [{ translateX: 22 }],
   },
-  inputText: {
-    fontSize: 16,
-    color: palette.text,
-  },
-  inputPlaceholder: {
-    color: palette.textMuted,
-  },
   dateTimeRow: {
     flexDirection: "row",
     gap: 10,
@@ -904,11 +873,6 @@ const styles = StyleSheet.create({
   },
   timeInput: {
     flex: 1,
-  },
-  dateTimeText: {
-    fontSize: 16,
-    color: palette.text,
-    fontWeight: "500",
   },
   textArea: {
     paddingHorizontal: 16,
@@ -923,12 +887,6 @@ const styles = StyleSheet.create({
   },
   inputError: {
     borderColor: palette.primary,
-  },
-  errorContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginTop: 6,
   },
   errorText: {
     fontSize: 13,
@@ -1013,94 +971,6 @@ const styles = StyleSheet.create({
     color: palette.textMuted,
     paddingVertical: 6,
   },
-  reminderContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  reminderChip: {
-    paddingVertical: 10,
-    paddingHorizontal: 18,
-    borderRadius: 20,
-    backgroundColor: palette.divider,
-    borderWidth: 2,
-    borderColor: palette.divider,
-  },
-  reminderChipActive: {
-    backgroundColor: palette.secondarySoft,
-    borderColor: palette.secondary,
-  },
-  reminderChipText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: palette.textSecondary,
-  },
-  reminderChipTextActive: {
-    color: palette.textAccent,
-  },
-  recurrenceTypeContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  recurrenceTypeChip: {
-    paddingVertical: 10,
-    paddingHorizontal: 18,
-    borderRadius: 20,
-    backgroundColor: palette.divider,
-    borderWidth: 2,
-    borderColor: palette.divider,
-  },
-  recurrenceTypeChipActive: {
-    backgroundColor: palette.primarySoft,
-    borderColor: palette.primary,
-  },
-  recurrenceTypeChipText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: palette.textSecondary,
-  },
-  recurrenceTypeChipTextActive: {
-    color: palette.textAccent,
-  },
-  weekDaysContainer: {
-    flexDirection: "row",
-    gap: 8,
-    justifyContent: "space-between",
-  },
-  weekDayButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: palette.divider,
-    borderWidth: 2,
-    borderColor: palette.divider,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  weekDayButtonActive: {
-    backgroundColor: palette.primarySoft,
-    borderColor: palette.primary,
-  },
-  weekDayText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: palette.textSecondary,
-  },
-  weekDayTextActive: {
-    color: palette.textAccent,
-  },
-  recurrenceEndRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  recurrenceEndInput: {
-    flex: 1,
-  },
-  clearButton: {
-    padding: 8,
-  },
   recurrenceSummary: {
     marginBottom: 24,
     padding: 16,
@@ -1123,23 +993,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: palette.textAccent,
     flex: 1,
-  },
-  infoCard: {
-    marginBottom: 20,
-    borderRadius: 16,
-    overflow: "hidden",
-  },
-  infoCardGradient: {
-    flexDirection: "row",
-    padding: 16,
-    gap: 12,
-    alignItems: "center",
-  },
-  infoText: {
-    flex: 1,
-    fontSize: 13,
-    color: palette.textSecondary,
-    lineHeight: 18,
   },
   createButton: {
     height: 56,

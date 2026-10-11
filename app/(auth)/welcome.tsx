@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { palette, gradients } from "../../constants/colors";
+import { decorativeLoop } from "../../utils/motion";
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -24,7 +25,7 @@ export default function WelcomeScreen() {
 
   useEffect(() => {
     // Oscilación del corazón
-    Animated.loop(
+    decorativeLoop(
       Animated.sequence([
         Animated.timing(heartRotate, {
           toValue: 1,
@@ -40,7 +41,7 @@ export default function WelcomeScreen() {
     ).start();
 
     // Pulso de iconos secundarios
-    Animated.loop(
+    decorativeLoop(
       Animated.sequence([
         Animated.timing(iconScale1, {
           toValue: 1.2,
@@ -56,7 +57,7 @@ export default function WelcomeScreen() {
     ).start();
 
     setTimeout(() => {
-      Animated.loop(
+      decorativeLoop(
         Animated.sequence([
           Animated.timing(iconScale2, {
             toValue: 1.2,

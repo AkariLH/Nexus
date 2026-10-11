@@ -218,13 +218,13 @@ export function RemindersModal({
                   onChangeText={setCustomMinutes}
                   autoFocus
                 />
-                <TouchableOpacity
+                <TouchableOpacity accessibilityRole="button" accessibilityLabel="Agregar recordatorio" hitSlop={10}
                   style={styles.addButton}
                   onPress={addCustomReminder}
                 >
                   <Ionicons name="checkmark" size={20} color={palette.onPrimary} />
                 </TouchableOpacity>
-                <TouchableOpacity
+                <TouchableOpacity accessibilityRole="button" accessibilityLabel="Cerrar" hitSlop={10}
                   style={styles.cancelButton}
                   onPress={() => {
                     setShowCustomInput(false);
@@ -249,7 +249,7 @@ export function RemindersModal({
                       <View key={reminder.id} style={styles.selectedItem}>
                         <Ionicons name="notifications" size={18} color={palette.primary} />
                         <Text style={styles.selectedItemText}>{reminder.label}</Text>
-                        <TouchableOpacity onPress={() => removeReminder(reminder.id)}>
+                        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Eliminar recordatorio" hitSlop={10} onPress={() => removeReminder(reminder.id)}>
                           <Ionicons name="trash-outline" size={18} color={palette.primary} />
                         </TouchableOpacity>
                       </View>

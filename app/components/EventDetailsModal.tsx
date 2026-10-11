@@ -208,7 +208,7 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, o
                 <View style={[styles.statusBadge, { backgroundColor: getStatusColor() }]}>
                   <Text style={styles.statusText}>{getStatusText()}</Text>
                 </View>
-                <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                <TouchableOpacity accessibilityRole="button" accessibilityLabel="Cerrar" hitSlop={10} onPress={onClose} style={styles.closeButton}>
                   <Ionicons name="close" size={24} color={palette.onPrimary} />
                 </TouchableOpacity>
               </View>

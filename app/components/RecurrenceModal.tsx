@@ -272,7 +272,7 @@ export function RecurrenceModal({
                       </Text>
                     </TouchableOpacity>
                     {endDate && (
-                      <TouchableOpacity
+                      <TouchableOpacity accessibilityRole="button" accessibilityLabel="Quitar fecha de fin" hitSlop={10}
                         style={styles.clearButton}
                         onPress={() => setEndDate(null)}
                       >
@@ -345,7 +345,7 @@ export function RecurrenceModal({
                     </Text>
                   </TouchableOpacity>
                   {endDate && (
-                    <TouchableOpacity
+                    <TouchableOpacity accessibilityRole="button" accessibilityLabel="Quitar fecha de fin" hitSlop={10}
                       style={styles.clearButton}
                       onPress={() => setEndDate(null)}
                     >

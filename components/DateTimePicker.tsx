@@ -63,7 +63,7 @@ export default function DateTimePicker({
       <View style={styles.wheelContainer}>
         <Text style={styles.wheelLabel}>Año</Text>
         <View style={styles.wheel}>
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Aumentar año" hitSlop={10}
             style={styles.wheelButton}
             onPress={() => updateDate("year", 1)}
           >
@@ -72,7 +72,7 @@ export default function DateTimePicker({
           <View style={styles.wheelValue}>
             <Text style={styles.wheelValueText}>{selectedDate.getFullYear()}</Text>
           </View>
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Disminuir año" hitSlop={10}
             style={styles.wheelButton}
             onPress={() => updateDate("year", -1)}
           >
@@ -85,7 +85,7 @@ export default function DateTimePicker({
       <View style={styles.wheelContainer}>
         <Text style={styles.wheelLabel}>Mes</Text>
         <View style={styles.wheel}>
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Aumentar mes" hitSlop={10}
             style={styles.wheelButton}
             onPress={() => updateDate("month", 1)}
           >
@@ -96,7 +96,7 @@ export default function DateTimePicker({
               {selectedDate.toLocaleString("es", { month: "long" })}
             </Text>
           </View>
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Disminuir mes" hitSlop={10}
             style={styles.wheelButton}
             onPress={() => updateDate("month", -1)}
           >
@@ -109,7 +109,7 @@ export default function DateTimePicker({
       <View style={styles.wheelContainer}>
         <Text style={styles.wheelLabel}>Día</Text>
         <View style={styles.wheel}>
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Aumentar día" hitSlop={10}
             style={styles.wheelButton}
             onPress={() => updateDate("day", 1)}
           >
@@ -118,7 +118,7 @@ export default function DateTimePicker({
           <View style={styles.wheelValue}>
             <Text style={styles.wheelValueText}>{selectedDate.getDate()}</Text>
           </View>
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Disminuir día" hitSlop={10}
             style={styles.wheelButton}
             onPress={() => updateDate("day", -1)}
           >
@@ -137,7 +137,7 @@ export default function DateTimePicker({
       <View style={styles.wheelContainer}>
         <Text style={styles.wheelLabel}>Hora</Text>
         <View style={styles.wheel}>
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Aumentar hora" hitSlop={10}
             style={styles.wheelButton}
             onPress={() => updateTime("hour", 1)}
           >
@@ -148,7 +148,7 @@ export default function DateTimePicker({
               {selectedDate.getHours().toString().padStart(2, "0")}
             </Text>
           </View>
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Disminuir hora" hitSlop={10}
             style={styles.wheelButton}
             onPress={() => updateTime("hour", -1)}
           >
@@ -161,7 +161,7 @@ export default function DateTimePicker({
       <View style={styles.wheelContainer}>
         <Text style={styles.wheelLabel}>Minutos</Text>
         <View style={styles.wheel}>
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Aumentar minutos" hitSlop={10}
             style={styles.wheelButton}
             onPress={() => updateTime("minute", 15)}
           >
@@ -172,7 +172,7 @@ export default function DateTimePicker({
               {selectedDate.getMinutes().toString().padStart(2, "0")}
             </Text>
           </View>
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Disminuir minutos" hitSlop={10}
             style={styles.wheelButton}
             onPress={() => updateTime("minute", -15)}
           >

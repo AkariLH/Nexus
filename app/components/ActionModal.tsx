@@ -133,13 +133,4 @@ const styles = StyleSheet.create({
   destructiveText: {
     color: palette.error,
   },
-  cancelButton: {
-    alignItems: "center",
-    padding: 16,
-  },
-  cancelText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: palette.textSecondary,
-  },
 });

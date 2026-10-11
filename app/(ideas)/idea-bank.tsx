@@ -251,32 +251,9 @@ export default function IdeaBankScreen() {
 }
 
 const styles = StyleSheet.create({
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: palette.text,
-  },
   container: {
     flex: 1,
     backgroundColor: palette.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 60,
-    paddingBottom: 16,
-    backgroundColor: palette.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: palette.border,
-  },
-  headerButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   content: {
     padding: 16,

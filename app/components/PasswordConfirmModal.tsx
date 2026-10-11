@@ -107,7 +107,7 @@ export function PasswordConfirmModal({
               editable={!isLoading}
               autoFocus={true}
             />
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Mostrar u ocultar contraseña" hitSlop={10}
               style={styles.iconRight}
               onPress={() => setShowPassword(!showPassword)}
               disabled={isLoading}

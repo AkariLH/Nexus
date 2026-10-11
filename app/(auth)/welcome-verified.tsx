@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { palette, gradients } from "../../constants/colors";
+import { decorativeLoop } from "../../utils/motion";
 
 const { width, height } = Dimensions.get("window");
 
@@ -93,7 +94,7 @@ export default function WelcomeVerifiedScreen() {
     }).start();
 
     // Animación del anillo pulsante
-    Animated.loop(
+    decorativeLoop(
       Animated.parallel([
         Animated.timing(ringScale, {
           toValue: 1.5,
@@ -113,7 +114,7 @@ export default function WelcomeVerifiedScreen() {
       const delay = Math.random() * 2000;
       const duration = 3000 + Math.random() * 2000;
       
-      Animated.loop(
+      decorativeLoop(
         Animated.sequence([
           Animated.delay(delay),
           Animated.parallel([
@@ -153,7 +154,7 @@ export default function WelcomeVerifiedScreen() {
     sparkleAnims.forEach((anim, i) => {
       const delay = Math.random() * 1000;
       
-      Animated.loop(
+      decorativeLoop(
         Animated.sequence([
           Animated.delay(delay),
           Animated.parallel([

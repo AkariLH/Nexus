@@ -549,7 +549,7 @@ export default function EditEventScreen() {
               <Ionicons name="time-outline" size={20} color={palette.primary} />
               <Text style={styles.label}>Todo el día</Text>
             </View>
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="switch" accessibilityLabel="Todo el día" accessibilityState={{ checked: isAllDay }}
               style={[styles.switch, isAllDay && styles.switchActive]}
               onPress={() => setIsAllDay(!isAllDay)}
               activeOpacity={0.7}
@@ -646,7 +646,7 @@ export default function EditEventScreen() {
               <Ionicons name="repeat" size={20} color={palette.primary} />
               <Text style={styles.label}>Evento recurrente</Text>
             </View>
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="switch" accessibilityLabel="Evento recurrente" accessibilityState={{ checked: isRecurring }}
               style={[styles.switch, isRecurring && styles.switchActive]}
               onPress={() => {
                 if (!isRecurring) {
@@ -936,27 +936,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: palette.textSecondary,
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: palette.surface,
-    borderBottomWidth: 2,
-    borderBottomColor: palette.divider,
-  },
-  backButton: {
-    padding: 8,
-    marginLeft: -8,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: palette.text,
-    flex: 1,
-    textAlign: "center",
-  },
   deleteButton: {
     padding: 8,
   },
@@ -1006,9 +985,6 @@ const styles = StyleSheet.create({
     color: palette.text,
     textAlign: "center",
     paddingVertical: 14,
-  },
-  placeholder: {
-    color: palette.textMuted,
   },
   allDayContainer: {
     flexDirection: "row",
