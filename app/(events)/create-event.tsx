@@ -11,6 +11,7 @@ import {
   View,
   ActivityIndicator,
   Platform,
+  KeyboardAvoidingView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -20,6 +21,8 @@ import { RecurrenceModal } from "../components/RecurrenceModal";
 import { RemindersModal, Reminder } from "../components/RemindersModal";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { endFromDuration } from "../../utils/ideaFormat";
+import { palette, gradients } from "../../constants/colors";
+import { ScreenHeader } from "../components/layout/ScreenHeader";
 
 export default function CreateEventScreen() {
   const router = useRouter();
@@ -46,7 +49,7 @@ export default function CreateEventScreen() {
   const [description, setDescription] = useState(ideaDescription ?? '');
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [showRemindersModal, setShowRemindersModal] = useState(false);
-  const [selectedColor, setSelectedColor] = useState('#FF4F81');
+  const [selectedColor, setSelectedColor] = useState<string>(palette.primary);
   
   // Estados de UI
   const [loading, setLoading] = useState(false);
@@ -334,31 +337,30 @@ export default function CreateEventScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={["left", "right", "bottom"]}>
       {/* Header estilo Figma */}
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton} 
-          onPress={() => router.back()}
-          disabled={loading}
-        >
-          <Ionicons name="arrow-back" size={24} color="#1A1A1A" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Nuevo evento</Text>
-        <TouchableOpacity
-          onPress={handleCreateEvent}
-          disabled={!title || !startDateSelected || !endDateSelected || (!isAllDay && (!startTimeSelected || !endTimeSelected)) || loading}
-          style={styles.headerAction}
-        >
-          <Text style={[
-            styles.headerActionText,
-            (!title || !startDateSelected || !endDateSelected || (!isAllDay && (!startTimeSelected || !endTimeSelected)) || loading) && styles.headerActionDisabled
-          ]}>
-            Crear
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <ScreenHeader
+        title="Nuevo evento"
+        onBack={() => router.back()}
+        backDisabled={loading}
+        right={
+          <TouchableOpacity
+            onPress={handleCreateEvent}
+            disabled={!title || !startDateSelected || !endDateSelected || (!isAllDay && (!startTimeSelected || !endTimeSelected)) || loading}
+            style={styles.headerAction}
+            accessibilityRole="button"
+          >
+            <Text style={[
+              styles.headerActionText,
+              (!title || !startDateSelected || !endDateSelected || (!isAllDay && (!startTimeSelected || !endTimeSelected)) || loading) && styles.headerActionDisabled
+            ]}>
+              Crear
+            </Text>
+          </TouchableOpacity>
+        }
+      />
 
+      <KeyboardAvoidingView style={styles.keyboardAvoider} behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <ScrollView 
         style={styles.scrollView} 
         contentContainerStyle={styles.scrollContent}
@@ -368,7 +370,7 @@ export default function CreateEventScreen() {
         {/* Título */}
         <View style={styles.inputGroup}>
           <View style={styles.labelContainer}>
-            <Ionicons name="text" size={20} color="#FF4F81" />
+            <Ionicons name="text" size={20} color={palette.primary} />
             <Text style={styles.label}>Título del evento</Text>
           </View>
           <TextInput
@@ -376,7 +378,7 @@ export default function CreateEventScreen() {
             value={title}
             onChangeText={setTitle}
             placeholder="Cita romántica, Aniversario..."
-            placeholderTextColor="#1A1A1A66"
+            placeholderTextColor={palette.textMuted}
             maxLength={255}
             editable={!loading}
           />
@@ -388,7 +390,7 @@ export default function CreateEventScreen() {
         {/* Todo el día */}
         <View style={styles.allDayContainer}>
           <View style={styles.labelContainer}>
-            <Ionicons name="time-outline" size={20} color="#FF4F81" />
+            <Ionicons name="time-outline" size={20} color={palette.primary} />
             <Text style={styles.label}>Todo el día</Text>
           </View>
           <TouchableOpacity
@@ -403,7 +405,7 @@ export default function CreateEventScreen() {
         {/* Fecha y hora de inicio */}
         <View style={styles.inputGroup}>
           <View style={styles.labelContainer}>
-            <Ionicons name="calendar-outline" size={20} color="#FF4F81" />
+            <Ionicons name="calendar-outline" size={20} color={palette.primary} />
             <Text style={styles.label}>Inicio</Text>
           </View>
           <View style={styles.dateTimeRow}>
@@ -436,7 +438,7 @@ export default function CreateEventScreen() {
         {/* Fecha y hora de fin */}
         <View style={styles.inputGroup}>
           <View style={styles.labelContainer}>
-            <Ionicons name="calendar-outline" size={20} color="#FF4F81" />
+            <Ionicons name="calendar-outline" size={20} color={palette.primary} />
             <Text style={styles.label}>Fin</Text>
           </View>
           <View style={styles.dateTimeRow}>
@@ -469,7 +471,7 @@ export default function CreateEventScreen() {
         {/* Ubicación */}
         <View style={styles.inputGroup}>
           <View style={styles.labelContainer}>
-            <Ionicons name="location" size={20} color="#FF4F81" />
+            <Ionicons name="location" size={20} color={palette.primary} />
             <Text style={styles.label}>Ubicación (opcional)</Text>
           </View>
           <TextInput
@@ -477,7 +479,7 @@ export default function CreateEventScreen() {
             value={location}
             onChangeText={setLocation}
             placeholder="Restaurante favorito, Casa..."
-            placeholderTextColor="#1A1A1A66"
+            placeholderTextColor={palette.textMuted}
             maxLength={500}
             editable={!loading}
           />
@@ -486,7 +488,7 @@ export default function CreateEventScreen() {
         {/* Evento recurrente */}
         <View style={styles.allDayContainer}>
           <View style={styles.labelContainer}>
-            <Ionicons name="repeat" size={20} color="#FF4F81" />
+            <Ionicons name="repeat" size={20} color={palette.primary} />
             <Text style={styles.label}>Evento recurrente</Text>
           </View>
           <TouchableOpacity
@@ -513,7 +515,7 @@ export default function CreateEventScreen() {
             activeOpacity={0.7}
           >
             <View style={styles.recurrenceSummaryContent}>
-              <Ionicons name="settings-outline" size={20} color="#8A2BE2" />
+              <Ionicons name="settings-outline" size={20} color={palette.secondary} />
               <Text style={styles.recurrenceSummaryText}>
                 {recurrenceConfig.type === 'CUSTOM'
                   ? `${recurrenceConfig.customFrequency === 'WEEKLY' ? 'Semanal' : recurrenceConfig.customFrequency === 'MONTHLY' ? 'Mensual' : 'Anual'} personalizado`
@@ -521,7 +523,7 @@ export default function CreateEventScreen() {
                 {recurrenceConfig.endDate && ` hasta ${new Date(recurrenceConfig.endDate).toLocaleDateString('es-ES')}`}
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="#666" />
+            <Ionicons name="chevron-forward" size={20} color={palette.textSecondary} />
           </TouchableOpacity>
         )}
 
@@ -547,7 +549,7 @@ export default function CreateEventScreen() {
         {/* Categoría */}
         <View style={styles.inputGroup}>
           <View style={styles.labelContainer}>
-            <Ionicons name="pricetag" size={20} color="#FF4F81" />
+            <Ionicons name="pricetag" size={20} color={palette.primary} />
             <Text style={styles.label}>Categoría (opcional)</Text>
           </View>
           <View style={styles.categoryContainer}>
@@ -577,7 +579,7 @@ export default function CreateEventScreen() {
         {/* Descripción */}
         <View style={styles.inputGroup}>
           <View style={styles.labelContainer}>
-            <Ionicons name="document-text" size={20} color="#FF4F81" />
+            <Ionicons name="document-text" size={20} color={palette.primary} />
             <Text style={styles.label}>Descripción (opcional)</Text>
           </View>
           <TextInput
@@ -585,7 +587,7 @@ export default function CreateEventScreen() {
             value={description}
             onChangeText={setDescription}
             placeholder="Añade detalles sobre el evento..."
-            placeholderTextColor="#1A1A1A66"
+            placeholderTextColor={palette.textMuted}
             maxLength={2000}
             multiline
             numberOfLines={4}
@@ -597,7 +599,7 @@ export default function CreateEventScreen() {
         {/* Recordatorios */}
         <View style={styles.inputGroup}>
           <View style={styles.labelContainer}>
-            <Ionicons name="notifications" size={20} color="#FF4F81" />
+            <Ionicons name="notifications" size={20} color={palette.primary} />
             <Text style={styles.label}>Recordatorios (opcional)</Text>
           </View>
           <TouchableOpacity
@@ -605,13 +607,13 @@ export default function CreateEventScreen() {
             onPress={() => setShowRemindersModal(true)}
             disabled={loading}
           >
-            <Ionicons name="alarm" size={20} color="#FF4F81" />
+            <Ionicons name="alarm" size={20} color={palette.primary} />
             <Text style={styles.remindersButtonText}>
               {reminders.length === 0
                 ? 'Agregar recordatorios'
                 : `${reminders.length} recordatorio${reminders.length > 1 ? 's' : ''}`}
             </Text>
-            <Ionicons name="chevron-forward" size={20} color="#999" />
+            <Ionicons name="chevron-forward" size={20} color={palette.icon} />
           </TouchableOpacity>
 
           {reminders.length > 0 && (
@@ -636,13 +638,13 @@ export default function CreateEventScreen() {
           activeOpacity={0.8}
         >
           <LinearGradient
-            colors={["#FF4F81", "#8A2BE2"]}
+            colors={gradients.primary}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.createButtonGradient}
           >
             {loading ? (
-              <ActivityIndicator color="#FFF" size="small" />
+              <ActivityIndicator color={palette.onPrimary} size="small" />
             ) : (
               <Text style={styles.createButtonText}>Crear evento</Text>
             )}
@@ -651,6 +653,7 @@ export default function CreateEventScreen() {
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* Date/Time Pickers Nativos */}
       {showStartDatePicker && (
@@ -660,8 +663,8 @@ export default function CreateEventScreen() {
           display={Platform.OS === 'ios' ? 'spinner' : 'default'}
           onChange={onStartDateChange}
           minimumDate={new Date()}
-          accentColor="#FF4F81"
-          textColor="#1A1A1A"
+          accentColor={palette.primary}
+          textColor={palette.text}
         />
       )}
 
@@ -672,8 +675,8 @@ export default function CreateEventScreen() {
           display={Platform.OS === 'ios' ? 'spinner' : 'default'}
           onChange={onEndDateChange}
           minimumDate={startDate}
-          accentColor="#FF4F81"
-          textColor="#1A1A1A"
+          accentColor={palette.primary}
+          textColor={palette.text}
         />
       )}
 
@@ -684,8 +687,8 @@ export default function CreateEventScreen() {
           display={Platform.OS === 'ios' ? 'spinner' : 'default'}
           onChange={onStartTimeChange}
           is24Hour={true}
-          accentColor="#FF4F81"
-          textColor="#1A1A1A"
+          accentColor={palette.primary}
+          textColor={palette.text}
         />
       )}
 
@@ -696,8 +699,8 @@ export default function CreateEventScreen() {
           display={Platform.OS === 'ios' ? 'spinner' : 'default'}
           onChange={onEndTimeChange}
           is24Hour={true}
-          accentColor="#FF4F81"
-          textColor="#1A1A1A"
+          accentColor={palette.primary}
+          textColor={palette.text}
         />
       )}
 
@@ -762,9 +765,12 @@ export default function CreateEventScreen() {
 }
 
 const styles = StyleSheet.create({
+  keyboardAvoider: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    backgroundColor: "#FFF",
+    backgroundColor: palette.surface,
   },
   header: {
     flexDirection: "row",
@@ -772,9 +778,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: "#FFF",
+    backgroundColor: palette.surface,
     borderBottomWidth: 2,
-    borderBottomColor: "#F0F0F0",
+    borderBottomColor: palette.divider,
   },
   backButton: {
     padding: 8,
@@ -783,7 +789,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: palette.text,
     flex: 1,
     textAlign: "center",
   },
@@ -793,7 +799,7 @@ const styles = StyleSheet.create({
   headerActionText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#FF4F81",
+    color: palette.textAccent,
   },
   headerActionDisabled: {
     opacity: 0.5,
@@ -819,24 +825,24 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: "500",
-    color: "#1A1A1A",
+    color: palette.text,
   },
   input: {
     height: 56,
     paddingHorizontal: 16,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: palette.surfaceMuted,
     borderWidth: 2,
     borderColor: "transparent",
     borderRadius: 20,
     fontSize: 16,
-    color: "#1A1A1A",
+    color: palette.text,
     justifyContent: "center",
   },
   inputWrapper: {
     height: 56,
     paddingHorizontal: 16,
     paddingVertical: 16,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: palette.surfaceMuted,
     borderWidth: 2,
     borderColor: "transparent",
     borderRadius: 20,
@@ -844,12 +850,12 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 16,
-    color: "#1A1A1A",
+    color: palette.text,
     textAlign: "center",
     paddingVertical: 14,
   },
   placeholder: {
-    color: "#1A1A1A66",
+    color: palette.textMuted,
   },
   allDayContainer: {
     flexDirection: "row",
@@ -861,19 +867,19 @@ const styles = StyleSheet.create({
     width: 50,
     height: 28,
     borderRadius: 14,
-    backgroundColor: "#E0E0E0",
+    backgroundColor: palette.border,
     padding: 2,
     justifyContent: "center",
   },
   switchActive: {
-    backgroundColor: "#FF4F81",
+    backgroundColor: palette.primary,
   },
   switchThumb: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: "#FFF",
-    shadowColor: "#000",
+    backgroundColor: palette.surface,
+    shadowColor: palette.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 2,
@@ -884,10 +890,10 @@ const styles = StyleSheet.create({
   },
   inputText: {
     fontSize: 16,
-    color: "#1A1A1A",
+    color: palette.text,
   },
   inputPlaceholder: {
-    color: "#1A1A1A66",
+    color: palette.textMuted,
   },
   dateTimeRow: {
     flexDirection: "row",
@@ -901,22 +907,22 @@ const styles = StyleSheet.create({
   },
   dateTimeText: {
     fontSize: 16,
-    color: "#1A1A1A",
+    color: palette.text,
     fontWeight: "500",
   },
   textArea: {
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: palette.surfaceMuted,
     borderWidth: 2,
     borderColor: "transparent",
     borderRadius: 20,
     fontSize: 16,
-    color: "#1A1A1A",
+    color: palette.text,
     minHeight: 120,
   },
   inputError: {
-    borderColor: "#FF4F81",
+    borderColor: palette.primary,
   },
   errorContainer: {
     flexDirection: "row",
@@ -926,7 +932,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 13,
-    color: "#FF4F81",
+    color: palette.textAccent,
     fontWeight: "500",
     marginTop: 4,
   },
@@ -942,7 +948,7 @@ const styles = StyleSheet.create({
   },
   colorButtonActive: {
     borderWidth: 4,
-    borderColor: "#FF4F8180",
+    borderColor: palette.primaryBorder,
     transform: [{ scale: 1.1 }],
   },
   categoryContainer: {
@@ -954,27 +960,27 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 18,
     borderRadius: 20,
-    backgroundColor: "#F0F0F0",
+    backgroundColor: palette.divider,
     borderWidth: 2,
-    borderColor: "#F0F0F0",
+    borderColor: palette.divider,
   },
   categoryChipActive: {
-    backgroundColor: "#FF4F8115",
-    borderColor: "#FF4F81",
+    backgroundColor: palette.primarySoft,
+    borderColor: palette.primary,
   },
   categoryChipText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#666",
+    color: palette.textSecondary,
   },
   categoryChipTextActive: {
-    color: "#FF4F81",
+    color: palette.textAccent,
   },
   remindersButton: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: palette.surfaceMuted,
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderRadius: 12,
@@ -982,7 +988,7 @@ const styles = StyleSheet.create({
   remindersButtonText: {
     flex: 1,
     fontSize: 15,
-    color: "#1A1A1A",
+    color: palette.text,
   },
   remindersPreview: {
     flexDirection: "row",
@@ -991,20 +997,20 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   reminderTag: {
-    backgroundColor: "#FFF5F8",
+    backgroundColor: palette.primarySoft,
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#FFE0E9",
+    borderColor: palette.primaryBorder,
   },
   reminderTagText: {
     fontSize: 12,
-    color: "#FF4F81",
+    color: palette.textAccent,
   },
   remindersMore: {
     fontSize: 12,
-    color: "#999",
+    color: palette.textMuted,
     paddingVertical: 6,
   },
   reminderContainer: {
@@ -1016,21 +1022,21 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 18,
     borderRadius: 20,
-    backgroundColor: "#F0F0F0",
+    backgroundColor: palette.divider,
     borderWidth: 2,
-    borderColor: "#F0F0F0",
+    borderColor: palette.divider,
   },
   reminderChipActive: {
-    backgroundColor: "#8A2BE215",
-    borderColor: "#8A2BE2",
+    backgroundColor: palette.secondarySoft,
+    borderColor: palette.secondary,
   },
   reminderChipText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#666",
+    color: palette.textSecondary,
   },
   reminderChipTextActive: {
-    color: "#8A2BE2",
+    color: palette.textAccent,
   },
   recurrenceTypeContainer: {
     flexDirection: "row",
@@ -1041,21 +1047,21 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 18,
     borderRadius: 20,
-    backgroundColor: "#F0F0F0",
+    backgroundColor: palette.divider,
     borderWidth: 2,
-    borderColor: "#F0F0F0",
+    borderColor: palette.divider,
   },
   recurrenceTypeChipActive: {
-    backgroundColor: "#FF4F8115",
-    borderColor: "#FF4F81",
+    backgroundColor: palette.primarySoft,
+    borderColor: palette.primary,
   },
   recurrenceTypeChipText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#666",
+    color: palette.textSecondary,
   },
   recurrenceTypeChipTextActive: {
-    color: "#FF4F81",
+    color: palette.textAccent,
   },
   weekDaysContainer: {
     flexDirection: "row",
@@ -1066,23 +1072,23 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "#F0F0F0",
+    backgroundColor: palette.divider,
     borderWidth: 2,
-    borderColor: "#F0F0F0",
+    borderColor: palette.divider,
     alignItems: "center",
     justifyContent: "center",
   },
   weekDayButtonActive: {
-    backgroundColor: "#FF4F8115",
-    borderColor: "#FF4F81",
+    backgroundColor: palette.primarySoft,
+    borderColor: palette.primary,
   },
   weekDayText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#666",
+    color: palette.textSecondary,
   },
   weekDayTextActive: {
-    color: "#FF4F81",
+    color: palette.textAccent,
   },
   recurrenceEndRow: {
     flexDirection: "row",
@@ -1098,10 +1104,10 @@ const styles = StyleSheet.create({
   recurrenceSummary: {
     marginBottom: 24,
     padding: 16,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: palette.surfaceMuted,
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: '#8A2BE2',
+    borderColor: palette.secondary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -1115,7 +1121,7 @@ const styles = StyleSheet.create({
   recurrenceSummaryText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#8A2BE2',
+    color: palette.textAccent,
     flex: 1,
   },
   infoCard: {
@@ -1132,7 +1138,7 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
     fontSize: 13,
-    color: "#666",
+    color: palette.textSecondary,
     lineHeight: 18,
   },
   createButton: {
@@ -1140,7 +1146,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     overflow: "hidden",
     marginTop: 8,
-    shadowColor: "#FF4F81",
+    shadowColor: palette.primary,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 16,
@@ -1159,7 +1165,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   createButtonText: {
-    color: "#FFF",
+    color: palette.onPrimary,
     fontSize: 17,
     fontWeight: "700",
   },

@@ -12,6 +12,8 @@ import { emotionService } from '../../services/emotion.service';
 import { MOODS, MoodOption } from '../../constants/moods';
 import { todayEntry } from '../../utils/moodHistory';
 import { MOOD_ROW_GAP, moodRows, moodSizing } from '../../utils/moodLayout';
+import { palette } from '../../constants/colors';
+import { ScreenHeader } from '../components/layout/ScreenHeader';
 
 /**
  * RF-31 - Registro de estado emocional del dia. Las opciones y su mapeo interno viven en
@@ -106,36 +108,32 @@ export default function MoodLogScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-        <TouchableOpacity
-          style={styles.headerButton}
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          accessibilityLabel="Regresar"
-        >
-          <Ionicons name="arrow-back" size={24} color="#1A1A1A" />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.historyButton}
-          onPress={() => router.push('/(mood)/mood-history')}
-          accessibilityRole="button"
-          accessibilityLabel="Ver mi historial"
-        >
-          <Ionicons name="time-outline" size={18} color="#FF4F81" />
-          <Text style={styles.historyButtonText}>Historial</Text>
-        </TouchableOpacity>
-      </View>
+      <ScreenHeader
+        title="Mi ánimo"
+        onBack={() => router.back()}
+        right={
+          <TouchableOpacity
+            style={styles.headerButton}
+            onPress={() => router.push('/(mood)/mood-history')}
+            accessibilityRole="button"
+            accessibilityLabel="Ver mi historial"
+          >
+            <Ionicons name="time-outline" size={24} color={palette.primary} />
+          </TouchableOpacity>
+        }
+      />
 
       <View style={styles.content}>
-        <Text style={styles.question} accessibilityRole="header">
+        <Text style={styles.question}>
           ¿Cómo estuvo tu día?
         </Text>
         <View style={styles.privacyRow}>
-          <Ionicons name="lock-closed" size={13} color="#6B7280" />
+          <Ionicons name="lock-closed" size={13} color={palette.textSecondary} />
           <Text style={styles.privacyText}>Solo tú puedes verlo</Text>
         </View>
         {registeredToday && (
           <View style={styles.todayNote}>
+            <Ionicons name="information-circle" size={20} color={palette.secondary} />
             <Text style={styles.todayNoteText}>
               Ya registraste tu día · puedes cambiarlo si quieres
             </Text>
@@ -231,75 +229,71 @@ export default function MoodLogScreen() {
 }
 
 const styles = StyleSheet.create({
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: palette.text,
+  },
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: palette.background,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingBottom: 8,
+    paddingTop: 60,
+    paddingBottom: 16,
+    backgroundColor: palette.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: palette.border,
   },
   headerButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  historyButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    height: 36,
-    paddingHorizontal: 14,
-    borderRadius: 18,
-    backgroundColor: '#FFF0F5',
-  },
-  historyButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#FF4F81',
-  },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 8,
+    padding: 16,
   },
   question: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#111827',
+    fontSize: 20,
+    fontWeight: '600',
+    color: palette.text,
     textAlign: 'center',
-    letterSpacing: -0.5,
   },
   todayNote: {
-    alignSelf: 'center',
-    marginTop: -6,
-    marginBottom: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 14,
-    backgroundColor: '#FFF0F5',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 12,
+    backgroundColor: palette.secondarySoft,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: palette.secondaryBorder,
+    marginBottom: 16,
   },
   todayNoteText: {
+    flex: 1,
     fontSize: 13,
-    fontWeight: '600',
-    color: '#FF4F81',
+    color: palette.text,
+    lineHeight: 20,
   },
   privacyRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 5,
-    marginTop: 6,
+    gap: 6,
+    marginTop: 8,
     marginBottom: 16,
   },
   privacyText: {
-    fontSize: 13,
-    color: '#6B7280',
+    fontSize: 14,
+    color: palette.textSecondary,
   },
   grid: {
     flex: 1,
@@ -315,24 +309,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 8,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
+    backgroundColor: palette.surface,
+    borderRadius: 16,
     borderWidth: 2,
     borderColor: 'transparent',
-    shadowColor: '#000',
+    shadowColor: palette.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
-    shadowRadius: 6,
+    shadowRadius: 4,
     elevation: 2,
   },
   moodCardSelected: {
-    borderColor: '#FF4F81',
-    backgroundColor: '#FFF0F5',
-    shadowColor: '#FF4F81',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.18,
-    shadowRadius: 12,
-    elevation: 6,
+    borderColor: palette.primary,
+    backgroundColor: palette.primarySoft,
   },
   moodCardDimmed: {
     opacity: 0.55,
@@ -345,16 +334,16 @@ const styles = StyleSheet.create({
   },
   moodLabel: {
     fontWeight: '500',
-    color: '#4B5563',
+    color: palette.textSecondary,
   },
   moodLabelSelected: {
-    color: '#FF4F81',
-    fontWeight: '700',
+    color: palette.textAccent,
+    fontWeight: '600',
   },
   footer: {
     minHeight: 88,
     justifyContent: 'flex-end',
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingTop: 16,
   },
   savedContainer: {
@@ -368,15 +357,15 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   savedTitle: {
-    fontSize: 26,
-    fontWeight: '700',
-    color: '#111827',
+    fontSize: 20,
+    fontWeight: '600',
+    color: palette.text,
     textAlign: 'center',
   },
   savedSubtitle: {
-    fontSize: 15,
-    color: '#6B7280',
+    fontSize: 14,
+    color: palette.textSecondary,
     textAlign: 'center',
-    marginTop: 6,
+    marginTop: 8,
   },
 });

@@ -16,6 +16,8 @@ import { useAuth } from "../../context/AuthContext";
 import eventService, { EventResponse } from "../../services/event.service";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { externalCalendarIntegration } from "../../services/externalCalendar.integration.service";
+import { palette, gradients } from "../../constants/colors";
+import { ScreenHeader } from "../components/layout/ScreenHeader";
 
 export default function NotificationsScreen() {
   const router = useRouter();
@@ -235,43 +237,29 @@ export default function NotificationsScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.backButton} 
-            onPress={() => router.back()}
-          >
-            <Ionicons name="arrow-back" size={24} color="#1A1A1A" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Notificaciones</Text>
-          <View style={styles.headerSpacer} />
-        </View>
+      <SafeAreaView style={styles.container} edges={["left", "right", "bottom"]}>
+        <ScreenHeader title="Notificaciones" onBack={() => router.back()} />
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#FF4F81" />
+          <ActivityIndicator size="large" color={palette.primary} />
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={["left", "right", "bottom"]}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton} 
-          onPress={() => router.back()}
-        >
-          <Ionicons name="arrow-back" size={24} color="#1A1A1A" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Notificaciones</Text>
-        <View style={styles.badgeContainer}>
-          {pendingEvents.length > 0 && (
+      <ScreenHeader
+        title="Notificaciones"
+        onBack={() => router.back()}
+        right={
+          pendingEvents.length > 0 ? (
             <View style={styles.badge}>
               <Text style={styles.badgeText}>{pendingEvents.length}</Text>
             </View>
-          )}
-        </View>
-      </View>
+          ) : undefined
+        }
+      />
 
       <ScrollView
         style={styles.scrollView}
@@ -283,8 +271,8 @@ export default function NotificationsScreen() {
               setRefreshing(true);
               loadPendingEvents();
             }}
-            colors={['#FF4F81']}
-            tintColor="#FF4F81"
+            colors={[palette.primary]}
+            tintColor={palette.primary}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -292,7 +280,7 @@ export default function NotificationsScreen() {
         {pendingEvents.length === 0 ? (
           <View style={styles.emptyContainer}>
             <View style={styles.emptyIconContainer}>
-              <Ionicons name="notifications-off-outline" size={64} color="#CCC" />
+              <Ionicons name="notifications-off-outline" size={64} color={palette.iconDisabled} />
             </View>
             <Text style={styles.emptyTitle}>No hay notificaciones</Text>
             <Text style={styles.emptyText}>
@@ -308,10 +296,10 @@ export default function NotificationsScreen() {
                 <View style={styles.notificationHeader}>
                   <View style={styles.avatarContainer}>
                     <LinearGradient
-                      colors={['#FF4F81', '#8A2BE2']}
+                      colors={gradients.primary}
                       style={styles.avatar}
                     >
-                      <Ionicons name="calendar" size={24} color="#FFF" />
+                      <Ionicons name="calendar" size={24} color={palette.onPrimary} />
                     </LinearGradient>
                   </View>
                   <View style={styles.notificationInfo}>
@@ -332,19 +320,19 @@ export default function NotificationsScreen() {
                 {/* Detalles del evento */}
                 <View style={styles.eventDetails}>
                   <View style={styles.eventTitleContainer}>
-                    <Ionicons name="calendar-outline" size={20} color="#FF4F81" />
+                    <Ionicons name="calendar-outline" size={20} color={palette.primary} />
                     <Text style={styles.eventTitle}>{event.title}</Text>
                   </View>
 
                   <View style={styles.eventRow}>
-                    <Ionicons name="time-outline" size={16} color="#666" />
+                    <Ionicons name="time-outline" size={16} color={palette.textSecondary} />
                     <Text style={styles.eventDetailText}>
                       {formatDate(event.startDateTime)}
                     </Text>
                   </View>
 
                   <View style={styles.eventRow}>
-                    <Ionicons name="alarm-outline" size={16} color="#666" />
+                    <Ionicons name="alarm-outline" size={16} color={palette.textSecondary} />
                     <Text style={styles.eventDetailText}>
                       {formatTime(event.startDateTime)} - {formatTime(event.endDateTime)}
                     </Text>
@@ -352,7 +340,7 @@ export default function NotificationsScreen() {
 
                   {event.location && (
                     <View style={styles.eventRow}>
-                      <Ionicons name="location-outline" size={16} color="#666" />
+                      <Ionicons name="location-outline" size={16} color={palette.textSecondary} />
                       <Text style={styles.eventDetailText}>{event.location}</Text>
                     </View>
                   )}
@@ -376,10 +364,10 @@ export default function NotificationsScreen() {
                     disabled={processingEventId === event.id}
                   >
                     {processingEventId === event.id ? (
-                      <ActivityIndicator size="small" color="#FF4757" />
+                      <ActivityIndicator size="small" color={palette.error} />
                     ) : (
                       <>
-                        <Ionicons name="close-circle" size={20} color="#FF4757" />
+                        <Ionicons name="close-circle" size={20} color={palette.error} />
                         <Text style={styles.rejectButtonText}>Rechazar</Text>
                       </>
                     )}
@@ -395,16 +383,16 @@ export default function NotificationsScreen() {
                     disabled={processingEventId === event.id}
                   >
                     <LinearGradient
-                      colors={['#FF4F81', '#8A2BE2']}
+                      colors={gradients.primary}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 0 }}
                       style={styles.approveButtonGradient}
                     >
                       {processingEventId === event.id ? (
-                        <ActivityIndicator size="small" color="#FFF" />
+                        <ActivityIndicator size="small" color={palette.onPrimary} />
                       ) : (
                         <>
-                          <Ionicons name="checkmark-circle" size={20} color="#FFF" />
+                          <Ionicons name="checkmark-circle" size={20} color={palette.onPrimary} />
                           <Text style={styles.approveButtonText}>Aceptar</Text>
                         </>
                       )}
@@ -478,7 +466,7 @@ export default function NotificationsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FA",
+    backgroundColor: palette.background,
   },
   header: {
     flexDirection: "row",
@@ -486,9 +474,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: "#FFF",
+    backgroundColor: palette.surface,
     borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
+    borderBottomColor: palette.divider,
   },
   backButton: {
     padding: 8,
@@ -496,7 +484,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: palette.text,
     flex: 1,
     textAlign: "center",
   },
@@ -508,7 +496,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   badge: {
-    backgroundColor: "#FF4F81",
+    backgroundColor: palette.primary,
     borderRadius: 12,
     minWidth: 24,
     height: 24,
@@ -517,7 +505,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
   badgeText: {
-    color: "#FFF",
+    color: palette.onPrimary,
     fontSize: 12,
     fontWeight: "700",
   },
@@ -535,7 +523,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1A1A1A",
+    color: palette.text,
     marginBottom: 12,
     marginTop: 8,
   },
@@ -549,7 +537,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: palette.surfaceMuted,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 20,
@@ -557,21 +545,21 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: palette.text,
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 14,
-    color: "#666",
+    color: palette.textSecondary,
     textAlign: "center",
     maxWidth: 250,
   },
   notificationCard: {
-    backgroundColor: "#FFF",
+    backgroundColor: palette.surface,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
-    shadowColor: "#000",
+    shadowColor: palette.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -598,20 +586,20 @@ const styles = StyleSheet.create({
   notificationName: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1A1A1A",
+    color: palette.text,
     marginBottom: 2,
   },
   notificationTime: {
     fontSize: 13,
-    color: "#999",
+    color: palette.textMuted,
   },
   notificationMessage: {
     fontSize: 14,
-    color: "#666",
+    color: palette.textSecondary,
     marginBottom: 16,
   },
   eventDetails: {
-    backgroundColor: "#F8F9FA",
+    backgroundColor: palette.background,
     borderRadius: 12,
     padding: 12,
     marginBottom: 16,
@@ -625,7 +613,7 @@ const styles = StyleSheet.create({
   eventTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: palette.text,
     flex: 1,
   },
   eventRow: {
@@ -636,18 +624,18 @@ const styles = StyleSheet.create({
   },
   eventDetailText: {
     fontSize: 14,
-    color: "#666",
+    color: palette.textSecondary,
     flex: 1,
   },
   descriptionContainer: {
     marginTop: 8,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: "#E0E0E0",
+    borderTopColor: palette.border,
   },
   descriptionText: {
     fontSize: 14,
-    color: "#666",
+    color: palette.textSecondary,
     lineHeight: 20,
   },
   actionButtons: {
@@ -665,16 +653,16 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   rejectButton: {
-    backgroundColor: "#FFF",
+    backgroundColor: palette.surface,
     borderWidth: 2,
-    borderColor: "#FF4757",
+    borderColor: palette.error,
     flexDirection: "row",
     gap: 6,
   },
   rejectButtonText: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#FF4757",
+    color: palette.error,
   },
   approveButton: {
     overflow: "hidden",
@@ -690,6 +678,6 @@ const styles = StyleSheet.create({
   approveButtonText: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#FFF",
+    color: palette.onPrimary,
   },
 });

@@ -18,6 +18,8 @@ import { GradientButton } from '../components/ui/GradientButton';
 import { useAuth } from '../../context/AuthContext';
 import { ideaService, IdeaCategory, IdeaResponse } from '../../services/idea.service';
 import { formatDuration, priceLabel, proposalParams } from '../../utils/ideaFormat';
+import { palette } from '../../constants/colors';
+import { ScreenHeader } from '../components/layout/ScreenHeader';
 
 /**
  * RF-34 - Banco de ideas de citas, por categoria. RF-35 - "Proponer a mi pareja" prellena
@@ -83,16 +85,7 @@ export default function IdeaBankScreen() {
   };
 
   const header = (
-    <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-      <TouchableOpacity
-        style={styles.headerButton}
-        onPress={() => router.back()}
-        accessibilityRole="button"
-        accessibilityLabel="Regresar"
-      >
-        <Ionicons name="arrow-back" size={24} color="#1A1A1A" />
-      </TouchableOpacity>
-    </View>
+    <ScreenHeader title="Banco de ideas" onBack={() => router.back()} />
   );
 
   const chips = (
@@ -113,7 +106,7 @@ export default function IdeaBankScreen() {
             accessibilityState={{ selected: active }}
           >
             {c.code && (
-              <Ionicons name={iconFor(c.code)} size={15} color={active ? '#FFFFFF' : '#FF4F81'} />
+              <Ionicons name={iconFor(c.code)} size={15} color={active ? palette.surface : palette.secondary} />
             )}
             <Text style={[styles.chipText, active && styles.chipTextActive]}>{c.label}</Text>
           </TouchableOpacity>
@@ -124,9 +117,7 @@ export default function IdeaBankScreen() {
 
   const intro = (
     <View style={styles.intro}>
-      <Text style={styles.title} accessibilityRole="header">
-        Banco de ideas
-      </Text>
+      <Ionicons name="bulb" size={20} color={palette.secondary} />
       <Text style={styles.subtitle}>Encuentren su próxima cita y propónganla en un toque.</Text>
     </View>
   );
@@ -137,14 +128,14 @@ export default function IdeaBankScreen() {
         {header}
         <View style={styles.centered}>
           <View style={styles.stateIcon}>
-            <Ionicons name="link-outline" size={44} color="#9CA3AF" />
+            <Ionicons name="link-outline" size={44} color={palette.icon} />
           </View>
           <Text style={styles.stateTitle}>Primero vincúlate con tu pareja</Text>
           <Text style={styles.stateSubtitle}>
             El banco de ideas es para planear juntos, así que necesita un vínculo activo.
           </Text>
           <TouchableOpacity style={styles.secondaryButton} onPress={() => router.replace('/(tabs)/link')}>
-            <Ionicons name="link" size={18} color="#FF4F81" />
+            <Ionicons name="link" size={18} color={palette.secondary} />
             <Text style={styles.secondaryButtonText}>Ir a Vínculo</Text>
           </TouchableOpacity>
         </View>
@@ -160,7 +151,7 @@ export default function IdeaBankScreen() {
         keyExtractor={(item) => String(item.id)}
         contentContainerStyle={[styles.content, { paddingBottom: 24 + insets.bottom }]}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF4F81" />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={palette.primary} />
         }
         ListHeaderComponent={
           <>
@@ -171,12 +162,12 @@ export default function IdeaBankScreen() {
         ListEmptyComponent={
           state === 'loading' ? (
             <View style={styles.listState}>
-              <ActivityIndicator size="large" color="#FF4F81" />
+              <ActivityIndicator size="large" color={palette.primary} />
             </View>
           ) : state === 'error' ? (
             <View style={styles.listState}>
               <View style={styles.stateIcon}>
-                <Ionicons name="cloud-offline-outline" size={44} color="#9CA3AF" />
+                <Ionicons name="cloud-offline-outline" size={44} color={palette.icon} />
               </View>
               <Text style={styles.stateTitle}>No pudimos cargar las ideas</Text>
               <Text style={styles.stateSubtitle}>Revisa tu conexión e inténtalo de nuevo.</Text>
@@ -187,7 +178,7 @@ export default function IdeaBankScreen() {
                   loadIdeas();
                 }}
               >
-                <Ionicons name="refresh" size={18} color="#FF4F81" />
+                <Ionicons name="refresh" size={18} color={palette.secondary} />
                 <Text style={styles.secondaryButtonText}>Reintentar</Text>
               </TouchableOpacity>
             </View>
@@ -215,7 +206,7 @@ export default function IdeaBankScreen() {
             >
               <View style={styles.cardRow}>
                 <View style={styles.cardIcon}>
-                  <Ionicons name={iconFor(item.category)} size={22} color="#FF4F81" />
+                  <Ionicons name={iconFor(item.category)} size={22} color={palette.primary} />
                 </View>
                 <View style={styles.cardBody}>
                   <Text style={styles.cardTitle}>{item.title}</Text>
@@ -224,7 +215,7 @@ export default function IdeaBankScreen() {
                 <Ionicons
                   name={expanded ? 'chevron-up' : 'chevron-down'}
                   size={20}
-                  color="#9CA3AF"
+                  color={palette.icon}
                 />
               </View>
 
@@ -260,82 +251,94 @@ export default function IdeaBankScreen() {
 }
 
 const styles = StyleSheet.create({
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: palette.text,
+  },
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: palette.background,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingBottom: 4,
+    paddingTop: 60,
+    paddingBottom: 16,
+    backgroundColor: palette.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: palette.border,
   },
   headerButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
   content: {
-    paddingHorizontal: 20,
+    padding: 16,
     flexGrow: 1,
   },
   intro: {
-    marginTop: 4,
-    marginBottom: 18,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#111827',
-    letterSpacing: -0.5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 16,
+    backgroundColor: palette.secondarySoft,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: palette.secondaryBorder,
+    marginBottom: 16,
   },
   subtitle: {
-    fontSize: 15,
-    color: '#6B7280',
-    marginTop: 4,
+    flex: 1,
+    fontSize: 13,
+    color: palette.text,
+    lineHeight: 20,
   },
   chipsScroll: {
-    marginHorizontal: -20,
+    marginHorizontal: -16,
     marginBottom: 16,
   },
   chipsRow: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     gap: 8,
   },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    height: 38,
+    paddingVertical: 10,
     paddingHorizontal: 14,
-    borderRadius: 19,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: palette.surface,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#F3D1DC',
+    borderColor: palette.border,
   },
   chipActive: {
-    backgroundColor: '#FF4F81',
-    borderColor: '#FF4F81',
+    backgroundColor: palette.secondary,
+    borderColor: palette.secondary,
   },
   chipText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
+    fontSize: 13,
+    fontWeight: '500',
+    color: palette.textAccent,
   },
   chipTextActive: {
-    color: '#FFFFFF',
+    color: palette.onPrimary,
   },
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    backgroundColor: palette.surface,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
+    shadowColor: palette.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
-    shadowRadius: 6,
+    shadowRadius: 4,
     elevation: 2,
   },
   cardPressed: {
@@ -350,7 +353,7 @@ const styles = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: 23,
-    backgroundColor: '#FFF0F5',
+    backgroundColor: palette.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -360,24 +363,24 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#111827',
+    fontWeight: '600',
+    color: palette.text,
   },
   cardMeta: {
-    fontSize: 13,
-    color: '#6B7280',
+    fontSize: 14,
+    color: palette.textSecondary,
   },
   cardDetail: {
     marginTop: 14,
     paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopColor: palette.divider,
     gap: 14,
   },
   cardDescription: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: '#374151',
+    fontSize: 14,
+    lineHeight: 20,
+    color: palette.textSecondary,
   },
   tagsRow: {
     flexDirection: 'row',
@@ -386,14 +389,14 @@ const styles = StyleSheet.create({
   },
   tag: {
     paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 10,
-    backgroundColor: '#F3F4F6',
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: palette.surfaceMuted,
   },
   tagText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#4B5563',
+    color: palette.textSecondary,
   },
   centered: {
     flex: 1,
@@ -407,40 +410,42 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   stateIcon: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: '#F3F4F6',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: palette.surfaceMuted,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
   },
   stateTitle: {
     fontSize: 20,
-    fontWeight: '700',
-    color: '#111827',
+    fontWeight: '600',
+    color: palette.text,
     textAlign: 'center',
-    marginBottom: 6,
+    marginBottom: 8,
   },
   stateSubtitle: {
-    fontSize: 15,
-    color: '#6B7280',
+    fontSize: 14,
+    color: palette.textSecondary,
     textAlign: 'center',
-    lineHeight: 21,
-    marginBottom: 28,
+    marginBottom: 32,
   },
   secondaryButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    height: 48,
-    paddingHorizontal: 22,
-    borderRadius: 24,
-    backgroundColor: '#FFF0F5',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    backgroundColor: palette.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: palette.border,
   },
   secondaryButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FF4F81',
+    fontSize: 14,
+    fontWeight: '500',
+    color: palette.textAccent,
   },
 });

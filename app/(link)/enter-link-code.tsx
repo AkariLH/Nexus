@@ -8,6 +8,8 @@ import { useAuth } from "../../context/AuthContext";
 import { ErrorModal } from "../components/ErrorModal";
 import { SuccessModal } from "../components/SuccessModal";
 import linkService from "../../services/link.service";
+import { palette, gradients } from "../../constants/colors";
+import { ScreenHeader } from "../components/layout/ScreenHeader";
 
 export default function EnterLinkCodeScreen() {
   const router = useRouter();
@@ -55,12 +57,7 @@ export default function EnterLinkCodeScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#1A1A1A" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Ingresar código</Text>
-      </View>
+      <ScreenHeader title="Ingresar código" onBack={() => router.back()} />
 
       {/* Content */}
       <MotiView
@@ -72,10 +69,10 @@ export default function EnterLinkCodeScreen() {
         {/* Icon */}
         <View style={styles.iconContainer}>
           <LinearGradient
-            colors={["#FF4F8120", "#8A2BE220"]}
+            colors={gradients.soft}
             style={styles.iconGradient}
           >
-            <Ionicons name="link" size={48} color="#FF4F81" />
+            <Ionicons name="link" size={48} color={palette.primary} />
           </LinearGradient>
         </View>
 
@@ -98,7 +95,7 @@ export default function EnterLinkCodeScreen() {
                 setCode(cleaned.substring(0, 6));
               }}
               placeholder="XXXXXX"
-              placeholderTextColor="#1A1A1A40"
+              placeholderTextColor={palette.textMuted}
               style={styles.inputField}
               maxLength={6}
               autoCapitalize="characters"
@@ -115,13 +112,13 @@ export default function EnterLinkCodeScreen() {
           activeOpacity={0.9}
         >
           <LinearGradient
-            colors={["#FF4F81", "#8A2BE2"]}
+            colors={gradients.primary}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.connectButton}
           >
             {loading ? (
-              <ActivityIndicator color="#FFF" />
+              <ActivityIndicator color={palette.onPrimary} />
             ) : (
               <Text style={styles.connectButtonText}>Conectar</Text>
             )}
@@ -162,7 +159,7 @@ export default function EnterLinkCodeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFF",
+    backgroundColor: palette.surface,
   },
   header: {
     flexDirection: "row",
@@ -179,7 +176,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "400",
-    color: "#1A1A1A",
+    color: palette.text,
     flex: 1,
   },
   content: {
@@ -201,13 +198,13 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 24,
     fontWeight: "600",
-    color: "#1A1A1A",
+    color: palette.text,
     marginBottom: 8,
     textAlign: "center",
   },
   subtitle: {
     fontSize: 14,
-    color: "#666",
+    color: palette.textSecondary,
     textAlign: "center",
     marginBottom: 48,
     paddingHorizontal: 16,
@@ -219,13 +216,13 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 14,
-    color: "#1A1A1A",
+    color: palette.text,
     marginBottom: 8,
   },
   inputWrapper: {
     width: "100%",
     height: 56,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: palette.surfaceMuted,
     borderWidth: 2,
     borderColor: "transparent",
     borderRadius: 20,
@@ -237,7 +234,7 @@ const styles = StyleSheet.create({
   inputPrefix: {
     fontSize: 20,
     fontWeight: "400",
-    color: "#999",
+    color: palette.textMuted,
     marginRight: 0,
     letterSpacing: 4,
   },
@@ -245,7 +242,7 @@ const styles = StyleSheet.create({
     flex: 0,
     width: 120,
     height: 56,
-    color: "#1A1A1A",
+    color: palette.text,
     fontSize: 20,
     fontWeight: "400",
     letterSpacing: 4,
@@ -268,7 +265,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   connectButtonText: {
-    color: "#FFF",
+    color: palette.onPrimary,
     fontSize: 16,
     fontWeight: "700",
   },
@@ -278,24 +275,24 @@ const styles = StyleSheet.create({
   },
   alternativeLabel: {
     fontSize: 13,
-    color: "#666",
+    color: palette.textSecondary,
     marginBottom: 6,
   },
   alternativeLink: {
     fontSize: 14,
-    color: "#FF4F81",
+    color: palette.textAccent,
     fontWeight: "500",
   },
   helpBox: {
     marginTop: "auto",
     marginBottom: 32,
-    backgroundColor: "#8A2BE210",
+    backgroundColor: palette.secondarySoft,
     borderRadius: 20,
     padding: 16,
   },
   helpText: {
     fontSize: 13,
-    color: "#666",
+    color: palette.textSecondary,
     textAlign: "center",
     lineHeight: 20,
   },

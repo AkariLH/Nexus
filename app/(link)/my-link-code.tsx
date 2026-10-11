@@ -9,6 +9,8 @@ import { useAuth } from "../../context/AuthContext";
 import { ErrorModal } from "../components/ErrorModal";
 import { SuccessModal } from "../components/SuccessModal";
 import linkService from "../../services/link.service";
+import { palette, gradients } from "../../constants/colors";
+import { ScreenHeader } from "../components/layout/ScreenHeader";
 
 interface LinkCodeData {
   code: string;
@@ -146,16 +148,11 @@ export default function MyLinkCodeScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#1A1A1A" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Mi código de vínculo</Text>
-      </View>
+      <ScreenHeader title="Mi código de vínculo" onBack={() => router.back()} />
 
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#FF4F81" />
+          <ActivityIndicator size="large" color={palette.primary} />
           <Text style={styles.loadingText}>Generando código...</Text>
         </View>
       ) : linkCode ? (
@@ -176,14 +173,14 @@ export default function MyLinkCodeScreen() {
               <QRCode
                 value={linkCode.code}
                 size={200}
-                color="#FF4F81"
+                color={palette.primary}
                 backgroundColor="transparent"
                 logoSize={40}
                 logoMargin={8}
                 logoBorderRadius={8}
                 quietZone={10}
                 enableLinearGradient={true}
-                linearGradient={["#FF4F81", "#8A2BE2"]}
+                linearGradient={[...gradients.primary]}
                 ecl="H"
               />
             </View>
@@ -213,12 +210,12 @@ export default function MyLinkCodeScreen() {
               }}
               activeOpacity={0.7}
             >
-              <Ionicons name="refresh-outline" size={18} color="#FF4F81" />
+              <Ionicons name="refresh-outline" size={18} color={palette.primary} />
               <Text style={styles.regenerateText}>Generar nuevo código</Text>
             </TouchableOpacity>
           ) : (
             <View style={styles.timerContainer}>
-              <Ionicons name="time-outline" size={18} color="#666" />
+              <Ionicons name="time-outline" size={18} color={palette.textSecondary} />
               <Text style={styles.timer}>Expira en: {timeRemaining}</Text>
             </View>
           )}
@@ -231,12 +228,12 @@ export default function MyLinkCodeScreen() {
               activeOpacity={0.9}
             >
               <LinearGradient
-                colors={["#FF4F81", "#8A2BE2"]}
+                colors={gradients.primary}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.primaryButton}
               >
-                <Ionicons name="copy-outline" size={20} color="#FFF" />
+                <Ionicons name="copy-outline" size={20} color={palette.onPrimary} />
                 <Text style={styles.primaryButtonText}>Copiar código</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -246,7 +243,7 @@ export default function MyLinkCodeScreen() {
               onPress={shareCode}
               activeOpacity={0.8}
             >
-              <Ionicons name="share-social-outline" size={20} color="#FF4F81" />
+              <Ionicons name="share-social-outline" size={20} color={palette.primary} />
               <Text style={styles.secondaryButtonText}>Compartir</Text>
             </TouchableOpacity>
           </View>
@@ -279,7 +276,7 @@ export default function MyLinkCodeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFF",
+    backgroundColor: palette.surface,
   },
   header: {
     flexDirection: "row",
@@ -296,7 +293,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "400",
-    color: "#1A1A1A",
+    color: palette.text,
     flex: 1,
   },
   loadingContainer: {
@@ -307,7 +304,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    color: "#1A1A1A99",
+    color: palette.textSecondary,
   },
   content: {
     flex: 1,
@@ -317,7 +314,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 14,
-    color: "#666",
+    color: palette.textSecondary,
     textAlign: "center",
     marginBottom: 40,
     paddingHorizontal: 16,
@@ -330,16 +327,16 @@ const styles = StyleSheet.create({
     width: 240,
     height: 240,
     borderRadius: 32,
-    backgroundColor: "#ffe8f0bb",
+    backgroundColor: palette.primarySoft,
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
   },
   codeCard: {
     width: "100%",
-    backgroundColor: "#FFF",
+    backgroundColor: palette.surface,
     borderWidth: 1.5,
-    borderColor: "#FFD0E0",
+    borderColor: palette.primaryBorder,
     borderRadius: 20,
     padding: 20,
     marginBottom: 16,
@@ -347,7 +344,7 @@ const styles = StyleSheet.create({
   },
   codeLabel: {
     fontSize: 14,
-    color: "#666",
+    color: palette.textSecondary,
     marginBottom: 8,
     textAlign: "center",
   },
@@ -358,13 +355,13 @@ const styles = StyleSheet.create({
   },
   codePrefix: {
     fontSize: 32,
-    color: "#FF4F81",
+    color: palette.textAccent,
     fontWeight: "400",
     letterSpacing: 0,
   },
   code: {
     fontSize: 32,
-    color: "#FF4F81",
+    color: palette.textAccent,
     fontWeight: "400",
     letterSpacing: 2,
   },
@@ -377,7 +374,7 @@ const styles = StyleSheet.create({
   },
   timer: {
     fontSize: 13,
-    color: "#666",
+    color: palette.textSecondary,
     fontWeight: "400",
   },
   regenerateContainer: {
@@ -390,7 +387,7 @@ const styles = StyleSheet.create({
   },
   regenerateText: {
     fontSize: 13,
-    color: "#FF4F81",
+    color: palette.textAccent,
     fontWeight: "600",
   },
   actions: {
@@ -410,7 +407,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   primaryButtonText: {
-    color: "#FFF",
+    color: palette.onPrimary,
     fontSize: 15,
     fontWeight: "600",
   },
@@ -420,13 +417,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: "#FFF",
+    backgroundColor: palette.surface,
     borderWidth: 1.5,
-    borderColor: "#FF4F81",
+    borderColor: palette.primary,
     borderRadius: 28,
   },
   secondaryButtonText: {
-    color: "#FF4F81",
+    color: palette.textAccent,
     fontSize: 15,
     fontWeight: "600",
   },
@@ -436,12 +433,12 @@ const styles = StyleSheet.create({
   },
   alternativeLabel: {
     fontSize: 13,
-    color: "#666",
+    color: palette.textSecondary,
     marginBottom: 6,
   },
   alternativeLink: {
     fontSize: 14,
-    color: "#FF4F81",
+    color: palette.textAccent,
     fontWeight: "500",
   },
 });

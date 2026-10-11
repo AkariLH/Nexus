@@ -16,6 +16,8 @@ import { useAuth } from '../../context/AuthContext';
 import { emotionService, EmotionLogResponse } from '../../services/emotion.service';
 import { moodEmoji } from '../../constants/moods';
 import { groupByDay, lastSevenDays } from '../../utils/moodHistory';
+import { palette, gradients } from '../../constants/colors';
+import { ScreenHeader } from '../components/layout/ScreenHeader';
 
 /** RF-32 - Historial emocional. Privado (RN-28): solo lo ve el propio usuario. */
 
@@ -69,20 +71,7 @@ export default function MoodHistoryScreen() {
   const week = useMemo(() => lastSevenDays(entries), [entries]);
 
   const header = (
-    <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-      <TouchableOpacity
-        style={styles.headerButton}
-        onPress={() => router.back()}
-        accessibilityRole="button"
-        accessibilityLabel="Regresar"
-      >
-        <Ionicons name="arrow-back" size={24} color="#1A1A1A" />
-      </TouchableOpacity>
-      <Text style={styles.headerTitle} accessibilityRole="header">
-        Mi historial
-      </Text>
-      <View style={styles.headerButton} />
-    </View>
+    <ScreenHeader title="Mi historial" onBack={() => router.back()} />
   );
 
   if (state !== 'ready') {
@@ -91,16 +80,16 @@ export default function MoodHistoryScreen() {
         {header}
         <View style={styles.centered}>
           {state === 'loading' ? (
-            <ActivityIndicator size="large" color="#FF4F81" />
+            <ActivityIndicator size="large" color={palette.primary} />
           ) : (
             <>
               <View style={styles.stateIcon}>
-                <Ionicons name="cloud-offline-outline" size={44} color="#9CA3AF" />
+                <Ionicons name="cloud-offline-outline" size={44} color={palette.icon} />
               </View>
               <Text style={styles.stateTitle}>No pudimos cargar tu historial</Text>
               <Text style={styles.stateSubtitle}>Revisa tu conexión e inténtalo de nuevo.</Text>
               <TouchableOpacity style={styles.secondaryButton} onPress={retry}>
-                <Ionicons name="refresh" size={18} color="#FF4F81" />
+                <Ionicons name="refresh" size={18} color={palette.secondary} />
                 <Text style={styles.secondaryButtonText}>Reintentar</Text>
               </TouchableOpacity>
             </>
@@ -119,7 +108,7 @@ export default function MoodHistoryScreen() {
         stickySectionHeadersEnabled={false}
         contentContainerStyle={[styles.content, { paddingBottom: 24 + insets.bottom }]}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF4F81" />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={palette.primary} />
         }
         ListHeaderComponent={
           entries.length > 0 ? (
@@ -178,7 +167,7 @@ export default function MoodHistoryScreen() {
             </Text>
             <TouchableOpacity style={styles.primaryButton} onPress={goToLog}>
               <LinearGradient
-                colors={['#FF4F81', '#8A2BE2']}
+                colors={gradients.primary}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.primaryButtonGradient}
@@ -196,30 +185,33 @@ export default function MoodHistoryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: palette.background,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingBottom: 8,
+    paddingTop: 60,
+    paddingBottom: 16,
+    backgroundColor: palette.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: palette.border,
   },
   headerButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#111827',
+    fontSize: 20,
+    fontWeight: '600',
+    color: palette.text,
   },
   content: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
+    padding: 16,
     flexGrow: 1,
   },
   centered: {
@@ -229,59 +221,60 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   stateIcon: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: '#F3F4F6',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: palette.surfaceMuted,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
   },
   stateTitle: {
     fontSize: 20,
-    fontWeight: '700',
-    color: '#111827',
+    fontWeight: '600',
+    color: palette.text,
     textAlign: 'center',
-    marginBottom: 6,
+    marginBottom: 8,
   },
   stateSubtitle: {
-    fontSize: 15,
-    color: '#6B7280',
+    fontSize: 14,
+    color: palette.textSecondary,
     textAlign: 'center',
-    lineHeight: 21,
-    marginBottom: 28,
+    marginBottom: 32,
   },
   secondaryButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    height: 48,
-    paddingHorizontal: 22,
-    borderRadius: 24,
-    backgroundColor: '#FFF0F5',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    backgroundColor: palette.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: palette.border,
   },
   secondaryButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FF4F81',
+    fontSize: 14,
+    fontWeight: '500',
+    color: palette.textAccent,
   },
   weekCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    paddingVertical: 18,
-    paddingHorizontal: 16,
+    backgroundColor: palette.surface,
+    borderRadius: 16,
+    padding: 16,
     marginBottom: 8,
-    shadowColor: '#000',
+    shadowColor: palette.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
-    shadowRadius: 6,
+    shadowRadius: 4,
     elevation: 2,
   },
   weekTitle: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
-    color: '#6B7280',
-    marginBottom: 14,
+    color: palette.text,
+    marginBottom: 12,
   },
   weekRow: {
     flexDirection: 'row',
@@ -295,15 +288,15 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: palette.background,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: 'transparent',
   },
   weekBubbleToday: {
-    borderColor: '#FF4F81',
-    backgroundColor: '#FFF0F5',
+    borderColor: palette.primary,
+    backgroundColor: palette.primarySoft,
   },
   weekEmoji: {
     fontSize: 22,
@@ -312,42 +305,41 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: palette.border,
   },
   weekInitial: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#9CA3AF',
+    color: palette.textMuted,
   },
   weekInitialToday: {
-    color: '#FF4F81',
+    color: palette.textAccent,
   },
   sectionTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#111827',
+    fontSize: 16,
+    fontWeight: '600',
+    color: palette.text,
     marginTop: 24,
-    marginBottom: 10,
-    marginLeft: 4,
+    marginBottom: 12,
   },
   entryRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: palette.surface,
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopColor: palette.divider,
   },
   entryRowFirst: {
     borderTopWidth: 0,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
   },
   entryRowLast: {
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
   },
   entryEmoji: {
     fontSize: 30,
@@ -356,11 +348,11 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827',
+    color: palette.text,
   },
   entryTime: {
     fontSize: 14,
-    color: '#6B7280',
+    color: palette.textSecondary,
     fontVariant: ['tabular-nums'],
   },
   emptyState: {
@@ -379,14 +371,14 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   primaryButtonGradient: {
-    height: 52,
-    paddingHorizontal: 28,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
   primaryButtonText: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontWeight: '600',
+    color: palette.onPrimary,
   },
 });

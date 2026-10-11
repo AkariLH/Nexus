@@ -16,6 +16,8 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { useAuth } from "../../context/AuthContext";
 import { getUserSchedule, saveUserSchedule, AvailabilityScheduleDTO } from "../../services/availabilityService";
 import { ConfirmModal } from "../components/ConfirmModal";
+import { palette, gradients, switchColors } from "../../constants/colors";
+import { ScreenHeader } from "../components/layout/ScreenHeader";
 
 interface DaySchedule {
   day: string;
@@ -188,15 +190,9 @@ export default function AvailabilityScheduleScreen() {
   if (loading) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#1A1A1A" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Horarios permitidos</Text>
-          <View style={styles.backButton} />
-        </View>
+        <ScreenHeader title="Horarios permitidos" onBack={() => router.back()} />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#FF4F81" />
+          <ActivityIndicator size="large" color={palette.primary} />
         </View>
       </View>
     );
@@ -205,18 +201,12 @@ export default function AvailabilityScheduleScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#1A1A1A" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Horarios permitidos</Text>
-        <View style={styles.backButton} />
-      </View>
+      <ScreenHeader title="Horarios permitidos" onBack={() => router.back()} />
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
         {/* Descripción */}
         <View style={styles.infoCard}>
-          <Ionicons name="information-circle" size={20} color="#8A2BE2" />
+          <Ionicons name="information-circle" size={20} color={palette.secondary} />
           <Text style={styles.infoText}>
             Configura los horarios en los que prefieres recibir recomendaciones de disponibilidad mutua. 
             Estos horarios NO bloquean eventos, solo indican cuándo estás disponible para nuevas actividades.
@@ -231,7 +221,7 @@ export default function AvailabilityScheduleScreen() {
               style={styles.quickButton}
               onPress={() => setQuickOption('all')}
             >
-              <Ionicons name="calendar" size={18} color="#8A2BE2" />
+              <Ionicons name="calendar" size={18} color={palette.secondary} />
               <Text style={styles.quickButtonText}>Todos los días</Text>
             </TouchableOpacity>
             
@@ -239,7 +229,7 @@ export default function AvailabilityScheduleScreen() {
               style={styles.quickButton}
               onPress={() => setQuickOption('weekdays')}
             >
-              <Ionicons name="briefcase" size={18} color="#8A2BE2" />
+              <Ionicons name="briefcase" size={18} color={palette.secondary} />
               <Text style={styles.quickButtonText}>Entre semana</Text>
             </TouchableOpacity>
             
@@ -247,7 +237,7 @@ export default function AvailabilityScheduleScreen() {
               style={styles.quickButton}
               onPress={() => setQuickOption('weekends')}
             >
-              <Ionicons name="sunny" size={18} color="#8A2BE2" />
+              <Ionicons name="sunny" size={18} color={palette.secondary} />
               <Text style={styles.quickButtonText}>Fines de semana</Text>
             </TouchableOpacity>
           </View>
@@ -264,8 +254,7 @@ export default function AvailabilityScheduleScreen() {
                 <Switch
                   value={day.enabled}
                   onValueChange={() => toggleDay(index)}
-                  trackColor={{ false: '#E5E7EB', true: '#FF4F81' }}
-                  thumbColor="#FFFFFF"
+                  {...switchColors}
                 />
               </View>
               
@@ -275,22 +264,22 @@ export default function AvailabilityScheduleScreen() {
                     style={styles.timeInput}
                     onPress={() => openTimePicker(index, 'startTime')}
                   >
-                    <Ionicons name="time-outline" size={16} color="#6B7280" />
+                    <Ionicons name="time-outline" size={16} color={palette.textSecondary} />
                     <Text style={styles.timeLabel}>Desde</Text>
                     <Text style={styles.timeValue}>{day.startTime}</Text>
-                    <Ionicons name="chevron-down" size={16} color="#6B7280" />
+                    <Ionicons name="chevron-down" size={16} color={palette.textSecondary} />
                   </TouchableOpacity>
                   
-                  <Ionicons name="arrow-forward" size={16} color="#6B7280" />
+                  <Ionicons name="arrow-forward" size={16} color={palette.textSecondary} />
                   
                   <TouchableOpacity 
                     style={styles.timeInput}
                     onPress={() => openTimePicker(index, 'endTime')}
                   >
-                    <Ionicons name="time-outline" size={16} color="#6B7280" />
+                    <Ionicons name="time-outline" size={16} color={palette.textSecondary} />
                     <Text style={styles.timeLabel}>Hasta</Text>
                     <Text style={styles.timeValue}>{day.endTime}</Text>
-                    <Ionicons name="chevron-down" size={16} color="#6B7280" />
+                    <Ionicons name="chevron-down" size={16} color={palette.textSecondary} />
                   </TouchableOpacity>
                 </View>
               )}
@@ -305,16 +294,16 @@ export default function AvailabilityScheduleScreen() {
           disabled={saving}
         >
           <LinearGradient
-            colors={["#FF4F81", "#8A2BE2"]}
+            colors={gradients.primary}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.saveButtonGradient}
           >
             {saving ? (
-              <ActivityIndicator color="#FFF" size="small" />
+              <ActivityIndicator color={palette.onPrimary} size="small" />
             ) : (
               <>
-                <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
+                <Ionicons name="checkmark-circle" size={20} color={palette.onPrimary} />
                 <Text style={styles.saveButtonText}>Guardar configuración</Text>
               </>
             )}
@@ -385,7 +374,7 @@ export default function AvailabilityScheduleScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: palette.background,
   },
   header: {
     flexDirection: 'row',
@@ -394,9 +383,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 60,
     paddingBottom: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: palette.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: palette.border,
   },
   backButton: {
     width: 40,
@@ -407,7 +396,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1A1A1A',
+    color: palette.text,
   },
   loadingContainer: {
     flex: 1,
@@ -424,16 +413,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
     padding: 16,
-    backgroundColor: '#8A2BE210',
+    backgroundColor: palette.secondarySoft,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#8A2BE230',
+    borderColor: palette.secondaryBorder,
     marginBottom: 24,
   },
   infoText: {
     flex: 1,
     fontSize: 13,
-    color: '#1A1A1A',
+    color: palette.text,
     lineHeight: 20,
   },
   quickOptions: {
@@ -442,7 +431,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1A1A1A',
+    color: palette.text,
     marginBottom: 12,
   },
   quickButtonsRow: {
@@ -457,26 +446,26 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 12,
     paddingHorizontal: 8,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: palette.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: palette.border,
   },
   quickButtonText: {
     fontSize: 12,
     fontWeight: '500',
-    color: '#8A2BE2',
+    color: palette.textAccent,
   },
   daysSection: {
     marginBottom: 24,
   },
   dayCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: palette.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: palette.border,
   },
   dayHeader: {
     flexDirection: 'row',
@@ -486,7 +475,7 @@ const styles = StyleSheet.create({
   dayName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1A1A1A',
+    color: palette.text,
   },
   timeRow: {
     flexDirection: 'row',
@@ -495,7 +484,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopColor: palette.divider,
   },
   timeInput: {
     flex: 1,
@@ -504,19 +493,19 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 8,
     paddingHorizontal: 12,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: palette.background,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: palette.border,
   },
   timeLabel: {
     fontSize: 12,
-    color: '#6B7280',
+    color: palette.textSecondary,
   },
   timeValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1A1A1A',
+    color: palette.text,
     flex: 1,
   },
   saveButton: {
@@ -537,7 +526,7 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: palette.onPrimary,
   },
   bottomSpacer: {
     height: 40,
@@ -547,10 +536,10 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: palette.surface,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
-    shadowColor: '#000',
+    shadowColor: palette.shadow,
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -561,14 +550,14 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: palette.border,
   },
   iosPickerButton: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#8A2BE2',
+    color: palette.textAccent,
   },
   iosPicker: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: palette.surface,
   },
 });

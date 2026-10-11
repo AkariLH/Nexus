@@ -7,6 +7,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '@/context/AuthContext';
 import eventService, { EventResponse } from '@/services/event.service';
 import { ConfirmModal } from '../components/ConfirmModal';
+import { palette, gradients } from '../../constants/colors';
+import { ScreenHeader } from '../components/layout/ScreenHeader';
 
 /**
  * Pantalla para ver los eventos propios creados por el usuario
@@ -94,36 +96,36 @@ export default function MyEventsScreen() {
     if (event.fullyApproved) {
       return {
         label: 'Confirmado',
-        color: '#10B981',
+        color: palette.success,
         icon: 'checkmark-circle' as const,
-        bg: '#ECFDF5'
+        bg: palette.successSoft
       };
     }
     
     if (event.status === 'REJECTED') {
       return {
         label: 'Rechazado',
-        color: '#EF4444',
+        color: palette.error,
         icon: 'close-circle' as const,
-        bg: '#FEF2F2'
+        bg: palette.errorSoft
       };
     }
 
     if (event.status === 'CANCELLED') {
       return {
         label: 'Cancelado',
-        color: '#6B7280',
+        color: palette.textSecondary,
         icon: 'ban' as const,
-        bg: '#F3F4F6'
+        bg: palette.surfaceMuted
       };
     }
 
     // Pendiente
     return {
       label: 'Pendiente de aprobación',
-      color: '#F59E0B',
+      color: palette.warning,
       icon: 'time' as const,
-      bg: '#FEF3C7'
+      bg: palette.warningSoft
     };
   };
 
@@ -150,15 +152,9 @@ export default function MyEventsScreen() {
   if (loading) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color="#1A1A1A" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Mis Eventos</Text>
-          <View style={styles.backButton} />
-        </View>
+        <ScreenHeader title="Mis eventos" onBack={() => router.back()} />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#FF4F81" />
+          <ActivityIndicator size="large" color={palette.primary} />
         </View>
       </View>
     );
@@ -166,13 +162,7 @@ export default function MyEventsScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#1A1A1A" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Mis Eventos</Text>
-        <View style={styles.backButton} />
-      </View>
+      <ScreenHeader title="Mis eventos" onBack={() => router.back()} />
 
       <ScrollView 
         style={styles.scrollView}
@@ -184,7 +174,7 @@ export default function MyEventsScreen() {
         {events.length === 0 ? (
           <View style={styles.emptyState}>
             <View style={styles.emptyIconContainer}>
-              <Ionicons name="calendar-outline" size={64} color="#D1D5DB" />
+              <Ionicons name="calendar-outline" size={64} color={palette.iconDisabled} />
             </View>
             <Text style={styles.emptyTitle}>No tienes eventos creados</Text>
             <Text style={styles.emptySubtitle}>
@@ -195,12 +185,12 @@ export default function MyEventsScreen() {
               onPress={() => router.push('/(events)/create-event')}
             >
               <LinearGradient
-                colors={['#FF4F81', '#8A2BE2']}
+                colors={gradients.primary}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.createButtonGradient}
               >
-                <Ionicons name="add" size={24} color="#FFFFFF" />
+                <Ionicons name="add" size={24} color={palette.onPrimary} />
                 <Text style={styles.createButtonText}>Crear evento</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -213,13 +203,13 @@ export default function MyEventsScreen() {
                 <Text style={styles.statLabel}>Confirmados</Text>
               </View>
               <View style={styles.statCard}>
-                <Text style={[styles.statNumber, { color: '#F59E0B' }]}>
+                <Text style={[styles.statNumber, { color: palette.warning }]}>
                   {events.filter(e => !e.fullyApproved && e.status !== 'REJECTED' && e.status !== 'CANCELLED').length}
                 </Text>
                 <Text style={styles.statLabel}>Pendientes</Text>
               </View>
               <View style={styles.statCard}>
-                <Text style={[styles.statNumber, { color: '#EF4444' }]}>
+                <Text style={[styles.statNumber, { color: palette.error }]}>
                   {events.filter(e => e.status === 'REJECTED' || e.status === 'CANCELLED').length}
                 </Text>
                 <Text style={styles.statLabel}>Rechazados</Text>
@@ -248,7 +238,7 @@ export default function MyEventsScreen() {
 
                   <View style={styles.eventDetails}>
                     <View style={styles.eventDetailRow}>
-                      <Ionicons name="calendar-outline" size={16} color="#FF4F81" />
+                      <Ionicons name="calendar-outline" size={16} color={palette.primary} />
                       <Text style={styles.eventDetailText}>
                         {formatDateTime(event.startDateTime)}
                       </Text>
@@ -256,7 +246,7 @@ export default function MyEventsScreen() {
 
                     {event.location && (
                       <View style={styles.eventDetailRow}>
-                        <Ionicons name="location-outline" size={16} color="#FF4F81" />
+                        <Ionicons name="location-outline" size={16} color={palette.primary} />
                         <Text style={styles.eventDetailText} numberOfLines={1}>
                           {event.location}
                         </Text>
@@ -265,7 +255,7 @@ export default function MyEventsScreen() {
 
                     {event.category && (
                       <View style={styles.eventDetailRow}>
-                        <Ionicons name="pricetag-outline" size={16} color="#FF4F81" />
+                        <Ionicons name="pricetag-outline" size={16} color={palette.primary} />
                         <Text style={styles.eventDetailText}>
                           {event.category}
                         </Text>
@@ -274,7 +264,7 @@ export default function MyEventsScreen() {
 
                     {event.partnerName && (
                       <View style={styles.eventDetailRow}>
-                        <Ionicons name="person-outline" size={16} color="#FF4F81" />
+                        <Ionicons name="person-outline" size={16} color={palette.primary} />
                         <Text style={styles.eventDetailText}>
                           Con {event.partnerNickname || event.partnerName}
                         </Text>
@@ -297,10 +287,10 @@ export default function MyEventsScreen() {
                         disabled={isProcessing}
                       >
                         {isProcessing ? (
-                          <ActivityIndicator size="small" color="#EF4444" />
+                          <ActivityIndicator size="small" color={palette.error} />
                         ) : (
                           <>
-                            <Ionicons name="trash-outline" size={18} color="#EF4444" />
+                            <Ionicons name="trash-outline" size={18} color={palette.error} />
                             <Text style={styles.deleteButtonText}>Eliminar</Text>
                           </>
                         )}
@@ -352,7 +342,7 @@ export default function MyEventsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: palette.background,
   },
   header: {
     flexDirection: 'row',
@@ -361,9 +351,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 60,
     paddingBottom: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: palette.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: palette.border,
   },
   backButton: {
     width: 40,
@@ -375,7 +365,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#111827',
+    color: palette.text,
   },
   loadingContainer: {
     flex: 1,
@@ -397,7 +387,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: palette.surfaceMuted,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
@@ -405,12 +395,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#111827',
+    color: palette.text,
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 14,
-    color: '#6B7280',
+    color: palette.textSecondary,
     textAlign: 'center',
     marginBottom: 32,
   },
@@ -428,7 +418,7 @@ const styles = StyleSheet.create({
   createButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: palette.onPrimary,
   },
   statsContainer: {
     flexDirection: 'row',
@@ -437,11 +427,11 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: palette.surface,
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: palette.shadow,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
@@ -450,20 +440,20 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#FF4F81',
+    color: palette.textAccent,
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 12,
-    color: '#6B7280',
+    color: palette.textSecondary,
     fontWeight: '500',
   },
   eventCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: palette.surface,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
+    shadowColor: palette.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 4,
@@ -482,7 +472,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 18,
     fontWeight: '600',
-    color: '#111827',
+    color: palette.text,
   },
   statusBadge: {
     flexDirection: 'row',
@@ -501,7 +491,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: palette.divider,
   },
   eventDetailRow: {
     flexDirection: 'row',
@@ -511,10 +501,10 @@ const styles = StyleSheet.create({
   eventDetailText: {
     flex: 1,
     fontSize: 14,
-    color: '#6B7280',
+    color: palette.textSecondary,
   },
   approvalSection: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: palette.background,
     borderRadius: 8,
     padding: 12,
     marginBottom: 12,
@@ -522,12 +512,12 @@ const styles = StyleSheet.create({
   approvalTitle: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#1A1A1A',
+    color: palette.text,
     marginBottom: 6,
   },
   approvalDetails: {
     fontSize: 13,
-    color: '#6B7280',
+    color: palette.textSecondary,
     lineHeight: 18,
   },
   eventActions: {
@@ -541,7 +531,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 8,
     borderWidth: 1.5,
-    borderColor: '#EF4444',
+    borderColor: palette.error,
     gap: 6,
     minWidth: 100,
     justifyContent: 'center',
@@ -549,7 +539,7 @@ const styles = StyleSheet.create({
   deleteButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#EF4444',
+    color: palette.error,
   },
 });
 
