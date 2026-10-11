@@ -1,4 +1,7 @@
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useFonts } from "expo-font";
 import { Stack, useRouter, useSegments } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { AuthProvider, useAuth } from "../context/AuthContext";
 import { QuestionnaireProvider } from "../context/QuestionnaireContext";
@@ -103,8 +106,16 @@ function RootNavigator() {
 }
 
 export default function RootLayout() {
+  // Las fuentes de iconos se cargan antes de pintar; sin esto, en web salen cuadros vacios
+  // durante los primeros segundos.
+  const [fontsLoaded, fontError] = useFonts({ ...Ionicons.font, ...MaterialCommunityIcons.font });
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
+
   return (
     <AuthProvider>
+      <StatusBar style="dark" />
       <QuestionnaireProvider>
         <AvailabilityProvider>
           <RootNavigator />

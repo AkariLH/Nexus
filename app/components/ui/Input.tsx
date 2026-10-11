@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { palette } from "../../../constants/colors";
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -33,13 +34,14 @@ export function Input({
           <Ionicons
             name={icon}
             size={20}
-            color="#1A1A1A66"
+            color={palette.icon}
             style={styles.iconLeft}
           />
         )}
         <TextInput
+          accessibilityLabel={label}
           {...textInputProps}
-          placeholderTextColor="#1A1A1A66"
+          placeholderTextColor={palette.textMuted}
           style={[styles.input, textInputProps.style]}
           secureTextEntry={isPassword && !showPassword}
         />
@@ -47,11 +49,14 @@ export function Input({
           <TouchableOpacity
             style={styles.iconRight}
             onPress={() => setShowPassword(!showPassword)}
+            hitSlop={14}
+            accessibilityRole="button"
+            accessibilityLabel={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
           >
             <Ionicons
               name={showPassword ? "eye-off-outline" : "eye-outline"}
               size={20}
-              color="#1A1A1A66"
+              color={palette.icon}
             />
           </TouchableOpacity>
         )}
@@ -66,13 +71,13 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   label: {
-    color: "#1A1A1A",
+    color: palette.text,
     marginBottom: 8,
     fontSize: 14,
   },
   inputWrapper: {
     position: "relative",
-    backgroundColor: "#F7F7F7",
+    backgroundColor: palette.surfaceMuted,
     borderRadius: 20,
     height: 56,
     justifyContent: "center",
@@ -90,10 +95,10 @@ const styles = StyleSheet.create({
     paddingLeft: 44,
     paddingRight: 44,
     fontSize: 16,
-    color: "#1A1A1A",
+    color: palette.text,
   },
   error: {
-    color: "#FF4F81",
+    color: palette.textAccent,
     fontSize: 12,
     marginTop: 4,
   },

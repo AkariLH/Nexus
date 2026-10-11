@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
+import { palette } from '../../constants/colors';
 
 export interface ExternalEventDetail {
   title: string;
@@ -147,8 +148,10 @@ export function ExternalEventDetailModal({
                   onPress={onClose}
                   style={styles.closeButton}
                   activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityLabel="Cerrar"
                 >
-                  <Ionicons name="close-circle" size={28} color="#9CA3AF" />
+                  <Ionicons name="close-circle" size={28} color={palette.icon} />
                 </TouchableOpacity>
               </View>
 
@@ -156,7 +159,7 @@ export function ExternalEventDetailModal({
                 {/* Fecha y hora */}
                 <View style={styles.section}>
                   <View style={styles.detailRow}>
-                    <Ionicons name="calendar" size={20} color="#FF4F81" />
+                    <Ionicons name="calendar" size={20} color={palette.primary} />
                     <View style={styles.detailTextContainer}>
                       <Text style={styles.detailLabel}>Fecha</Text>
                       <Text style={styles.detailValue}>{formatDate(event.startDate)}</Text>
@@ -165,7 +168,7 @@ export function ExternalEventDetailModal({
 
                   {!event.allDay && (
                     <View style={styles.detailRow}>
-                      <Ionicons name="time" size={20} color="#FF4F81" />
+                      <Ionicons name="time" size={20} color={palette.primary} />
                       <View style={styles.detailTextContainer}>
                         <Text style={styles.detailLabel}>Horario</Text>
                         <Text style={styles.detailValue}>
@@ -177,7 +180,7 @@ export function ExternalEventDetailModal({
 
                   {event.allDay && (
                     <View style={styles.detailRow}>
-                      <Ionicons name="sunny" size={20} color="#FF4F81" />
+                      <Ionicons name="sunny" size={20} color={palette.primary} />
                       <View style={styles.detailTextContainer}>
                         <Text style={styles.detailLabel}>Duración</Text>
                         <Text style={styles.detailValue}>Todo el día</Text>
@@ -190,7 +193,7 @@ export function ExternalEventDetailModal({
                 {event.recurrenceRule && (
                   <View style={styles.section}>
                     <View style={styles.detailRow}>
-                      <Ionicons name="repeat" size={20} color="#FF4F81" />
+                      <Ionicons name="repeat" size={20} color={palette.primary} />
                       <View style={styles.detailTextContainer}>
                         <Text style={styles.detailLabel}>Repetición</Text>
                         <Text style={styles.detailValue}>
@@ -205,7 +208,7 @@ export function ExternalEventDetailModal({
                 {event.location && (
                   <View style={styles.section}>
                     <View style={styles.detailRow}>
-                      <Ionicons name="location" size={20} color="#FF4F81" />
+                      <Ionicons name="location" size={20} color={palette.primary} />
                       <View style={styles.detailTextContainer}>
                         <Text style={styles.detailLabel}>Ubicación</Text>
                         <Text style={styles.detailValue}>{event.location}</Text>
@@ -218,7 +221,7 @@ export function ExternalEventDetailModal({
                 {event.description && (
                   <View style={styles.section}>
                     <View style={styles.detailRow}>
-                      <Ionicons name="document-text" size={20} color="#FF4F81" />
+                      <Ionicons name="document-text" size={20} color={palette.primary} />
                       <View style={styles.detailTextContainer}>
                         <Text style={styles.detailLabel}>Descripción</Text>
                         <Text style={styles.detailValue}>{event.description}</Text>
@@ -250,10 +253,10 @@ const styles = StyleSheet.create({
   modalContent: {
     width: '90%',
     maxHeight: '80%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: palette.surface,
     borderRadius: 24,
     overflow: 'hidden',
-    shadowColor: '#000',
+    shadowColor: palette.shadow,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,
     shadowRadius: 20,
@@ -265,7 +268,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: palette.divider,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -285,12 +288,12 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#1A1A1A',
+    color: palette.text,
     marginBottom: 4,
   },
   calendarName: {
     fontSize: 13,
-    color: '#1A1A1A99',
+    color: palette.textSecondary,
   },
   closeButton: {
     padding: 4,
@@ -313,11 +316,11 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 13,
-    color: '#1A1A1A99',
+    color: palette.textSecondary,
     marginBottom: 4,
   },
   detailValue: {
     fontSize: 15,
-    color: '#1A1A1A',
+    color: palette.text,
   },
 });

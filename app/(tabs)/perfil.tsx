@@ -26,6 +26,7 @@ import { profileService } from "../../services/profile.service";
 import { useAuth } from "../../context/AuthContext";
 import type { UpdateProfileRequest } from "../../types/auth.types";
 import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
+import { palette } from "../../constants/colors";
 
 export default function PerfilScreen() {
   useQuestionnaireGuard();
@@ -376,33 +377,53 @@ export default function PerfilScreen() {
           onPress={() => router.back()}
           style={styles.backButton}
           disabled={isLoading}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Regresar"
         >
-          <Ionicons name="arrow-back" size={24} color="#1A1A1A" />
+          <Ionicons name="arrow-back" size={24} color={palette.text} />
         </TouchableOpacity>
 
         {!isEditing ? (
-          <TouchableOpacity
-            onPress={handleStartEdit}
-            style={styles.editButton}
-            disabled={isLoading}
-          >
-            <Text style={styles.editButtonText}>Editar</Text>
-          </TouchableOpacity>
+          <View style={styles.editActions}>
+            <TouchableOpacity
+              onPress={handleStartEdit}
+              style={styles.editButton}
+              disabled={isLoading}
+            >
+              <Text style={styles.editButtonText}>Editar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => router.push("/(tabs)/configuraciones")}
+              style={styles.settingsButton}
+              disabled={isLoading}
+              accessibilityRole="button"
+              accessibilityLabel="Configuraciones"
+            >
+              <Ionicons name="settings-outline" size={24} color={palette.text} />
+            </TouchableOpacity>
+          </View>
         ) : (
           <View style={styles.editActions}>
             <TouchableOpacity
               onPress={handleCancelEdit}
               style={styles.iconButton}
+              hitSlop={6}
+              accessibilityRole="button"
+              accessibilityLabel="Cancelar edición"
               disabled={isLoading}
             >
-              <Ionicons name="close" size={20} color="#1A1A1A99" />
+              <Ionicons name="close" size={20} color={palette.textSecondary} />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={handleSaveEdit}
               style={[styles.iconButton, styles.saveIconButton]}
+              hitSlop={6}
+              accessibilityRole="button"
+              accessibilityLabel="Guardar cambios"
               disabled={isLoading}
             >
-              <Ionicons name="checkmark" size={20} color="#FF4F81" />
+              <Ionicons name="checkmark" size={20} color={palette.primary} />
             </TouchableOpacity>
           </View>
         )}
@@ -425,7 +446,7 @@ export default function PerfilScreen() {
                 onError={() => setAvatarUri(null)}
               />
             ) : (
-              <Ionicons name="person" size={64} color="#FF4F81" />
+              <Ionicons name="person" size={64} color={palette.primary} />
             )}
           </View>
           <TouchableOpacity 
@@ -440,9 +461,9 @@ export default function PerfilScreen() {
             disabled={isUploadingAvatar}
           >
             {isUploadingAvatar ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
+              <ActivityIndicator size="small" color={palette.onPrimary} />
             ) : (
-              <Ionicons name="camera" size={20} color="#FFFFFF" />
+              <Ionicons name="camera" size={20} color={palette.onPrimary} />
             )}
           </TouchableOpacity>
           <Text style={styles.imageHint}>
@@ -465,7 +486,7 @@ export default function PerfilScreen() {
                 <Ionicons
                   name="person-outline"
                   size={20}
-                  color="#1A1A1A66"
+                  color={palette.icon}
                   style={styles.inputIcon}
                 />
                 <TextInput
@@ -473,7 +494,7 @@ export default function PerfilScreen() {
                   onChangeText={setEditDisplayName}
                   style={styles.input}
                   placeholder="Ingresa tu nombre"
-                  placeholderTextColor="#1A1A1A40"
+                  placeholderTextColor={palette.textMuted}
                   editable={!isLoading}
                 />
               </View>
@@ -482,7 +503,7 @@ export default function PerfilScreen() {
                 <Ionicons
                   name="person-outline"
                   size={20}
-                  color="#1A1A1A66"
+                  color={palette.icon}
                   style={styles.inputIcon}
                 />
                 <Text style={styles.inputText}>{displayName}</Text>
@@ -503,7 +524,7 @@ export default function PerfilScreen() {
                 <Ionicons
                   name="at"
                   size={20}
-                  color="#1A1A1A66"
+                  color={palette.icon}
                   style={styles.inputIcon}
                 />
                 <TextInput
@@ -511,7 +532,7 @@ export default function PerfilScreen() {
                   onChangeText={setEditNickname}
                   style={styles.input}
                   placeholder="Ingresa tu apodo"
-                  placeholderTextColor="#1A1A1A40"
+                  placeholderTextColor={palette.textMuted}
                   editable={!isLoading}
                 />
               </View>
@@ -520,7 +541,7 @@ export default function PerfilScreen() {
                 <Ionicons
                   name="at"
                   size={20}
-                  color="#1A1A1A66"
+                  color={palette.icon}
                   style={styles.inputIcon}
                 />
                 <Text style={styles.inputText}>{nickname || "Sin apodo"}</Text>
@@ -541,7 +562,7 @@ export default function PerfilScreen() {
                 <Ionicons
                   name="mail-outline"
                   size={20}
-                  color="#1A1A1A66"
+                  color={palette.icon}
                   style={styles.inputIcon}
                 />
                 <TextInput
@@ -549,7 +570,7 @@ export default function PerfilScreen() {
                   onChangeText={setEditEmail}
                   style={styles.input}
                   placeholder="tu@email.com"
-                  placeholderTextColor="#1A1A1A40"
+                  placeholderTextColor={palette.textMuted}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   editable={!isLoading}
@@ -560,7 +581,7 @@ export default function PerfilScreen() {
                 <Ionicons
                   name="mail-outline"
                   size={20}
-                  color="#1A1A1A66"
+                  color={palette.icon}
                   style={styles.inputIcon}
                 />
                 <Text style={styles.inputText}>{email}</Text>
@@ -584,14 +605,14 @@ export default function PerfilScreen() {
                   <Ionicons
                     name="calendar-outline"
                     size={20}
-                    color="#1A1A1A66"
+                    color={palette.icon}
                     style={styles.inputIcon}
                   />
                   <Text style={styles.inputText}>{editBirthDate}</Text>
                   <Ionicons
                     name="chevron-down"
                     size={20}
-                    color="#1A1A1A66"
+                    color={palette.icon}
                   />
                 </TouchableOpacity>
                 <Text style={styles.fieldHint}>
@@ -606,8 +627,8 @@ export default function PerfilScreen() {
                     onChange={handleDateChange}
                     maximumDate={new Date()}
                     minimumDate={new Date(1900, 0, 1)}
-                    accentColor="#FF4F81"
-                    textColor="#1A1A1A"
+                    accentColor={palette.primary}
+                    textColor={palette.text}
                   />
                 )}
               </>
@@ -616,7 +637,7 @@ export default function PerfilScreen() {
                 <Ionicons
                   name="calendar-outline"
                   size={20}
-                  color="#1A1A1A66"
+                  color={palette.icon}
                   style={styles.inputIcon}
                 />
                 <Text style={styles.inputText}>{birthDate}</Text>
@@ -636,7 +657,7 @@ export default function PerfilScreen() {
             {isLoading && (
               <ActivityIndicator
                 size="small"
-                color="#FF4F81"
+                color={palette.primary}
                 style={styles.loader}
               />
             )}
@@ -657,7 +678,7 @@ export default function PerfilScreen() {
                   Edita tus preferencias de bienestar
                 </Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color="#1A1A1A66" />
+              <Ionicons name="chevron-forward" size={20} color={palette.icon} />
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -670,7 +691,7 @@ export default function PerfilScreen() {
                   Actualiza tu contraseña
                 </Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color="#1A1A1A66" />
+              <Ionicons name="chevron-forward" size={20} color={palette.icon} />
             </TouchableOpacity>
           </View>
         )}
@@ -743,7 +764,7 @@ export default function PerfilScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: palette.surface,
   },
   header: {
     flexDirection: "row",
@@ -762,8 +783,15 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 16,
   },
+  settingsButton: {
+    width: 48,
+    height: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: -12,
+  },
   editButtonText: {
-    color: "#FF4F81",
+    color: palette.textAccent,
     fontSize: 16,
     fontWeight: "600",
   },
@@ -775,12 +803,12 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#F7F7F7",
+    backgroundColor: palette.surfaceMuted,
     alignItems: "center",
     justifyContent: "center",
   },
   saveIconButton: {
-    backgroundColor: "#FF4F8120",
+    backgroundColor: palette.primarySoft,
   },
   scrollView: {
     flex: 1,
@@ -792,7 +820,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: palette.text,
     marginBottom: 32,
   },
   profileImageContainer: {
@@ -803,7 +831,7 @@ const styles = StyleSheet.create({
     width: 128,
     height: 128,
     borderRadius: 64,
-    backgroundColor: "rgba(255, 79, 129, 0.1)",
+    backgroundColor: palette.primarySoft,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 12,
@@ -821,10 +849,10 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#FF4F81",
+    backgroundColor: palette.primary,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#000",
+    shadowColor: palette.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
@@ -832,7 +860,7 @@ const styles = StyleSheet.create({
   },
   imageHint: {
     fontSize: 14,
-    color: "#1A1A1A99",
+    color: palette.textSecondary,
     marginTop: 8,
   },
   formContainer: {
@@ -845,18 +873,18 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#1A1A1A",
+    color: palette.text,
   },
   fieldHint: {
     fontSize: 12,
-    color: "#1A1A1A99",
+    color: palette.textSecondary,
     marginTop: 6,
     fontStyle: "italic",
   },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F7F7F7",
+    backgroundColor: palette.surfaceMuted,
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 16,
@@ -864,8 +892,8 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
   },
   inputContainerEditing: {
-    borderColor: "#FF4F81",
-    backgroundColor: "#FFFFFF",
+    borderColor: palette.primary,
+    backgroundColor: palette.surface,
   },
   inputIcon: {
     marginRight: 12,
@@ -873,12 +901,12 @@ const styles = StyleSheet.create({
   inputText: {
     flex: 1,
     fontSize: 16,
-    color: "#1A1A1A",
+    color: palette.text,
   },
   input: {
     flex: 1,
     fontSize: 16,
-    color: "#1A1A1A",
+    color: palette.text,
     padding: 0,
   },
   saveButtonContainer: {
@@ -897,26 +925,26 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: palette.surface,
     borderWidth: 2,
-    borderColor: "#F7F7F7",
+    borderColor: palette.divider,
     borderRadius: 20,
     padding: 16,
   },
   dangerButton: {
-    borderColor: "#FEE2E2",
+    borderColor: palette.errorBorder,
   },
   actionTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1A1A1A",
+    color: palette.text,
     marginBottom: 4,
   },
   dangerText: {
-    color: "#EF4444",
+    color: palette.error,
   },
   actionSubtitle: {
     fontSize: 14,
-    color: "#1A1A1A99",
+    color: palette.textSecondary,
   },
 });

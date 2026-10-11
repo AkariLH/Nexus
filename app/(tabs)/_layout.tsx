@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { View, ActivityIndicator } from "react-native";
 import { useQuestionnaire } from "../../context/QuestionnaireContext";
+import { palette } from "../../constants/colors";
 
 export default function TabLayout() {
   const { isCompleted, isLoading } = useQuestionnaire();
@@ -9,8 +10,8 @@ export default function TabLayout() {
   // Mostrar loading mientras verifica
   if (isLoading || isCompleted === null) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
-        <ActivityIndicator size="large" color="#FF4F81" />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: palette.surface }}>
+        <ActivityIndicator size="large" color={palette.primary} />
       </View>
     );
   }
@@ -24,12 +25,13 @@ export default function TabLayout() {
 
   return (
     <Tabs
+      backBehavior="history"
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#FF4F81",
-        tabBarInactiveTintColor: "#000000ff",
+        tabBarActiveTintColor: palette.textAccent,
+        tabBarInactiveTintColor: palette.textSecondary,
         tabBarStyle: {
-          backgroundColor: "#FFFFFF",
+          backgroundColor: palette.surface,
           borderTopWidth: 0,
           elevation: 5,
           display: isCompleted ? 'flex' : 'none', // Mostrar tabs solo si completó
@@ -63,7 +65,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="link"
         options={{
-          title: "Vinculo",
+          title: "Vínculo",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? "link" : "link-outline"} color={color} size={24} />
           ),
@@ -88,13 +90,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="configuraciones"
         options={{
-          title: "Configuraciones",
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "settings" : "settings-outline"} color={color} size={24} />
-          ),
-        }}
-        listeners={{
-          tabPress: (e) => handleTabPress(e, 'configuraciones'),
+          href: null, // No mostrar en tabs, accesible desde perfil
         }}
       />
       {/* Ocultar del tabBar pero mantener accesible programáticamente */}

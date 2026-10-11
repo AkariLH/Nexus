@@ -18,6 +18,7 @@ import { expandRecurringEvent } from "../../utils/recurrenceUtils";
 import { EventDetailsModal } from "../components/EventDetailsModal";
 import { externalCalendarIntegration, ExternalEventDTO } from "../../services/externalCalendar.integration.service";
 import { ExternalEventDetailModal, ExternalEventDetail } from "../components/ExternalEventDetailModal";
+import { palette, gradients } from "../../constants/colors";
 
 type ViewMode = "month" | "week" | "day";
 
@@ -248,7 +249,7 @@ export default function CalendarioScreen() {
               title: event.title,
               date: occurrenceDate,
               endDate: occurrenceEnd,
-              color: event.color || '#8B5CF6',
+              color: event.color || palette.secondary,
               isShared: true,
               isAllDay: isAllDay,
             });
@@ -260,7 +261,7 @@ export default function CalendarioScreen() {
             title: event.title,
             date: startDate,
             endDate: endDate,
-            color: event.color || '#8B5CF6',
+            color: event.color || palette.secondary,
             isShared: true,
             isAllDay: isAllDay,
           });
@@ -434,7 +435,7 @@ export default function CalendarioScreen() {
                   title: isBusyOnly ? '🔒 Ocupado' : extEvent.title,
                   date: occurrenceDate,
                   endDate: occurrenceEnd,
-                  color: isBusyOnly ? '#94A3B8' : (isOwnEvent ? '#10B981' : '#3B82F6'),
+                  color: isBusyOnly ? palette.textMuted : (isOwnEvent ? palette.success : palette.info),
                   isShared: !isOwnEvent,
                   isAllDay: extEvent.isAllDay,
                   isExternal: true,
@@ -449,7 +450,7 @@ export default function CalendarioScreen() {
                 title: isBusyOnly ? '🔒 Ocupado' : extEvent.title,
                 date: startDate,
                 endDate: endDate,
-                color: isBusyOnly ? '#94A3B8' : (isOwnEvent ? '#10B981' : '#3B82F6'),
+                color: isBusyOnly ? palette.textMuted : (isOwnEvent ? palette.success : palette.info),
                 isShared: !isOwnEvent,
                 isAllDay: extEvent.isAllDay,
                 isExternal: true,
@@ -463,7 +464,7 @@ export default function CalendarioScreen() {
               title: isBusyOnly ? '🔒 Ocupado' : extEvent.title,
               date: startDate,
               endDate: endDate,
-              color: isBusyOnly ? '#94A3B8' : (isOwnEvent ? '#10B981' : '#3B82F6'),
+              color: isBusyOnly ? palette.textMuted : (isOwnEvent ? palette.success : palette.info),
               isShared: !isOwnEvent,
               isAllDay: extEvent.isAllDay,
               isExternal: true,
@@ -564,7 +565,7 @@ export default function CalendarioScreen() {
           <Text style={styles.headerTitle}>Calendario</Text>
         </View>
         <View style={styles.emptyStateContainer}>
-          <ActivityIndicator size="large" color="#FF4F81" />
+          <ActivityIndicator size="large" color={palette.primary} />
         </View>
       </View>
     );
@@ -578,10 +579,10 @@ export default function CalendarioScreen() {
         </View>
         <View style={styles.emptyStateContainer}>
           <LinearGradient
-            colors={["#FF4F8120", "#8A2BE220"]}
+            colors={gradients.soft}
             style={styles.emptyStateCard}
           >
-            <Ionicons name="calendar-outline" size={64} color="#FF4F81" style={styles.emptyIcon} />
+            <Ionicons name="calendar-outline" size={64} color={palette.primary} style={styles.emptyIcon} />
             <Text style={styles.emptyTitle}>Calendario no disponible</Text>
             <Text style={styles.emptyText}>
               Necesitas establecer un vínculo con tu pareja para acceder al calendario compartido
@@ -592,12 +593,12 @@ export default function CalendarioScreen() {
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={["#FF4F81", "#8A2BE2"]}
+                colors={gradients.primary}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.linkButtonGradient}
               >
-                <Ionicons name="heart" size={20} color="#FFF" />
+                <Ionicons name="heart" size={20} color={palette.onPrimary} />
                 <Text style={styles.linkButtonText}>Establecer vínculo</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -836,10 +837,10 @@ export default function CalendarioScreen() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <Text style={styles.eventTitle}>{event.title}</Text>
                   {event.isExternal && (
-                    <Ionicons name="cloud-outline" size={16} color="#10B981" />
+                    <Ionicons name="cloud-outline" size={16} color={palette.success} />
                   )}
                   {event.isReadOnly && (
-                    <Ionicons name="lock-closed-outline" size={14} color="#64748B" />
+                    <Ionicons name="lock-closed-outline" size={14} color={palette.textSecondary} />
                   )}
                 </View>
                 <Text style={styles.eventDate}>
@@ -855,13 +856,13 @@ export default function CalendarioScreen() {
                 </Text>
               </View>
               {event.isShared && (
-                <Ionicons name="heart" size={20} color="#FF4F81" />
+                <Ionicons name="heart" size={20} color={palette.primary} />
               )}
             </TouchableOpacity>
           ))}
         {events.filter((e) => e.date >= today).length === 0 && (
           <View style={styles.noEventsContainer}>
-            <Ionicons name="calendar-outline" size={32} color="#999" />
+            <Ionicons name="calendar-outline" size={32} color={palette.icon} />
             <Text style={styles.noEventsText}>No hay eventos próximos</Text>
           </View>
         )}
@@ -940,7 +941,7 @@ export default function CalendarioScreen() {
                               {event.title}
                             </Text>
                             {event.isExternal && (
-                              <Ionicons name="cloud-outline" size={10} color="white" />
+                              <Ionicons name="cloud-outline" size={10} color={palette.onPrimary} />
                             )}
                           </View>
                         </TouchableOpacity>
@@ -1058,7 +1059,7 @@ export default function CalendarioScreen() {
                                   {event.title}
                                 </Text>
                                 {event.isExternal && (
-                                  <Ionicons name="cloud-outline" size={12} color="white" />
+                                  <Ionicons name="cloud-outline" size={12} color={palette.onPrimary} />
                                 )}
                               </View>
                               <Text style={styles.weekTimeEventTime}>
@@ -1115,11 +1116,11 @@ export default function CalendarioScreen() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <Text style={styles.dayAllDayEventText}>{event.title}</Text>
                   {event.isExternal && (
-                    <Ionicons name="cloud-outline" size={14} color="white" />
+                    <Ionicons name="cloud-outline" size={14} color={palette.onPrimary} />
                   )}
                 </View>
                 {event.isShared && (
-                  <Ionicons name="heart" size={16} color="white" />
+                  <Ionicons name="heart" size={16} color={palette.onPrimary} />
                 )}
               </TouchableOpacity>
             ))}
@@ -1223,7 +1224,7 @@ export default function CalendarioScreen() {
                                   {event.title}
                                 </Text>
                                 {event.isExternal && (
-                                  <Ionicons name="cloud-outline" size={14} color="white" />
+                                  <Ionicons name="cloud-outline" size={14} color={palette.onPrimary} />
                                 )}
                               </View>
                               <Text style={styles.timelineEventTime}>
@@ -1234,7 +1235,7 @@ export default function CalendarioScreen() {
                               </Text>
                             </View>
                             {event.isShared && (
-                              <Ionicons name="heart" size={20} color="white" />
+                              <Ionicons name="heart" size={20} color={palette.onPrimary} />
                             )}
                           </TouchableOpacity>
                           );
@@ -1259,8 +1260,11 @@ export default function CalendarioScreen() {
           <TouchableOpacity
             style={styles.navButton}
             onPress={previousPeriod}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Periodo anterior"
           >
-            <Ionicons name="chevron-back" size={20} color="#1A1A1A" />
+            <Ionicons name="chevron-back" size={20} color={palette.text} />
           </TouchableOpacity>
 
           <View style={styles.headerTitleContainer}>
@@ -1276,21 +1280,26 @@ export default function CalendarioScreen() {
           <TouchableOpacity
             style={styles.navButton}
             onPress={nextPeriod}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Periodo siguiente"
           >
-            <Ionicons name="chevron-forward" size={20} color="#1A1A1A" />
+            <Ionicons name="chevron-forward" size={20} color={palette.text} />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.addButton}
             onPress={() => router.push('/(events)/create-event')}
+            accessibilityRole="button"
+            accessibilityLabel="Crear evento"
           >
             <LinearGradient
-              colors={["#FF4F81", "#8A2BE2"]}
+              colors={gradients.primary}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.addButtonGradient}
             >
-              <Ionicons name="add" size={24} color="white" />
+              <Ionicons name="add" size={24} color={palette.onPrimary} />
             </LinearGradient>
           </TouchableOpacity>
         </View>
@@ -1307,17 +1316,17 @@ export default function CalendarioScreen() {
             >
               {viewMode === "month" ? (
                 <LinearGradient
-                  colors={["#FF4F81", "#8A2BE2"]}
+                  colors={gradients.primary}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.viewModeButtonGradient}
                 >
-                  <Ionicons name="calendar" size={16} color="white" />
+                  <Ionicons name="calendar" size={16} color={palette.onPrimary} />
                   <Text style={styles.viewModeTextActive}>Mes</Text>
                 </LinearGradient>
               ) : (
                 <>
-                  <Ionicons name="calendar-outline" size={16} color="#1A1A1A66" />
+                  <Ionicons name="calendar-outline" size={16} color={palette.icon} />
                   <Text style={styles.viewModeText}>Mes</Text>
                 </>
               )}
@@ -1332,17 +1341,17 @@ export default function CalendarioScreen() {
             >
               {viewMode === "week" ? (
                 <LinearGradient
-                  colors={["#FF4F81", "#8A2BE2"]}
+                  colors={gradients.primary}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.viewModeButtonGradient}
                 >
-                  <Ionicons name="calendar" size={16} color="white" />
+                  <Ionicons name="calendar" size={16} color={palette.onPrimary} />
                   <Text style={styles.viewModeTextActive}>Semana</Text>
                 </LinearGradient>
               ) : (
                 <>
-                  <Ionicons name="calendar-outline" size={16} color="#1A1A1A66" />
+                  <Ionicons name="calendar-outline" size={16} color={palette.icon} />
                   <Text style={styles.viewModeText}>Semana</Text>
                 </>
               )}
@@ -1357,17 +1366,17 @@ export default function CalendarioScreen() {
             >
               {viewMode === "day" ? (
                 <LinearGradient
-                  colors={["#FF4F81", "#8A2BE2"]}
+                  colors={gradients.primary}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.viewModeButtonGradient}
                 >
-                  <Ionicons name="time" size={16} color="white" />
+                  <Ionicons name="time" size={16} color={palette.onPrimary} />
                   <Text style={styles.viewModeTextActive}>Día</Text>
                 </LinearGradient>
               ) : (
                 <>
-                  <Ionicons name="time-outline" size={16} color="#1A1A1A66" />
+                  <Ionicons name="time-outline" size={16} color={palette.icon} />
                   <Text style={styles.viewModeText}>Día</Text>
                 </>
               )}
@@ -1410,12 +1419,12 @@ export default function CalendarioScreen() {
         onPress={() => router.push('/(tabs)/recommendations')}
       >
         <LinearGradient
-          colors={["#FF4F81", "#8A2BE2"]}
+          colors={gradients.primary}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.recommendationsGradient}
         >
-          <Ionicons name="bulb" size={24} color="#FFFFFF" />
+          <Ionicons name="bulb" size={24} color={palette.onPrimary} />
         </LinearGradient>
       </TouchableOpacity>
     </View>
@@ -1425,11 +1434,11 @@ export default function CalendarioScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: palette.surface,
   },
   header: {
     borderBottomWidth: 2,
-    borderBottomColor: "#F5F5F5",
+    borderBottomColor: palette.divider,
     paddingTop: 50,
   },
   emptyStateContainer: {
@@ -1450,13 +1459,13 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#333',
+    color: palette.text,
     marginBottom: 8,
     textAlign: 'center',
   },
   emptyText: {
     fontSize: 14,
-    color: '#666',
+    color: palette.textSecondary,
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 20,
@@ -1475,7 +1484,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   linkButtonText: {
-    color: '#FFF',
+    color: palette.onPrimary,
     fontSize: 16,
     fontWeight: '700',
   },
@@ -1496,19 +1505,19 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    color: "#1A1A1A",
+    color: palette.text,
     fontWeight: "600",
     textAlign: "center",
   },
   todayButton: {
     paddingHorizontal: 12,
     paddingVertical: 4,
-    backgroundColor: "#FF4F8120",
+    backgroundColor: palette.primarySoft,
     borderRadius: 12,
   },
   todayButtonText: {
     fontSize: 12,
-    color: "#FF4F81",
+    color: palette.textAccent,
     fontWeight: "600",
   },
   addButton: {
@@ -1528,7 +1537,7 @@ const styles = StyleSheet.create({
   },
   viewModeSelector: {
     flexDirection: "row",
-    backgroundColor: "#F5F5F5",
+    backgroundColor: palette.surfaceMuted,
     borderRadius: 16,
     padding: 4,
     gap: 4,
@@ -1554,12 +1563,12 @@ const styles = StyleSheet.create({
   },
   viewModeText: {
     fontSize: 14,
-    color: "#1A1A1A66",
+    color: palette.textMuted,
     marginLeft: 8,
   },
   viewModeTextActive: {
     fontSize: 14,
-    color: "white",
+    color: palette.onPrimary,
     fontWeight: "600",
   },
   scrollView: {
@@ -1579,7 +1588,7 @@ const styles = StyleSheet.create({
   },
   dayHeaderText: {
     fontSize: 12,
-    color: "#1A1A1A66",
+    color: palette.textMuted,
   },
   daysGrid: {
     flexDirection: "row",
@@ -1592,19 +1601,19 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   todayCell: {
-    backgroundColor: "rgba(255, 79, 129, 0.1)",
+    backgroundColor: palette.primarySoft,
   },
   dayCellContent: {
     flex: 1,
   },
   dayNumber: {
     fontSize: 14,
-    color: "#1A1A1A",
+    color: palette.text,
     textAlign: "center",
     marginBottom: 4,
   },
   todayText: {
-    color: "#FF4F81",
+    color: palette.textAccent,
     fontWeight: "600",
   },
   eventDots: {
@@ -1621,7 +1630,7 @@ const styles = StyleSheet.create({
   },
   moreEvents: {
     fontSize: 10,
-    color: "#1A1A1A66",
+    color: palette.textMuted,
     textAlign: "center",
   },
   upcomingSection: {
@@ -1629,7 +1638,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    color: "#1A1A1A",
+    color: palette.text,
     fontWeight: "600",
     marginBottom: 12,
     paddingHorizontal: 8,
@@ -1637,9 +1646,9 @@ const styles = StyleSheet.create({
   eventCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "white",
+    backgroundColor: palette.surface,
     borderWidth: 2,
-    borderColor: "#F5F5F5",
+    borderColor: palette.divider,
     borderRadius: 16,
     padding: 12,
     marginBottom: 8,
@@ -1655,12 +1664,12 @@ const styles = StyleSheet.create({
   },
   eventTitle: {
     fontSize: 16,
-    color: "#1A1A1A",
+    color: palette.text,
     fontWeight: "500",
   },
   eventDate: {
     fontSize: 14,
-    color: "#1A1A1A66",
+    color: palette.textMuted,
     marginTop: 2,
   },
   noEventsContainer: {
@@ -1670,19 +1679,19 @@ const styles = StyleSheet.create({
   },
   noEventsText: {
     fontSize: 14,
-    color: "#999",
+    color: palette.textMuted,
     marginTop: 8,
   },
   // Vista Semanal - Estilo Google Calendar
   weekViewContainer: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: palette.surface,
   },
   weekViewHeader: {
     flexDirection: "row",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: palette.surface,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E5E5",
+    borderBottomColor: palette.border,
     paddingVertical: 8,
   },
   weekTimeGutter: {
@@ -1695,12 +1704,12 @@ const styles = StyleSheet.create({
   },
   weekDayName: {
     fontSize: 11,
-    color: "#666",
+    color: palette.textSecondary,
     textTransform: "uppercase",
     marginBottom: 4,
   },
   weekDayNameToday: {
-    color: "#FF4F81",
+    color: palette.textAccent,
     fontWeight: "600",
   },
   weekDayNumber: {
@@ -1711,22 +1720,22 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   weekDayNumberToday: {
-    backgroundColor: "#FF4F81",
+    backgroundColor: palette.primary,
   },
   weekDayNumberText: {
     fontSize: 18,
-    color: "#1A1A1A",
+    color: palette.text,
     fontWeight: "500",
   },
   weekDayNumberTextToday: {
-    color: "white",
+    color: palette.onPrimary,
     fontWeight: "600",
   },
   // Sección de eventos de todo el día
   allDaySection: {
-    backgroundColor: "#F9FAFB",
+    backgroundColor: palette.background,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E5E5",
+    borderBottomColor: palette.border,
   },
   allDayLabel: {
     width: 60,
@@ -1735,7 +1744,7 @@ const styles = StyleSheet.create({
   },
   allDayLabelText: {
     fontSize: 10,
-    color: "#666",
+    color: palette.textSecondary,
     textTransform: "uppercase",
   },
   allDayEventsContainer: {
@@ -1753,7 +1762,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   allDayEventText: {
-    color: "#FFFFFF",
+    color: palette.onPrimary,
     fontSize: 12,
     fontWeight: "600",
   },
@@ -1768,7 +1777,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     height: 60,
     borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
+    borderBottomColor: palette.divider,
   },
   weekTimeColumn: {
     width: 60,
@@ -1778,16 +1787,16 @@ const styles = StyleSheet.create({
   },
   weekTimeText: {
     fontSize: 11,
-    color: "#999",
+    color: palette.textMuted,
   },
   weekDayCell: {
     flex: 1,
     borderLeftWidth: 1,
-    borderLeftColor: "#F0F0F0",
+    borderLeftColor: palette.divider,
     position: "relative",
   },
   weekDayCellToday: {
-    backgroundColor: "rgba(255, 79, 129, 0.02)",
+    backgroundColor: palette.primarySoft,
   },
   weekTimeEvent: {
     position: "absolute",
@@ -1800,13 +1809,13 @@ const styles = StyleSheet.create({
   },
   weekTimeEventTitle: {
     fontSize: 11,
-    color: "#FFFFFF",
+    color: palette.onPrimary,
     fontWeight: "600",
     marginBottom: 2,
   },
   weekTimeEventTime: {
     fontSize: 10,
-    color: "rgba(255, 255, 255, 0.9)",
+    color: palette.onPrimarySoft,
   },
   // Mantener estilos antiguos para compatibilidad
   weekGrid: {
@@ -1818,14 +1827,14 @@ const styles = StyleSheet.create({
   weekDayColumn: {
     flex: 1,
     borderWidth: 2,
-    borderColor: "#F5F5F5",
+    borderColor: palette.divider,
     borderRadius: 16,
     padding: 8,
     gap: 8,
   },
   weekDayColumnToday: {
-    borderColor: "#FF4F8166",
-    backgroundColor: "rgba(255, 79, 129, 0.05)",
+    borderColor: palette.primaryBorder,
+    backgroundColor: palette.primarySoft,
   },
   weekEventCard: {
     padding: 8,
@@ -1833,7 +1842,7 @@ const styles = StyleSheet.create({
   },
   weekEventTitle: {
     fontSize: 12,
-    color: "white",
+    color: palette.onPrimary,
     fontWeight: "500",
   },
   weekEventTime: {
@@ -1844,21 +1853,21 @@ const styles = StyleSheet.create({
   },
   weekEventTimeText: {
     fontSize: 10,
-    color: "rgba(255, 255, 255, 0.8)",
+    color: palette.onPrimarySoft,
   },
   dayViewHeader: {
     alignItems: "center",
-    backgroundColor: "#F5F5F5",
+    backgroundColor: palette.surfaceMuted,
     paddingVertical: 16,
   },
   dayViewDayName: {
     fontSize: 14,
-    color: "#1A1A1A66",
+    color: palette.textMuted,
     marginBottom: 4,
   },
   dayViewDate: {
     fontSize: 24,
-    color: "#1A1A1A",
+    color: palette.text,
     fontWeight: "600",
   },
   timeline: {
@@ -1875,12 +1884,12 @@ const styles = StyleSheet.create({
   },
   timelineHourText: {
     fontSize: 14,
-    color: "#1A1A1A66",
+    color: palette.textMuted,
   },
   timelineContent: {
     flex: 1,
     borderLeftWidth: 2,
-    borderLeftColor: "#F5F5F5",
+    borderLeftColor: palette.divider,
     paddingLeft: 12,
     paddingBottom: 8,
   },
@@ -1901,28 +1910,28 @@ const styles = StyleSheet.create({
   },
   timelineEventTitle: {
     fontSize: 16,
-    color: "white",
+    color: palette.onPrimary,
     fontWeight: "500",
     marginBottom: 4,
   },
   timelineEventTime: {
     fontSize: 14,
-    color: "rgba(255, 255, 255, 0.8)",
+    color: palette.onPrimarySoft,
   },
   // Day view - all-day events styles
   dayViewContainer: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: palette.surface,
   },
   dayAllDaySection: {
-    backgroundColor: "#F9FAFB",
+    backgroundColor: palette.background,
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E5E5",
+    borderBottomColor: palette.border,
   },
   dayAllDayTitle: {
     fontSize: 12,
-    color: "#666666",
+    color: palette.textSecondary,
     fontWeight: "600",
     marginBottom: 8,
     textTransform: "uppercase",
@@ -1936,7 +1945,7 @@ const styles = StyleSheet.create({
   },
   dayAllDayEventText: {
     fontSize: 14,
-    color: "#FFFFFF",
+    color: palette.onPrimary,
     fontWeight: "600",
     flex: 1,
   },
@@ -1946,7 +1955,7 @@ const styles = StyleSheet.create({
     right: 20,
     borderRadius: 28,
     elevation: 5,
-    shadowColor: '#000',
+    shadowColor: palette.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,

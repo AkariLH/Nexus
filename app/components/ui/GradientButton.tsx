@@ -1,5 +1,6 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, Text, TouchableOpacity, ActivityIndicator } from "react-native";
+import { palette, gradients } from "../../../constants/colors";
 
 interface GradientButtonProps {
   onPress: () => void;
@@ -15,7 +16,7 @@ export function GradientButton({
   title,
   disabled = false,
   loading = false,
-  colors = ["#FF4F81", "#8A2BE2"],
+  colors = gradients.primary,
   style,
 }: GradientButtonProps) {
   return (
@@ -24,6 +25,9 @@ export function GradientButton({
       disabled={disabled || loading}
       style={[styles.buttonWrapper, disabled && { opacity: 0.5 }, style]}
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityState={{ disabled: disabled || loading, busy: loading }}
     >
       <LinearGradient
         colors={colors}
@@ -32,7 +36,7 @@ export function GradientButton({
         style={styles.button}
       >
         {loading ? (
-          <ActivityIndicator color="#FFFFFF" />
+          <ActivityIndicator color={palette.onPrimary} />
         ) : (
           <Text style={styles.buttonText}>{title}</Text>
         )}
@@ -45,7 +49,7 @@ const styles = StyleSheet.create({
   buttonWrapper: {
     borderRadius: 24,
     overflow: "hidden",
-    shadowColor: "#000",
+    shadowColor: palette.shadow,
     shadowOpacity: 0.15,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
@@ -57,7 +61,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   buttonText: {
-    color: "#FFF",
+    color: palette.onPrimary,
     fontWeight: "700",
     fontSize: 16,
   },

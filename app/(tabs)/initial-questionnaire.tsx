@@ -11,6 +11,7 @@ import { ErrorModal } from '../components/ErrorModal';
 import { SuccessModal } from '../components/SuccessModal';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { useQuestionnaire } from '../../context/QuestionnaireContext';
+import { palette, gradients } from '../../constants/colors';
 
 const DIMENSIONS = [
   { id: 'physical', name: 'Bienestar Físico', icon: 'fitness', emoji: '💪', color: '#FF6B6B' },
@@ -224,7 +225,7 @@ export default function InitialQuestionnaireScreen() {
       return (
         <SafeAreaView style={styles.container}>
           <View style={styles.errorContainer}>
-            <Ionicons name="alert-circle" size={48} color="#ff6b6b" />
+            <Ionicons name="alert-circle" size={48} color={palette.error} />
             <Text style={styles.errorText}>No se pudieron cargar las preferencias</Text>
             <TouchableOpacity 
               style={styles.retryButton}
@@ -255,13 +256,13 @@ export default function InitialQuestionnaireScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <LinearGradient
-        colors={['#FF4F81', '#8A2BE2']}
+        colors={gradients.primary}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.header}
       >
         <View style={styles.headerBadge}>
-          <Ionicons name="clipboard" size={32} color="#FF4F81" />
+          <Ionicons name="clipboard" size={32} color={palette.primary} />
         </View>
         <Text style={styles.headerTitle}>Cuestionario de Preferencias</Text>
         <Text style={styles.headerSubtitle}>
@@ -281,7 +282,7 @@ export default function InitialQuestionnaireScreen() {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.infoCard}>
-          <Ionicons name="information-circle" size={24} color="#8A2BE2" />
+          <Ionicons name="information-circle" size={24} color={palette.secondary} />
           <Text style={styles.infoText}>
             Para personalizar tu experiencia en Nexus, necesitamos conocer tus preferencias en estas 7 dimensiones del bienestar. 
             Debes completar todas antes de acceder a la aplicación.
@@ -308,7 +309,7 @@ export default function InitialQuestionnaireScreen() {
                   <Text style={styles.dimensionEmoji}>{dimension.emoji}</Text>
                   {isCompleted && (
                     <View style={styles.completedBadge}>
-                      <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
+                      <Ionicons name="checkmark-circle" size={24} color={palette.success} />
                     </View>
                   )}
                 </View>
@@ -326,7 +327,7 @@ export default function InitialQuestionnaireScreen() {
 
         {/* Mensaje de recordatorio */}
         <View style={styles.reminderCard}>
-          <Ionicons name="alert-circle-outline" size={20} color="#FF4F81" />
+          <Ionicons name="alert-circle-outline" size={20} color={palette.primary} />
           <Text style={styles.reminderText}>
             Recuerda: No podrás acceder a las funciones de la app hasta completar todas las dimensiones.
           </Text>
@@ -356,7 +357,6 @@ export default function InitialQuestionnaireScreen() {
         cancelText="Cancelar"
         onConfirm={confirmModal.onConfirm}
         onCancel={() => setConfirmModal({ ...confirmModal, visible: false })}
-        iconName="checkmark-circle"
       />
     </SafeAreaView>
   );
@@ -365,7 +365,7 @@ export default function InitialQuestionnaireScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: palette.surfaceMuted,
   },
   header: {
     padding: 20,
@@ -379,11 +379,11 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: 'white',
+    backgroundColor: palette.surface,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
-    shadowColor: '#000',
+    shadowColor: palette.shadow,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -392,13 +392,13 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 26,
     fontWeight: 'bold',
-    color: 'white',
+    color: palette.onPrimary,
     marginBottom: 8,
     textAlign: 'center',
   },
   headerSubtitle: {
     fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: palette.onPrimarySoft,
     marginBottom: 20,
     textAlign: 'center',
     fontWeight: '600',
@@ -409,19 +409,19 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: palette.onPrimaryFaint,
     borderRadius: 4,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: 'white',
+    backgroundColor: palette.surface,
     borderRadius: 4,
   },
   progressText: {
     marginTop: 8,
     fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: palette.onPrimarySoft,
     textAlign: 'center',
     fontWeight: '600',
   },
@@ -431,14 +431,14 @@ const styles = StyleSheet.create({
   },
   infoCard: {
     flexDirection: 'row',
-    backgroundColor: '#8A2BE210',
+    backgroundColor: palette.secondarySoft,
     padding: 16,
     borderRadius: 16,
     borderLeftWidth: 4,
-    borderLeftColor: '#8A2BE2',
+    borderLeftColor: palette.secondary,
     marginBottom: 24,
     gap: 12,
-    shadowColor: '#8A2BE2',
+    shadowColor: palette.secondary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -447,13 +447,13 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
     fontSize: 14,
-    color: '#333',
+    color: palette.text,
     lineHeight: 20,
   },
   sectionTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#333',
+    color: palette.text,
     marginBottom: 16,
   },
   dimensionsGrid: {
@@ -464,11 +464,11 @@ const styles = StyleSheet.create({
   },
   dimensionCard: {
     width: '47%',
-    backgroundColor: 'white',
+    backgroundColor: palette.surface,
     borderRadius: 20,
     padding: 20,
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: palette.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
@@ -476,7 +476,7 @@ const styles = StyleSheet.create({
   },
   dimensionCardCompleted: {
     borderWidth: 2,
-    borderColor: '#4CAF50',
+    borderColor: palette.success,
   },
   dimensionIconContainer: {
     position: 'relative',
@@ -489,13 +489,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -8,
     right: -8,
-    backgroundColor: 'white',
+    backgroundColor: palette.surface,
     borderRadius: 12,
   },
   dimensionName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: palette.text,
     textAlign: 'center',
     lineHeight: 20,
   },
@@ -509,17 +509,17 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingHorizontal: 12,
     paddingVertical: 4,
-    backgroundColor: '#FF4F8110',
+    backgroundColor: palette.primarySoft,
     borderRadius: 12,
   },
   pendingText: {
     fontSize: 11,
-    color: '#FF4F81',
+    color: palette.textAccent,
     fontWeight: '600',
   },
   reminderCard: {
     flexDirection: 'row',
-    backgroundColor: '#FF4F8110',
+    backgroundColor: palette.primarySoft,
     padding: 16,
     borderRadius: 16,
     marginTop: 24,
@@ -530,7 +530,7 @@ const styles = StyleSheet.create({
   reminderText: {
     flex: 1,
     fontSize: 13,
-    color: '#666',
+    color: palette.textSecondary,
     lineHeight: 18,
   },
   errorContainer: {
@@ -542,23 +542,23 @@ const styles = StyleSheet.create({
   errorText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#666',
+    color: palette.textSecondary,
     textAlign: 'center',
   },
   retryButton: {
     marginTop: 24,
     paddingHorizontal: 32,
     paddingVertical: 12,
-    backgroundColor: '#FF4F81',
+    backgroundColor: palette.primary,
     borderRadius: 24,
-    shadowColor: '#FF4F81',
+    shadowColor: palette.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 5,
   },
   retryButtonText: {
-    color: 'white',
+    color: palette.onPrimary,
     fontSize: 16,
     fontWeight: '600',
   },

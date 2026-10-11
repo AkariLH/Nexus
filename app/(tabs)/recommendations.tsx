@@ -16,6 +16,7 @@ import { useAvailability } from "../../context/AvailabilityContext";
 import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
 import { findMutualAvailability, MutualAvailabilityResponse } from "../../services/availabilityService";
 import linkService from "../../services/link.service";
+import { palette, gradients } from "../../constants/colors";
 
 interface LinkStatusData {
   hasActiveLink: boolean;
@@ -135,18 +136,18 @@ export default function RecommendationsScreen() {
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <LinearGradient
-              colors={["#FF4F81", "#8A2BE2"]}
+              colors={gradients.primary}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.iconGradient}
             >
-              <Ionicons name="bulb" size={24} color="#FFFFFF" />
+              <Ionicons name="bulb" size={24} color={palette.onPrimary} />
             </LinearGradient>
             <Text style={styles.headerTitle}>Recomendaciones</Text>
           </View>
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#FF4F81" />
+          <ActivityIndicator size="large" color={palette.primary} />
           <Text style={styles.loadingText}>Calculando disponibilidad...</Text>
         </View>
       </View>
@@ -161,20 +162,23 @@ export default function RecommendationsScreen() {
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <LinearGradient
-            colors={["#FF4F81", "#8A2BE2"]}
+            colors={gradients.primary}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.iconGradient}
           >
-            <Ionicons name="bulb" size={24} color="#FFFFFF" />
+            <Ionicons name="bulb" size={24} color={palette.onPrimary} />
           </LinearGradient>
           <Text style={styles.headerTitle}>Recomendaciones</Text>
         </View>
         <TouchableOpacity 
           onPress={() => router.push('/(settings)/availability-schedule')}
           style={styles.settingsButton}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Horarios permitidos"
         >
-          <Ionicons name="settings-outline" size={24} color="#6B7280" />
+          <Ionicons name="settings-outline" size={24} color={palette.textSecondary} />
         </TouchableOpacity>
       </View>
 
@@ -182,13 +186,13 @@ export default function RecommendationsScreen() {
         style={styles.scrollView}
         contentContainerStyle={styles.content}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={['#FF4F81']} />
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[palette.primary]} />
         }
       >
         {/* Solo mostrar disponibilidad mutua */}
         {!hasActiveLink ? (
           <View style={styles.emptyCard}>
-            <Ionicons name="link-outline" size={64} color="#D1D5DB" />
+            <Ionicons name="link-outline" size={64} color={palette.iconDisabled} />
             <Text style={styles.emptyTitle}>Sin vínculo activo</Text>
             <Text style={styles.emptyText}>
               Necesitas tener un vínculo activo para ver recomendaciones de horarios en común
@@ -198,19 +202,19 @@ export default function RecommendationsScreen() {
               style={styles.linkButton}
             >
               <LinearGradient
-                colors={["#FF4F81", "#8A2BE2"]}
+                colors={gradients.primary}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.linkButtonGradient}
               >
-                <Ionicons name="link" size={20} color="#FFFFFF" />
+                <Ionicons name="link" size={20} color={palette.onPrimary} />
                 <Text style={styles.linkButtonText}>Gestionar vínculo</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>
         ) : !mutualAvailability || mutualAvailability.totalDaysWithMutualAvailability === 0 ? (
           <View style={styles.emptyCard}>
-            <Ionicons name="calendar-clear-outline" size={64} color="#D1D5DB" />
+            <Ionicons name="calendar-clear-outline" size={64} color={palette.iconDisabled} />
             <Text style={styles.emptyTitle}>Sin coincidencias</Text>
             <Text style={styles.emptyText}>
               No hay horarios libres en común con {linkStatus?.partner?.nickname || 'tu pareja'} en los próximos 7 días
@@ -222,7 +226,7 @@ export default function RecommendationsScreen() {
         ) : (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="people" size={24} color="#8A2BE2" />
+              <Ionicons name="people" size={24} color={palette.secondary} />
               <View style={styles.sectionTitleContainer}>
                 <Text style={styles.sectionTitle}>Horarios disponibles en común</Text>
                 <Text style={styles.sectionSubtitle}>
@@ -233,7 +237,7 @@ export default function RecommendationsScreen() {
 
             <View style={styles.statsCard}>
               <LinearGradient
-                colors={["#8A2BE2", "#FF4F81"]}
+                colors={gradients.primaryReversed}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.statsGradient}
@@ -273,7 +277,7 @@ export default function RecommendationsScreen() {
                       <Text style={styles.dayName}>{getDayName(day.dayOfWeek)}</Text>
                     </View>
                     <View style={styles.dayStats}>
-                      <Ionicons name="time-outline" size={16} color="#8A2BE2" />
+                      <Ionicons name="time-outline" size={16} color={palette.secondary} />
                       <Text style={styles.dayMinutes}>
                         {Math.floor(day.totalMutualMinutes / 60)}h {day.totalMutualMinutes % 60}m
                       </Text>
@@ -282,7 +286,7 @@ export default function RecommendationsScreen() {
                   <View style={styles.slotsContainer}>
                     {day.mutualFreeSlots.map((slot, slotIndex) => (
                       <View key={slotIndex} style={styles.mutualSlotChip}>
-                        <Ionicons name="heart" size={14} color="#FF4F81" />
+                        <Ionicons name="heart" size={14} color={palette.primary} />
                         <Text style={styles.mutualSlotText}>
                           {slot.start} - {slot.end}
                         </Text>
@@ -299,7 +303,7 @@ export default function RecommendationsScreen() {
                     }}
                   >
                     <Text style={styles.createEventText}>Crear evento</Text>
-                    <Ionicons name="add-circle" size={16} color="#8A2BE2" />
+                    <Ionicons name="add-circle" size={16} color={palette.secondary} />
                   </TouchableOpacity>
                 </View>
               ))}
@@ -316,7 +320,7 @@ export default function RecommendationsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: palette.background,
   },
   header: {
     flexDirection: 'row',
@@ -325,9 +329,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 60,
     paddingBottom: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: palette.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: palette.border,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -344,7 +348,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#1A1A1A',
+    color: palette.text,
   },
   settingsButton: {
     width: 40,
@@ -360,7 +364,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 14,
-    color: '#6B7280',
+    color: palette.textSecondary,
   },
   scrollView: {
     flex: 1,
@@ -383,11 +387,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1A1A1A',
+    color: palette.text,
   },
   sectionSubtitle: {
     fontSize: 14,
-    color: '#6B7280',
+    color: palette.textSecondary,
     marginTop: 2,
   },
   statsCard: {
@@ -395,7 +399,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: 16,
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: palette.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -411,29 +415,29 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: palette.onPrimary,
   },
   statLabel: {
     fontSize: 11,
-    color: '#FFFFFF',
+    color: palette.onPrimary,
     opacity: 0.9,
     marginTop: 4,
     textAlign: 'center',
   },
   statDivider: {
     width: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: palette.surface,
     opacity: 0.3,
   },
   daysContainer: {
     gap: 12,
   },
   mutualDayCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: palette.surface,
     borderRadius: 12,
     padding: 16,
     borderWidth: 2,
-    borderColor: '#FF4F81',
+    borderColor: palette.primary,
   },
   dayHeader: {
     flexDirection: 'row',
@@ -444,18 +448,18 @@ const styles = StyleSheet.create({
   dayDate: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1A1A1A',
+    color: palette.text,
   },
   dayName: {
     fontSize: 13,
-    color: '#6B7280',
+    color: palette.textSecondary,
     marginTop: 2,
   },
   dayStats: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#8A2BE210',
+    backgroundColor: palette.secondarySoft,
     paddingVertical: 4,
     paddingHorizontal: 8,
     borderRadius: 8,
@@ -463,7 +467,7 @@ const styles = StyleSheet.create({
   dayMinutes: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#8A2BE2',
+    color: palette.textAccent,
   },
   slotsContainer: {
     flexDirection: 'row',
@@ -477,15 +481,15 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingVertical: 6,
     paddingHorizontal: 10,
-    backgroundColor: '#FF4F8110',
+    backgroundColor: palette.primarySoft,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#FF4F8130',
+    borderColor: palette.primaryBorder,
   },
   mutualSlotText: {
     fontSize: 12,
     fontWeight: '500',
-    color: '#FF4F81',
+    color: palette.textAccent,
   },
   createEventButton: {
     flexDirection: 'row',
@@ -494,40 +498,40 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 10,
     paddingHorizontal: 16,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: palette.background,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: palette.border,
   },
   createEventText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#8A2BE2',
+    color: palette.textAccent,
   },
   emptyCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: palette.surface,
     borderRadius: 12,
     padding: 32,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: palette.border,
   },
   emptyTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1A1A1A',
+    color: palette.text,
     marginTop: 16,
   },
   emptyText: {
     fontSize: 14,
-    color: '#6B7280',
+    color: palette.textSecondary,
     textAlign: 'center',
     marginTop: 8,
     lineHeight: 20,
   },
   emptySubtext: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: palette.textMuted,
     textAlign: 'center',
     marginTop: 8,
     fontStyle: 'italic',
@@ -547,7 +551,7 @@ const styles = StyleSheet.create({
   linkButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: palette.onPrimary,
   },
   bottomSpacer: {
     height: 40,

@@ -18,6 +18,7 @@ import { authService } from "../../services/auth.service";
 import type { RegisterRequest } from "../../types/auth.types";
 import { SuccessModal } from "../components/SuccessModal";
 import { ErrorModal } from "../components/ErrorModal";
+import { palette, gradients } from "../../constants/colors";
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -372,8 +373,11 @@ export default function RegisterScreen() {
           onPress={() => router.push("/(auth)/welcome")}
           style={styles.backButton}
           activeOpacity={0.8}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Regresar"
         >
-          <Ionicons name="arrow-back" size={28} color="#1A1A1A" />
+          <Ionicons name="arrow-back" size={28} color={palette.text} />
         </TouchableOpacity>
       </View>
 
@@ -400,12 +404,12 @@ export default function RegisterScreen() {
               <Ionicons
                 name="person-outline"
                 size={20}
-                color="#1A1A1A66"
+                color={palette.icon}
                 style={styles.iconLeft}
               />
               <TextInput
                 placeholder="María García"
-                placeholderTextColor="#1A1A1A66"
+                placeholderTextColor={palette.textMuted}
                 value={name}
                 onChangeText={setName}
                 style={styles.input}
@@ -420,12 +424,12 @@ export default function RegisterScreen() {
               <Ionicons
                 name="at-outline"
                 size={20}
-                color="#1A1A1A66"
+                color={palette.icon}
                 style={styles.iconLeft}
               />
               <TextInput
                 placeholder="mari_love"
-                placeholderTextColor="#1A1A1A66"
+                placeholderTextColor={palette.textMuted}
                 value={nickname}
                 onChangeText={setNickname}
                 style={styles.input}
@@ -440,12 +444,12 @@ export default function RegisterScreen() {
               <Ionicons
                 name="mail-outline"
                 size={20}
-                color={emailError ? "#FF4F81" : "#1A1A1A66"}
+                color={emailError ? palette.primary : palette.textMuted}
                 style={styles.iconLeft}
               />
               <TextInput
                 placeholder="tu@email.com"
-                placeholderTextColor="#1A1A1A66"
+                placeholderTextColor={palette.textMuted}
                 value={email}
                 onChangeText={handleEmailChange}
                 style={styles.input}
@@ -455,7 +459,7 @@ export default function RegisterScreen() {
             </View>
             {emailError ? (
               <View style={styles.errorContainer}>
-                <Ionicons name="alert-circle" size={14} color="#FF4F81" />
+                <Ionicons name="alert-circle" size={14} color={palette.primary} />
                 <Text style={styles.errorText}>{emailError}</Text>
               </View>
             ) : null}
@@ -468,12 +472,12 @@ export default function RegisterScreen() {
               <Ionicons
                 name="lock-closed-outline"
                 size={20}
-                color={passwordError ? "#FF4F81" : "#1A1A1A66"}
+                color={passwordError ? palette.primary : palette.textMuted}
                 style={styles.iconLeft}
               />
               <TextInput
                 placeholder="••••••••"
-                placeholderTextColor="#1A1A1A66"
+                placeholderTextColor={palette.textMuted}
                 value={password}
                 onChangeText={handlePasswordChange}
                 secureTextEntry={!showPassword}
@@ -486,13 +490,13 @@ export default function RegisterScreen() {
                 <Ionicons
                   name={showPassword ? "eye-off-outline" : "eye-outline"}
                   size={20}
-                  color="#1A1A1A66"
+                  color={palette.icon}
                 />
               </TouchableOpacity>
             </View>
             {passwordError ? (
               <View style={styles.errorContainer}>
-                <Ionicons name="alert-circle" size={14} color="#FF4F81" />
+                <Ionicons name="alert-circle" size={14} color={palette.primary} />
                 <Text style={styles.errorText}>{passwordError}</Text>
               </View>
             ) : null}
@@ -505,12 +509,12 @@ export default function RegisterScreen() {
               <Ionicons
                 name="lock-closed-outline"
                 size={20}
-                color={confirmPasswordError ? "#FF4F81" : "#1A1A1A66"}
+                color={confirmPasswordError ? palette.primary : palette.textMuted}
                 style={styles.iconLeft}
               />
               <TextInput
                 placeholder="••••••••"
-                placeholderTextColor="#1A1A1A66"
+                placeholderTextColor={palette.textMuted}
                 value={confirmPassword}
                 onChangeText={handleConfirmPasswordChange}
                 secureTextEntry={!showConfirmPassword}
@@ -523,13 +527,13 @@ export default function RegisterScreen() {
                 <Ionicons
                   name={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
                   size={20}
-                  color="#1A1A1A66"
+                  color={palette.icon}
                 />
               </TouchableOpacity>
             </View>
             {confirmPasswordError ? (
               <View style={styles.errorContainer}>
-                <Ionicons name="alert-circle" size={14} color="#FF4F81" />
+                <Ionicons name="alert-circle" size={14} color={palette.primary} />
                 <Text style={styles.errorText}>{confirmPasswordError}</Text>
               </View>
             ) : null}
@@ -546,7 +550,7 @@ export default function RegisterScreen() {
               <Ionicons
                 name="calendar-outline"
                 size={20}
-                color={birthDateError ? "#FF4F81" : "#1A1A1A66"}
+                color={birthDateError ? palette.primary : palette.textMuted}
                 style={styles.iconLeft}
               />
               <Text style={[styles.input, styles.dateText, !birthDate && styles.placeholder]}>
@@ -555,7 +559,7 @@ export default function RegisterScreen() {
             </TouchableOpacity>
             {birthDateError ? (
               <View style={styles.errorContainer}>
-                <Ionicons name="alert-circle" size={14} color="#FF4F81" />
+                <Ionicons name="alert-circle" size={14} color={palette.primary} />
                 <Text style={styles.errorText}>{birthDateError}</Text>
               </View>
             ) : null}
@@ -569,8 +573,8 @@ export default function RegisterScreen() {
               onChange={onDateChange}
               maximumDate={new Date()}
               minimumDate={new Date(1900, 0, 1)}
-              accentColor="#FF4F81"
-              textColor="#1A1A1A"
+              accentColor={palette.primary}
+              textColor={palette.text}
             />
           )}
 
@@ -583,7 +587,7 @@ export default function RegisterScreen() {
             >
               <View style={[styles.checkbox, termsAccepted && styles.checkboxActive]}>
                 {termsAccepted && (
-                  <Ionicons name="checkmark" size={16} color="#FFF" />
+                  <Ionicons name="checkmark" size={16} color={palette.onPrimary} />
                 )}
               </View>
               <View style={styles.termsTextWrapper}>
@@ -605,13 +609,13 @@ export default function RegisterScreen() {
             disabled={loading || !termsAccepted}
           >
             <LinearGradient
-              colors={termsAccepted ? ["#FF4F81", "#8A2BE2"] : ["#FFB3C6", "#C9A8E8"]}
+              colors={termsAccepted ? gradients.primary : gradients.disabled}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.button}
             >
               {loading ? (
-                <ActivityIndicator color="#FFFFFF" />
+                <ActivityIndicator color={palette.onPrimary} />
               ) : (
                 <Text style={[styles.buttonText, !termsAccepted && styles.buttonTextDisabled]}>
                   Crear cuenta
@@ -657,22 +661,22 @@ export default function RegisterScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#FFF" },
+  container: { flex: 1, backgroundColor: palette.surface },
   header: { paddingHorizontal: 20, paddingTop: 50, paddingBottom: 10 },
   backButton: { padding: 6, borderRadius: 20 },
   scrollContent: { paddingHorizontal: 24, paddingBottom: 60 },
   title: {
     fontSize: 32,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: palette.text,
     marginBottom: 6,
   },
-  subtitle: { color: "#1A1A1A99", marginBottom: 24, fontSize: 14 },
+  subtitle: { color: palette.textSecondary, marginBottom: 24, fontSize: 14 },
   field: { marginBottom: 20 },
-  label: { color: "#1A1A1A", marginBottom: 8, fontSize: 14 },
+  label: { color: palette.text, marginBottom: 8, fontSize: 14 },
   inputWrapper: {
     position: "relative",
-    backgroundColor: "#F7F7F7",
+    backgroundColor: palette.surfaceMuted,
     borderRadius: 20,
     height: 56,
     justifyContent: "center",
@@ -680,8 +684,8 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
   },
   inputError: {
-    borderColor: "#FF4F81",
-    backgroundColor: "#FFF5F7",
+    borderColor: palette.primary,
+    backgroundColor: palette.primarySoft,
   },
   errorContainer: {
     flexDirection: "row",
@@ -690,7 +694,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   errorText: {
-    color: "#FF4F81",
+    color: palette.textAccent,
     fontSize: 12,
     marginLeft: 4,
     flex: 1,
@@ -702,7 +706,7 @@ const styles = StyleSheet.create({
     paddingLeft: 44,
     paddingRight: 44,
     fontSize: 16,
-    color: "#1A1A1A",
+    color: palette.text,
   },
   dateText: {
     lineHeight: 56,
@@ -710,7 +714,7 @@ const styles = StyleSheet.create({
     paddingBottom: 0,
   },
   placeholder: {
-    color: "#1A1A1A66",
+    color: palette.textMuted,
   },
   termsContainer: {
     marginBottom: 24,
@@ -724,34 +728,34 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 8,
     borderWidth: 2,
-    borderColor: '#D0D0D0',
+    borderColor: palette.border,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 2,
   },
   checkboxActive: {
-    backgroundColor: '#FF4F81',
-    borderColor: '#FF4F81',
+    backgroundColor: palette.primary,
+    borderColor: palette.primary,
   },
   termsTextWrapper: {
     flex: 1,
     marginLeft: 12,
   },
   termsText: {
-    color: '#1A1A1A',
+    color: palette.text,
     opacity: 0.8,
     fontSize: 14,
     lineHeight: 20,
   },
   termsLink: {
-    color: '#FF4F81',
+    color: palette.textAccent,
     fontWeight: '600',
   },
   buttonWrapper: {
     marginTop: 8,
     borderRadius: 24,
     overflow: "hidden",
-    shadowColor: "#000",
+    shadowColor: palette.shadow,
     shadowOpacity: 0.15,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
@@ -763,18 +767,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   buttonText: { 
-    color: "#FFF", 
+    color: palette.onPrimary, 
     fontWeight: "700", 
     fontSize: 16 
   },
   buttonTextDisabled: {
-    color: "#1A1A1A66",
+    color: palette.textMuted,
   },
   loginWrapper: {
     flexDirection: "row",
     justifyContent: "center",
     marginTop: 28,
   },
-  loginText: { color: "#1A1A1A99" },
-  loginLink: { color: "#FF4F81", fontWeight: "600" },
+  loginText: { color: palette.textSecondary },
+  loginLink: { color: palette.textAccent, fontWeight: "600" },
 });

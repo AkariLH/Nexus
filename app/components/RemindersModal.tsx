@@ -10,6 +10,7 @@ import {
   TextInput,
 } from "react-native";
 import { ConfirmModal } from "./ConfirmModal";
+import { palette } from "../../constants/colors";
 
 export interface Reminder {
   id: string;
@@ -164,8 +165,8 @@ export function RemindersModal({
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.title}>Recordatorios</Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Ionicons name="close" size={24} color="#1A1A1A" />
+            <TouchableOpacity onPress={onClose} style={styles.closeButton} accessibilityRole="button" accessibilityLabel="Cerrar">
+              <Ionicons name="close" size={24} color={palette.text} />
             </TouchableOpacity>
           </View>
 
@@ -191,7 +192,7 @@ export function RemindersModal({
                     {preset.label}
                   </Text>
                   {isSelected(preset.minutesBefore) && (
-                    <Ionicons name="checkmark-circle" size={18} color="#FFF" style={styles.checkIcon} />
+                    <Ionicons name="checkmark-circle" size={18} color={palette.onPrimary} style={styles.checkIcon} />
                   )}
                 </TouchableOpacity>
               ))}
@@ -204,7 +205,7 @@ export function RemindersModal({
                 style={styles.addCustomButton}
                 onPress={() => setShowCustomInput(true)}
               >
-                <Ionicons name="add-circle-outline" size={20} color="#FF4F81" />
+                <Ionicons name="add-circle-outline" size={20} color={palette.primary} />
                 <Text style={styles.addCustomText}>Agregar tiempo personalizado</Text>
               </TouchableOpacity>
             ) : (
@@ -221,7 +222,7 @@ export function RemindersModal({
                   style={styles.addButton}
                   onPress={addCustomReminder}
                 >
-                  <Ionicons name="checkmark" size={20} color="#FFF" />
+                  <Ionicons name="checkmark" size={20} color={palette.onPrimary} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.cancelButton}
@@ -230,7 +231,7 @@ export function RemindersModal({
                     setCustomMinutes("");
                   }}
                 >
-                  <Ionicons name="close" size={20} color="#666" />
+                  <Ionicons name="close" size={20} color={palette.textSecondary} />
                 </TouchableOpacity>
               </View>
             )}
@@ -246,10 +247,10 @@ export function RemindersModal({
                     .sort((a, b) => a.minutesBefore - b.minutesBefore)
                     .map((reminder) => (
                       <View key={reminder.id} style={styles.selectedItem}>
-                        <Ionicons name="notifications" size={18} color="#FF4F81" />
+                        <Ionicons name="notifications" size={18} color={palette.primary} />
                         <Text style={styles.selectedItemText}>{reminder.label}</Text>
                         <TouchableOpacity onPress={() => removeReminder(reminder.id)}>
-                          <Ionicons name="trash-outline" size={18} color="#FF4F81" />
+                          <Ionicons name="trash-outline" size={18} color={palette.primary} />
                         </TouchableOpacity>
                       </View>
                     ))}
@@ -311,11 +312,11 @@ export function RemindersModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: palette.overlay,
     justifyContent: "flex-end",
   },
   modalContainer: {
-    backgroundColor: "#FFF",
+    backgroundColor: palette.surface,
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     height: "90%",
@@ -331,7 +332,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: palette.text,
   },
   closeButton: {
     padding: 4,
@@ -343,7 +344,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1A1A1A",
+    color: palette.text,
     marginTop: 16,
     marginBottom: 12,
   },
@@ -354,7 +355,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#F5F5F5",
+    backgroundColor: palette.surfaceMuted,
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderRadius: 12,
@@ -362,16 +363,16 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
   },
   presetChipSelected: {
-    backgroundColor: "#FF4F81",
-    borderColor: "#FF4F81",
+    backgroundColor: palette.primary,
+    borderColor: palette.primary,
   },
   presetChipText: {
     fontSize: 15,
     fontWeight: "500",
-    color: "#1A1A1A",
+    color: palette.text,
   },
   presetChipTextSelected: {
-    color: "#FFF",
+    color: palette.onPrimary,
   },
   checkIcon: {
     marginLeft: 8,
@@ -382,16 +383,16 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 14,
     paddingHorizontal: 16,
-    backgroundColor: "#FFF",
+    backgroundColor: palette.surface,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: "#FF4F81",
+    borderColor: palette.primary,
     borderStyle: "dashed",
   },
   addCustomText: {
     fontSize: 15,
     fontWeight: "500",
-    color: "#FF4F81",
+    color: palette.textAccent,
   },
   customInputContainer: {
     flexDirection: "row",
@@ -400,15 +401,15 @@ const styles = StyleSheet.create({
   },
   customInput: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: palette.surfaceMuted,
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderRadius: 12,
     fontSize: 15,
-    color: "#1A1A1A",
+    color: palette.text,
   },
   addButton: {
-    backgroundColor: "#FF4F81",
+    backgroundColor: palette.primary,
     width: 48,
     height: 48,
     borderRadius: 12,
@@ -416,7 +417,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   cancelButton: {
-    backgroundColor: "#F5F5F5",
+    backgroundColor: palette.surfaceMuted,
     width: 48,
     height: 48,
     borderRadius: 12,
@@ -431,17 +432,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    backgroundColor: "#FFF5F8",
+    backgroundColor: palette.primarySoft,
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#FFE0E9",
+    borderColor: palette.primaryBorder,
   },
   selectedItemText: {
     flex: 1,
     fontSize: 15,
-    color: "#1A1A1A",
+    color: palette.text,
   },
   footer: {
     flexDirection: "row",
@@ -449,30 +450,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 16,
     borderTopWidth: 1,
-    borderTopColor: "#F0F0F0",
+    borderTopColor: palette.divider,
   },
   cancelFooterButton: {
     flex: 1,
     paddingVertical: 16,
     borderRadius: 16,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: palette.surfaceMuted,
     alignItems: "center",
   },
   cancelFooterButtonText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#666",
+    color: palette.textSecondary,
   },
   saveButton: {
     flex: 1,
     paddingVertical: 16,
     borderRadius: 16,
-    backgroundColor: "#FF4F81",
+    backgroundColor: palette.primary,
     alignItems: "center",
   },
   saveButtonText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#FFF",
+    color: palette.onPrimary,
   },
 });

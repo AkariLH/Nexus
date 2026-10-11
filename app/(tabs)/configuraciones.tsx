@@ -11,6 +11,7 @@ import { PasswordConfirmModal } from "../components/PasswordConfirmModal";
 import { profileService } from "../../services/profile.service";
 import { useAuth } from "../../context/AuthContext";
 import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
+import { palette } from "../../constants/colors";
 
 export default function ConfiguracionesScreen() {
   useQuestionnaireGuard();
@@ -128,14 +129,14 @@ export default function ConfiguracionesScreen() {
         >
           <View style={styles.actionLeft}>
             <View style={styles.iconContainer}>
-              <Ionicons name="time-outline" size={24} color="#1A1A1A" />
+              <Ionicons name="time-outline" size={24} color={palette.text} />
             </View>
             <View>
               <Text style={styles.actionTitle}>Horarios permitidos</Text>
               <Text style={styles.actionSubtitle}>Define tu disponibilidad para recomendaciones</Text>
             </View>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="#1A1A1A66" />
+          <Ionicons name="chevron-forward" size={20} color={palette.icon} />
         </TouchableOpacity>
 
         {/* Calendarios Externos */}
@@ -146,14 +147,14 @@ export default function ConfiguracionesScreen() {
         >
           <View style={styles.actionLeft}>
             <View style={styles.iconContainer}>
-              <Ionicons name="calendar-outline" size={24} color="#1A1A1A" />
+              <Ionicons name="calendar-outline" size={24} color={palette.text} />
             </View>
             <View>
               <Text style={styles.actionTitle}>Calendarios externos</Text>
-              <Text style={styles.actionSubtitle}>Vincular Google Calendar</Text>
+              <Text style={styles.actionSubtitle}>Vincular el calendario de tu dispositivo</Text>
             </View>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="#1A1A1A66" />
+          <Ionicons name="chevron-forward" size={20} color={palette.icon} />
         </TouchableOpacity>
 
         {/* Cerrar sesión */}
@@ -164,7 +165,7 @@ export default function ConfiguracionesScreen() {
         >
           <View style={styles.actionLeft}>
             <View style={styles.iconContainer}>
-              <Ionicons name="log-out-outline" size={24} color="#1A1A1A" />
+              <Ionicons name="log-out-outline" size={24} color={palette.text} />
             </View>
             <View>
               <Text style={styles.actionTitle}>Cerrar sesión</Text>
@@ -172,9 +173,9 @@ export default function ConfiguracionesScreen() {
             </View>
           </View>
           {isLoading ? (
-            <ActivityIndicator size="small" color="#FF4F81" />
+            <ActivityIndicator size="small" color={palette.primary} />
           ) : (
-            <Ionicons name="chevron-forward" size={20} color="#1A1A1A66" />
+            <Ionicons name="chevron-forward" size={20} color={palette.icon} />
           )}
         </TouchableOpacity>
 
@@ -186,7 +187,7 @@ export default function ConfiguracionesScreen() {
         >
           <View style={styles.actionLeft}>
             <View style={[styles.iconContainer, styles.dangerIconContainer]}>
-              <Ionicons name="trash-outline" size={24} color="#EF4444" />
+              <Ionicons name="trash-outline" size={24} color={palette.error} />
             </View>
             <View>
               <Text style={[styles.actionTitle, styles.dangerText]}>
@@ -197,7 +198,7 @@ export default function ConfiguracionesScreen() {
               </Text>
             </View>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="#EF4444" />
+          <Ionicons name="chevron-forward" size={20} color={palette.error} />
         </TouchableOpacity>
       </View>
 
@@ -214,8 +215,6 @@ export default function ConfiguracionesScreen() {
         message="Esta acción es irreversible. Todos tus datos serán eliminados permanentemente y no podrán ser recuperados."
         confirmText="Continuar"
         cancelText="Cancelar"
-        iconName="warning-outline"
-        isDanger={true}
       />
 
       {/* Segunda confirmación con contraseña */}
@@ -241,8 +240,6 @@ export default function ConfiguracionesScreen() {
         message="¿Estás seguro que deseas cerrar sesión?"
         confirmText="Cerrar sesión"
         cancelText="Cancelar"
-        iconName="log-out-outline"
-        isDanger={false}
       />
 
       <ErrorModal
@@ -266,7 +263,7 @@ export default function ConfiguracionesScreen() {
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: "#FFFFFF" 
+    backgroundColor: palette.surface 
   },
   content: {
     padding: 20,
@@ -276,9 +273,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: palette.surface,
     borderWidth: 2,
-    borderColor: "#F7F7F7",
+    borderColor: palette.divider,
     borderRadius: 20,
     padding: 16,
   },
@@ -292,27 +289,27 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "#F7F7F7",
+    backgroundColor: palette.surfaceMuted,
     alignItems: "center",
     justifyContent: "center",
   },
   dangerButton: {
-    borderColor: "#FEE2E2",
+    borderColor: palette.errorBorder,
   },
   dangerIconContainer: {
-    backgroundColor: "#FEE2E2",
+    backgroundColor: palette.errorSoft,
   },
   actionTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1A1A1A",
+    color: palette.text,
     marginBottom: 4,
   },
   dangerText: {
-    color: "#EF4444",
+    color: palette.error,
   },
   actionSubtitle: {
     fontSize: 14,
-    color: "#1A1A1A99",
+    color: palette.textSecondary,
   },
 });

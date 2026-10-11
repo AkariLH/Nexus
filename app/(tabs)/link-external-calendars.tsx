@@ -20,6 +20,7 @@ import { ErrorModal } from '../components/ErrorModal';
 import { SuccessModal } from '../components/SuccessModal';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { API_CONFIG } from '../../config/api.config';
+import { palette, gradients, switchColors } from '../../constants/colors';
 
 export default function LinkExternalCalendarsScreen() {
   const { user } = useAuth();
@@ -173,7 +174,7 @@ export default function LinkExternalCalendarsScreen() {
       <SafeAreaView style={styles.container}>
         <Header onBack={() => router.back()} />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#8B5CF6" />
+          <ActivityIndicator size="large" color={palette.secondary} />
           <Text style={styles.loadingText}>Cargando calendarios...</Text>
         </View>
       </SafeAreaView>
@@ -215,8 +216,7 @@ export default function LinkExternalCalendarsScreen() {
                   <Switch
                     value={calendar.syncEnabled}
                     onValueChange={(value) => handleToggleSync(calendar, value)}
-                    trackColor={{ false: '#E5E5E5', true: '#FF4F81' }}
-                    thumbColor={calendar.syncEnabled ? '#FFFFFF' : '#F4F4F4'}
+                    {...switchColors}
                   />
                 </View>
 
@@ -247,13 +247,13 @@ export default function LinkExternalCalendarsScreen() {
               activeOpacity={0.9}
             >
               <LinearGradient
-                colors={['#FF4F81', '#8A2BE2']}
+                colors={gradients.primary}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.syncButtonGradient}
               >
                 {syncing ? (
-                  <ActivityIndicator color="#FFFFFF" />
+                  <ActivityIndicator color={palette.onPrimary} />
                 ) : (
                   <Text style={styles.syncButtonText}>Sincronizar Ahora</Text>
                 )}
@@ -298,7 +298,7 @@ export default function LinkExternalCalendarsScreen() {
                       activeOpacity={0.9}
                     >
                       <LinearGradient
-                        colors={['#FF4F81', '#8A2BE2']}
+                        colors={gradients.primary}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
                         style={styles.linkButtonGradient}
@@ -347,7 +347,7 @@ export default function LinkExternalCalendarsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: palette.surface,
   },
   scrollView: {
     flex: 1,
@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#1A1A1A99',
+    color: palette.textSecondary,
   },
   headerSection: {
     paddingHorizontal: 24,
@@ -370,12 +370,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: '700',
-    color: '#1A1A1A',
+    color: palette.text,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 15,
-    color: '#1A1A1A99',
+    color: palette.textSecondary,
   },
   section: {
     marginTop: 20,
@@ -384,17 +384,17 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1A1A1A',
+    color: palette.text,
     marginBottom: 16,
   },
   calendarCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: palette.surface,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#F0F0F0',
-    shadowColor: '#000',
+    borderColor: palette.divider,
+    shadowColor: palette.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -417,21 +417,21 @@ const styles = StyleSheet.create({
   calendarName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1A1A1A',
+    color: palette.text,
     marginBottom: 4,
   },
   calendarSource: {
     fontSize: 13,
-    color: '#1A1A1A99',
+    color: palette.textSecondary,
   },
   lastSync: {
     fontSize: 12,
-    color: '#1A1A1A99',
+    color: palette.textSecondary,
     marginTop: 4,
   },
   primaryBadge: {
     fontSize: 12,
-    color: '#FF4F81',
+    color: palette.textAccent,
     marginTop: 4,
     fontWeight: '600',
   },
@@ -441,22 +441,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: '#F5F5F5',
+    borderTopColor: palette.divider,
   },
   settingLabel: {
     fontSize: 15,
-    color: '#1A1A1A',
+    color: palette.text,
   },
   privacyMode: {
     fontSize: 14,
-    color: '#FF4F81',
+    color: palette.textAccent,
     fontWeight: '600',
   },
   linkButton: {
     borderRadius: 24,
     overflow: 'hidden',
     marginTop: 12,
-    shadowColor: '#000',
+    shadowColor: palette.shadow,
     shadowOpacity: 0.15,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
@@ -468,31 +468,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   linkButtonText: {
-    color: '#FFFFFF',
+    color: palette.onPrimary,
     fontSize: 15,
     fontWeight: '700',
   },
   unlinkButton: {
-    backgroundColor: '#EF4444',
+    backgroundColor: palette.error,
     borderRadius: 24,
     padding: 14,
     alignItems: 'center',
     marginTop: 12,
   },
   unlinkButtonText: {
-    color: '#FFFFFF',
+    color: palette.onPrimary,
     fontSize: 15,
     fontWeight: '600',
   },
   linkedBadge: {
-    backgroundColor: '#10B981',
+    backgroundColor: palette.success,
     borderRadius: 12,
     padding: 10,
     alignItems: 'center',
     marginTop: 12,
   },
   linkedBadgeText: {
-    color: '#FFFFFF',
+    color: palette.onPrimary,
     fontSize: 13,
     fontWeight: '600',
   },
@@ -501,7 +501,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginTop: 16,
     marginBottom: 24,
-    shadowColor: '#000',
+    shadowColor: palette.shadow,
     shadowOpacity: 0.15,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
@@ -516,14 +516,14 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   syncButtonText: {
-    color: '#FFFFFF',
+    color: palette.onPrimary,
     fontSize: 16,
     fontWeight: '700',
   },
   emptyText: {
     textAlign: 'center',
     fontSize: 15,
-    color: '#1A1A1A99',
+    color: palette.textSecondary,
     padding: 24,
   },
 });

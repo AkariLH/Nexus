@@ -12,6 +12,7 @@ import {
   Platform,
 } from "react-native";
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { palette, gradients } from "../../constants/colors";
 
 interface RecurrenceConfig {
   type: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'CUSTOM';
@@ -115,8 +116,8 @@ export function RecurrenceModal({
         <View style={styles.modalContent}>
           {/* Header */}
           <View style={styles.header}>
-            <TouchableOpacity style={styles.closeButton} onPress={onCancel}>
-              <Ionicons name="close" size={24} color="#1A1A1A" />
+            <TouchableOpacity style={styles.closeButton} onPress={onCancel} accessibilityRole="button" accessibilityLabel="Cerrar">
+              <Ionicons name="close" size={24} color={palette.text} />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Configurar recurrencia</Text>
             <View style={styles.headerSpacer} />
@@ -191,7 +192,7 @@ export function RecurrenceModal({
                     value={interval}
                     onChangeText={setInterval}
                     placeholder="1"
-                    placeholderTextColor="#1A1A1A66"
+                    placeholderTextColor={palette.textMuted}
                     keyboardType="number-pad"
                     maxLength={3}
                   />
@@ -233,7 +234,7 @@ export function RecurrenceModal({
                       style={styles.dateButton}
                       onPress={() => setShowMonthDayPicker(true)}
                     >
-                      <Ionicons name="calendar" size={20} color="#FF4F81" />
+                      <Ionicons name="calendar" size={20} color={palette.primary} />
                       <Text style={[styles.dateButtonText, !monthDay && styles.placeholder]}>
                         {formatDate(monthDay)}
                       </Text>
@@ -249,7 +250,7 @@ export function RecurrenceModal({
                       style={styles.dateButton}
                       onPress={() => setShowYearDayPicker(true)}
                     >
-                      <Ionicons name="calendar" size={20} color="#FF4F81" />
+                      <Ionicons name="calendar" size={20} color={palette.primary} />
                       <Text style={[styles.dateButtonText, !yearDay && styles.placeholder]}>
                         {formatDate(yearDay)}
                       </Text>
@@ -265,7 +266,7 @@ export function RecurrenceModal({
                       style={[styles.dateButton, styles.dateButtonFlex]}
                       onPress={() => setShowEndDatePicker(true)}
                     >
-                      <Ionicons name="flag" size={20} color="#FF4F81" />
+                      <Ionicons name="flag" size={20} color={palette.primary} />
                       <Text style={[styles.dateButtonText, !endDate && styles.placeholder]}>
                         {formatDate(endDate)}
                       </Text>
@@ -275,7 +276,7 @@ export function RecurrenceModal({
                         style={styles.clearButton}
                         onPress={() => setEndDate(null)}
                       >
-                        <Ionicons name="close-circle" size={24} color="#FF4F81" />
+                        <Ionicons name="close-circle" size={24} color={palette.primary} />
                       </TouchableOpacity>
                     )}
                   </View>
@@ -294,7 +295,7 @@ export function RecurrenceModal({
                   value={interval}
                   onChangeText={setInterval}
                   placeholder="1"
-                  placeholderTextColor="#1A1A1A66"
+                  placeholderTextColor={palette.textMuted}
                   keyboardType="number-pad"
                   maxLength={3}
                 />
@@ -338,7 +339,7 @@ export function RecurrenceModal({
                     style={[styles.dateButton, styles.dateButtonFlex]}
                     onPress={() => setShowEndDatePicker(true)}
                   >
-                    <Ionicons name="flag" size={20} color="#FF4F81" />
+                    <Ionicons name="flag" size={20} color={palette.primary} />
                     <Text style={[styles.dateButtonText, !endDate && styles.placeholder]}>
                       {formatDate(endDate)}
                     </Text>
@@ -348,7 +349,7 @@ export function RecurrenceModal({
                       style={styles.clearButton}
                       onPress={() => setEndDate(null)}
                     >
-                      <Ionicons name="close-circle" size={24} color="#FF4F81" />
+                      <Ionicons name="close-circle" size={24} color={palette.primary} />
                     </TouchableOpacity>
                   )}
                 </View>
@@ -363,7 +364,7 @@ export function RecurrenceModal({
             </TouchableOpacity>
             <TouchableOpacity style={styles.saveButtonWrapper} onPress={handleSave}>
               <LinearGradient
-                colors={['#FF4F81', '#8A2BE2']}
+                colors={gradients.primary}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.saveButton}
@@ -380,8 +381,8 @@ export function RecurrenceModal({
               mode="date"
               display={Platform.OS === 'ios' ? 'spinner' : 'default'}
               onChange={onMonthDayChange}
-              accentColor="#FF4F81"
-              textColor="#1A1A1A"
+              accentColor={palette.primary}
+              textColor={palette.text}
             />
           )}
 
@@ -391,8 +392,8 @@ export function RecurrenceModal({
               mode="date"
               display={Platform.OS === 'ios' ? 'spinner' : 'default'}
               onChange={onYearDayChange}
-              accentColor="#FF4F81"
-              textColor="#1A1A1A"
+              accentColor={palette.primary}
+              textColor={palette.text}
             />
           )}
 
@@ -403,8 +404,8 @@ export function RecurrenceModal({
               display={Platform.OS === 'ios' ? 'spinner' : 'default'}
               onChange={onEndDateChange}
               minimumDate={new Date()}
-              accentColor="#FF4F81"
-              textColor="#1A1A1A"
+              accentColor={palette.primary}
+              textColor={palette.text}
             />
           )}
         </View>
@@ -416,15 +417,15 @@ export function RecurrenceModal({
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: palette.overlay,
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#FFF',
+    backgroundColor: palette.surface,
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     height: '90%',
-    shadowColor: '#000',
+    shadowColor: palette.shadow,
     shadowOpacity: 0.25,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: -4 },
@@ -439,7 +440,7 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 16,
     borderBottomWidth: 2,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: palette.divider,
   },
   closeButton: {
     padding: 8,
@@ -448,7 +449,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#1A1A1A',
+    color: palette.text,
   },
   headerSpacer: {
     width: 40,
@@ -465,7 +466,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1A1A1A',
+    color: palette.text,
     marginBottom: 12,
   },
   chipContainer: {
@@ -477,31 +478,31 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 18,
     borderRadius: 20,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: palette.divider,
     borderWidth: 2,
-    borderColor: '#F0F0F0',
+    borderColor: palette.divider,
   },
   chipActive: {
-    backgroundColor: '#FF4F8115',
-    borderColor: '#FF4F81',
+    backgroundColor: palette.primarySoft,
+    borderColor: palette.primary,
   },
   chipText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
+    color: palette.textSecondary,
   },
   chipTextActive: {
-    color: '#FF4F81',
+    color: palette.textAccent,
   },
   input: {
     height: 56,
     paddingHorizontal: 16,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: palette.surfaceMuted,
     borderWidth: 2,
     borderColor: 'transparent',
     borderRadius: 20,
     fontSize: 16,
-    color: '#1A1A1A',
+    color: palette.text,
   },
   weekDaysContainer: {
     flexDirection: 'row',
@@ -512,28 +513,28 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: palette.divider,
     borderWidth: 2,
-    borderColor: '#F0F0F0',
+    borderColor: palette.divider,
     alignItems: 'center',
     justifyContent: 'center',
   },
   weekDayButtonActive: {
-    backgroundColor: '#FF4F8115',
-    borderColor: '#FF4F81',
+    backgroundColor: palette.primarySoft,
+    borderColor: palette.primary,
   },
   weekDayText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
+    color: palette.textSecondary,
   },
   weekDayTextActive: {
-    color: '#FF4F81',
+    color: palette.textAccent,
   },
   dateButton: {
     height: 56,
     paddingHorizontal: 16,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: palette.surfaceMuted,
     borderWidth: 2,
     borderColor: 'transparent',
     borderRadius: 20,
@@ -546,10 +547,10 @@ const styles = StyleSheet.create({
   },
   dateButtonText: {
     fontSize: 16,
-    color: '#1A1A1A',
+    color: palette.text,
   },
   placeholder: {
-    color: '#1A1A1A66',
+    color: palette.textMuted,
   },
   dateRow: {
     flexDirection: 'row',
@@ -564,20 +565,20 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 20,
     borderTopWidth: 2,
-    borderTopColor: '#F0F0F0',
+    borderTopColor: palette.divider,
   },
   cancelButton: {
     flex: 1,
     height: 56,
     borderRadius: 24,
     borderWidth: 2,
-    borderColor: '#F7F7F7',
-    backgroundColor: '#FFF',
+    borderColor: palette.divider,
+    backgroundColor: palette.surface,
     justifyContent: 'center',
     alignItems: 'center',
   },
   cancelButtonText: {
-    color: '#1A1A1A',
+    color: palette.text,
     fontWeight: '600',
     fontSize: 16,
   },
@@ -591,7 +592,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   saveButtonText: {
-    color: '#FFF',
+    color: palette.onPrimary,
     fontSize: 16,
     fontWeight: '700',
   },
