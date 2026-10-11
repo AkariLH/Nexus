@@ -20,10 +20,8 @@
     "android": {
       "package": "com.nexusapp.pareja",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#FFFFFF",
+        "foregroundImage": "./assets/images/icon.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
@@ -34,8 +32,7 @@
         "android.permission.CAMERA",
         "android.permission.READ_CALENDAR",
         "android.permission.WRITE_CALENDAR"
-      ],
-      "googleServicesFile": "./android/app/google-services.json"
+      ]
     },
     "web": {
       "output": "static",
@@ -43,6 +40,7 @@
     },
     "plugins": [
       "expo-router",
+      "./plugins/withCleartextTraffic",
       [
         "expo-image-picker",
         {
