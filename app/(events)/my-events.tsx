@@ -9,12 +9,14 @@ import eventService, { EventResponse } from '@/services/event.service';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { palette, gradients } from '../../constants/colors';
 import { ScreenHeader } from '../components/layout/ScreenHeader';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /**
  * Pantalla para ver los eventos propios creados por el usuario
  * Muestra el estado de aprobación de cada evento
  */
 export default function MyEventsScreen() {
+  const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const [events, setEvents] = useState<EventResponse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -166,7 +168,7 @@ export default function MyEventsScreen() {
 
       <ScrollView 
         style={styles.scrollView}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingBottom: 24 + insets.bottom }]}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
@@ -343,29 +345,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: palette.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 60,
-    paddingBottom: 16,
-    backgroundColor: palette.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: palette.border,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: palette.text,
   },
   loadingContainer: {
     flex: 1,

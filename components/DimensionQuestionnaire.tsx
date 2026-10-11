@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   TextInput,
   Image,
 } from 'react-native';
@@ -15,6 +14,7 @@ import { Chip } from './Chip';
 import { LevelSlider } from './LevelSlider';
 import { getPreferenceImage } from '../utils/preferenceImages';
 import { palette, gradients } from '../constants/colors';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface DimensionQuestionnaireProps {
   dimension: {
@@ -44,6 +44,7 @@ export const DimensionQuestionnaire: React.FC<DimensionQuestionnaireProps> = ({
   onSave,
   initialData,
 }) => {
+  const insets = useSafeAreaInsets();
   const [selectedPreferences, setSelectedPreferences] = useState<Set<number>>(
     initialData?.selectedPreferences || new Set()
   );
@@ -129,15 +130,15 @@ export const DimensionQuestionnaire: React.FC<DimensionQuestionnaireProps> = ({
   const canSave = selectedPreferences.size > 0;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView edges={["left", "right"]} style={styles.container}>
       {/* Header */}
       <LinearGradient
         colors={gradients.primary}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
-        style={styles.header}
+        style={[styles.header, { paddingTop: insets.top + 16 }]}
       >
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Regresar" hitSlop={10} style={styles.backButton} onPress={onBack}>
           <Ionicons name="arrow-back" size={24} color={palette.onPrimary} />
         </TouchableOpacity>
         <View style={styles.headerInfo}>
@@ -204,7 +205,7 @@ export const DimensionQuestionnaire: React.FC<DimensionQuestionnaireProps> = ({
                     {pref.name}
                   </Text>
                   {isSelected && !isNone && (
-                    <TouchableOpacity
+                    <TouchableOpacity accessibilityRole="button" accessibilityLabel="Agregar una nota" hitSlop={10}
                       style={styles.notesIconButton}
                       onPress={(e) => {
                         e.stopPropagation();
@@ -294,7 +295,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 20,
-    paddingTop: 60,
     paddingBottom: 24,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,

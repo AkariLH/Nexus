@@ -17,6 +17,7 @@ import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
 import { findMutualAvailability, MutualAvailabilityResponse } from "../../services/availabilityService";
 import linkService from "../../services/link.service";
 import { palette, gradients } from "../../constants/colors";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface LinkStatusData {
   hasActiveLink: boolean;
@@ -28,6 +29,7 @@ interface LinkStatusData {
 }
 
 export default function RecommendationsScreen() {
+  const insets = useSafeAreaInsets();
   useQuestionnaireGuard();
   const { user } = useAuth();
   const router = useRouter();
@@ -133,7 +135,7 @@ export default function RecommendationsScreen() {
   if (loading || contextLoading) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
           <View style={styles.headerLeft}>
             <LinearGradient
               colors={gradients.primary}
@@ -159,7 +161,7 @@ export default function RecommendationsScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
         <View style={styles.headerLeft}>
           <LinearGradient
             colors={gradients.primary}
@@ -327,7 +329,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 60,
     paddingBottom: 16,
     backgroundColor: palette.surface,
     borderBottomWidth: 1,

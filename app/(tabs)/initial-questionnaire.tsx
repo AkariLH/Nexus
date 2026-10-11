@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, BackHandler } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, BackHandler } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -12,6 +12,7 @@ import { SuccessModal } from '../components/SuccessModal';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { useQuestionnaire } from '../../context/QuestionnaireContext';
 import { palette, gradients } from '../../constants/colors';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const DIMENSIONS = [
   { id: 'physical', name: 'Bienestar Físico', icon: 'fitness', emoji: '💪', color: '#FF6B6B' },
@@ -26,6 +27,7 @@ const DIMENSIONS = [
 type WellnessDimension = typeof DIMENSIONS[number]['id'];
 
 export default function InitialQuestionnaireScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user, isLoading } = useAuth();
   const { revalidate } = useQuestionnaire();
@@ -223,7 +225,7 @@ export default function InitialQuestionnaireScreen() {
 
     if (!currentDimension || !currentCategory) {
       return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView edges={["left", "right"]} style={styles.container}>
           <View style={styles.errorContainer}>
             <Ionicons name="alert-circle" size={48} color={palette.error} />
             <Text style={styles.errorText}>No se pudieron cargar las preferencias</Text>
@@ -254,12 +256,12 @@ export default function InitialQuestionnaireScreen() {
 
   // Vista principal: cuestionario obligatorio
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView edges={["left", "right"]} style={styles.container}>
       <LinearGradient
         colors={gradients.primary}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
-        style={styles.header}
+        style={[styles.header, { paddingTop: insets.top + 16 }]}
       >
         <View style={styles.headerBadge}>
           <Ionicons name="clipboard" size={32} color={palette.primary} />
@@ -369,7 +371,6 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 20,
-    paddingTop: 60,
     paddingBottom: 30,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,

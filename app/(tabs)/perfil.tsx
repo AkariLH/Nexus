@@ -27,8 +27,10 @@ import { useAuth } from "../../context/AuthContext";
 import type { UpdateProfileRequest } from "../../types/auth.types";
 import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
 import { palette } from "../../constants/colors";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function PerfilScreen() {
+  const insets = useSafeAreaInsets();
   useQuestionnaireGuard();
   const router = useRouter();
   const { user, updateUser, logout } = useAuth();
@@ -372,17 +374,8 @@ export default function PerfilScreen() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-          disabled={isLoading}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel="Regresar"
-        >
-          <Ionicons name="arrow-back" size={24} color={palette.text} />
-        </TouchableOpacity>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
+        <View />
 
         {!isEditing ? (
           <View style={styles.editActions}>
@@ -449,7 +442,7 @@ export default function PerfilScreen() {
               <Ionicons name="person" size={64} color={palette.primary} />
             )}
           </View>
-          <TouchableOpacity 
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Cambiar foto de perfil" hitSlop={10} 
             style={styles.cameraButton} 
             onPress={() => {
               if (avatarUri) {
@@ -771,12 +764,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 20,
-    paddingTop: 50,
     paddingBottom: 16,
-  },
-  backButton: {
-    padding: 8,
-    marginLeft: -8,
   },
   editButton: {
     paddingHorizontal: 16,
@@ -931,17 +919,11 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 16,
   },
-  dangerButton: {
-    borderColor: palette.errorBorder,
-  },
   actionTitle: {
     fontSize: 16,
     fontWeight: "600",
     color: palette.text,
     marginBottom: 4,
-  },
-  dangerText: {
-    color: palette.error,
   },
   actionSubtitle: {
     fontSize: 14,

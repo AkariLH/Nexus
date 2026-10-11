@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { StyleSheet, Text, View, ActivityIndicator, TouchableOpacity, Image, ScrollView, SafeAreaView } from "react-native";
+import { StyleSheet, Text, View, ActivityIndicator, TouchableOpacity, Image, ScrollView } from "react-native";
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useRouter, useFocusEffect } from "expo-router";
@@ -12,6 +12,7 @@ import { SuccessModal } from "../components/SuccessModal";
 import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
 import { API_CONFIG, rebaseApiUrl } from "../../config/api.config";
 import { palette, gradients } from "../../constants/colors";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface LinkStatusData {
   hasActiveLink: boolean;
@@ -25,6 +26,7 @@ interface LinkStatusData {
 }
 
 export default function LinkScreen() {
+  const insets = useSafeAreaInsets();
   useQuestionnaireGuard();
   const { user } = useAuth();
   const router = useRouter();
@@ -142,7 +144,7 @@ export default function LinkScreen() {
   
   if (!isLinked) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView edges={["left", "right"]} style={styles.container}>
         <View style={styles.emptyContainerWrapper}>
           <View style={styles.emptyContainer}>
           <Ionicons name="heart-dislike-outline" size={80} color={palette.primary} style={styles.emptyIcon} />
@@ -201,8 +203,8 @@ export default function LinkScreen() {
     : null;
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.scrollContent}>
+    <SafeAreaView edges={["left", "right"]} style={styles.container}>
+      <ScrollView style={styles.scrollContainer} contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 24 }]}>
         <Text style={styles.title}>Estado del vínculo</Text>
 
       {/* Connection visual */}
@@ -386,7 +388,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
-    paddingTop: 60,
   },
   title: { 
     fontSize: 30, 
@@ -401,52 +402,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  linkCard: { 
-    borderRadius: 24, 
-    padding: 24,
-    backgroundColor: palette.surface,
-    elevation: 2,
-    shadowColor: palette.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-  },
-  linkHeader: { 
-    flexDirection: "row", 
-    alignItems: "center", 
-    marginBottom: 16 
-  },
-  iconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 16,
-    elevation: 4,
-    shadowColor: palette.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-  },
-  linkInfo: {
-    flex: 1,
-  },
-  subText: { 
-    color: palette.textSecondary, 
-    fontSize: 14,
-    marginBottom: 4,
-  },
-  partner: { 
-    color: palette.text, 
-    fontSize: 20, 
-    fontWeight: "700" 
-  },
-  details: { 
-    color: palette.textAccent, 
-    fontWeight: "600",
-    fontSize: 14,
   },
   emptyContainer: {
     flex: 1,

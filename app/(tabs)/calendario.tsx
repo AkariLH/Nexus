@@ -19,6 +19,7 @@ import { EventDetailsModal } from "../components/EventDetailsModal";
 import { externalCalendarIntegration, ExternalEventDTO } from "../../services/externalCalendar.integration.service";
 import { ExternalEventDetailModal, ExternalEventDetail } from "../components/ExternalEventDetailModal";
 import { palette, gradients } from "../../constants/colors";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type ViewMode = "month" | "week" | "day";
 
@@ -35,6 +36,7 @@ interface Event {
 }
 
 export default function CalendarioScreen() {
+  const insets = useSafeAreaInsets();
   useQuestionnaireGuard();
   const { user } = useAuth();
   const router = useRouter();
@@ -561,7 +563,7 @@ export default function CalendarioScreen() {
   if (loading) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
           <Text style={styles.headerTitle}>Calendario</Text>
         </View>
         <View style={styles.emptyStateContainer}>
@@ -574,7 +576,7 @@ export default function CalendarioScreen() {
   if (!hasActiveLink) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
           <Text style={styles.headerTitle}>Calendario</Text>
         </View>
         <View style={styles.emptyStateContainer}>
@@ -1255,7 +1257,7 @@ export default function CalendarioScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <View style={styles.headerTop}>
           <TouchableOpacity
             style={styles.navButton}
@@ -1414,7 +1416,7 @@ export default function CalendarioScreen() {
       />
 
       {/* Botón flotante de recomendaciones */}
-      <TouchableOpacity
+      <TouchableOpacity accessibilityRole="button" accessibilityLabel="Ver recomendaciones" hitSlop={10}
         style={styles.recommendationsButton}
         onPress={() => router.push('/(tabs)/recommendations')}
       >
@@ -1439,7 +1441,6 @@ const styles = StyleSheet.create({
   header: {
     borderBottomWidth: 2,
     borderBottomColor: palette.divider,
-    paddingTop: 50,
   },
   emptyStateContainer: {
     flex: 1,
@@ -1818,43 +1819,6 @@ const styles = StyleSheet.create({
     color: palette.onPrimarySoft,
   },
   // Mantener estilos antiguos para compatibilidad
-  weekGrid: {
-    flexDirection: "row",
-    padding: 16,
-    gap: 8,
-    minHeight: 400,
-  },
-  weekDayColumn: {
-    flex: 1,
-    borderWidth: 2,
-    borderColor: palette.divider,
-    borderRadius: 16,
-    padding: 8,
-    gap: 8,
-  },
-  weekDayColumnToday: {
-    borderColor: palette.primaryBorder,
-    backgroundColor: palette.primarySoft,
-  },
-  weekEventCard: {
-    padding: 8,
-    borderRadius: 12,
-  },
-  weekEventTitle: {
-    fontSize: 12,
-    color: palette.onPrimary,
-    fontWeight: "500",
-  },
-  weekEventTime: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginTop: 2,
-  },
-  weekEventTimeText: {
-    fontSize: 10,
-    color: palette.onPrimarySoft,
-  },
   dayViewHeader: {
     alignItems: "center",
     backgroundColor: palette.surfaceMuted,

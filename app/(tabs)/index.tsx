@@ -9,6 +9,7 @@ import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
 import eventService, { EventResponse } from "../../services/event.service";
 import linkService from "../../services/link.service";
 import { palette, gradients } from "../../constants/colors";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface LinkStatus {
   hasActiveLink: boolean;
@@ -21,6 +22,7 @@ interface LinkStatus {
 }
 
 export default function HomeScreen() {
+  const insets = useSafeAreaInsets();
   useQuestionnaireGuard();
   const router = useRouter();
   const { user } = useAuth();
@@ -98,7 +100,7 @@ export default function HomeScreen() {
   const partnerName = linkStatus?.partner?.displayName || linkStatus?.partner?.nickname || "";
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: insets.top + 24 }]}>
       {/* Header */}
       <MotiView
         from={{ opacity: 0, translateY: -20 }}
@@ -310,7 +312,6 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
-    paddingTop: 60,
     paddingBottom: 40,
   },
   header: {
@@ -415,27 +416,6 @@ const styles = StyleSheet.create({
   },
   quickActionLabelDisabled: {
     color: palette.textMuted,
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: palette.successSoft,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginTop: 8,
-    gap: 4,
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: palette.success,
-  },
-  statusText: {
-    fontSize: 10,
-    color: palette.success,
-    fontWeight: '600',
   },
   lockedBadge: {
     backgroundColor: palette.surfaceMuted,

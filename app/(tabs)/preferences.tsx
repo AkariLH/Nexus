@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { WellnessDimension, PREFERENCE_OPTIONS } from '../../types/preferences.types';
@@ -9,6 +9,7 @@ import preferenceService from '../../services/preference.service';
 import type { PreferenceCategory, UserPreferenceRequest, UserPreference } from '../../types/preferences.api.types';
 import { useAuth } from '../../context/AuthContext';
 import { palette, gradients } from '../../constants/colors';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const DIMENSIONS = [
   { id: 'physical', name: 'Bienestar Físico', icon: 'fitness', emoji: '💪', color: '#FF6B6B' },
@@ -21,6 +22,7 @@ const DIMENSIONS = [
 ] as const;
 
 export default function PreferencesScreen() {
+  const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const [selectedDimension, setSelectedDimension] = useState<WellnessDimension | null>(null);
   const [completedDimensions, setCompletedDimensions] = useState<Set<WellnessDimension>>(new Set());
@@ -160,7 +162,7 @@ export default function PreferencesScreen() {
 
     if (loading) {
       return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView edges={["left", "right"]} style={styles.container}>
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={palette.primary} />
             <Text style={styles.loadingText}>Cargando preferencias...</Text>
@@ -171,7 +173,7 @@ export default function PreferencesScreen() {
 
     if (!currentDimension || !currentCategory) {
       return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView edges={["left", "right"]} style={styles.container}>
           <View style={styles.errorContainer}>
             <Ionicons name="alert-circle" size={48} color={palette.error} />
             <Text style={styles.errorText}>No se pudieron cargar las preferencias</Text>
@@ -223,7 +225,7 @@ export default function PreferencesScreen() {
   // Vista principal: mostrar todas las dimensiones
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView edges={["left", "right"]} style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={palette.secondary} />
           <Text style={styles.loadingText}>Cargando...</Text>
@@ -237,12 +239,12 @@ export default function PreferencesScreen() {
   if (!selectedDimension) {
     // Vista principal: mostrar todas las dimensiones
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView edges={["left", "right"]} style={styles.container}>
         <LinearGradient
           colors={gradients.primary}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
-          style={styles.header}
+          style={[styles.header, { paddingTop: insets.top + 16 }]}
         >
           <Text style={styles.headerTitle}>Cuestionario de Preferencias</Text>
           <Text style={styles.headerSubtitle}>
@@ -346,9 +348,9 @@ export default function PreferencesScreen() {
   const currentDimension = DIMENSIONS.find(d => d.id === selectedDimension);
   
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView edges={["left", "right"]} style={styles.container}>
       <View style={styles.questionnaireHeader}>
-        <TouchableOpacity 
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Regresar" hitSlop={10} 
           style={styles.backButton}
           onPress={() => setSelectedDimension(null)}
         >
@@ -376,7 +378,6 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 20,
-    paddingTop: 60,
     paddingBottom: 30,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,

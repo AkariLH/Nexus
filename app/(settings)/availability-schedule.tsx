@@ -18,6 +18,7 @@ import { getUserSchedule, saveUserSchedule, AvailabilityScheduleDTO } from "../.
 import { ConfirmModal } from "../components/ConfirmModal";
 import { palette, gradients, switchColors } from "../../constants/colors";
 import { ScreenHeader } from "../components/layout/ScreenHeader";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface DaySchedule {
   day: string;
@@ -31,6 +32,7 @@ const DEFAULT_START_TIME = "09:00";
 const DEFAULT_END_TIME = "22:00";
 
 export default function AvailabilityScheduleScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user } = useAuth();
   
@@ -203,7 +205,7 @@ export default function AvailabilityScheduleScreen() {
       {/* Header */}
       <ScreenHeader title="Horarios permitidos" onBack={() => router.back()} />
 
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={[styles.content, { paddingBottom: 24 + insets.bottom }]}>
         {/* Descripción */}
         <View style={styles.infoCard}>
           <Ionicons name="information-circle" size={20} color={palette.secondary} />
@@ -375,28 +377,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: palette.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 60,
-    paddingBottom: 16,
-    backgroundColor: palette.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: palette.border,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: palette.text,
   },
   loadingContainer: {
     flex: 1,

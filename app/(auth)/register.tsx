@@ -19,8 +19,10 @@ import type { RegisterRequest } from "../../types/auth.types";
 import { SuccessModal } from "../components/SuccessModal";
 import { ErrorModal } from "../components/ErrorModal";
 import { palette, gradients } from "../../constants/colors";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function RegisterScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const [name, setName] = useState("");
   const [nickname, setNickname] = useState("");
@@ -368,7 +370,7 @@ export default function RegisterScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
         <TouchableOpacity
           onPress={() => router.push("/(auth)/welcome")}
           style={styles.backButton}
@@ -483,7 +485,7 @@ export default function RegisterScreen() {
                 secureTextEntry={!showPassword}
                 style={styles.input}
               />
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button" accessibilityLabel="Mostrar u ocultar contraseña" hitSlop={10}
                 style={styles.iconRight}
                 onPress={() => setShowPassword(!showPassword)}
               >
@@ -520,7 +522,7 @@ export default function RegisterScreen() {
                 secureTextEntry={!showConfirmPassword}
                 style={styles.input}
               />
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button" accessibilityLabel="Mostrar u ocultar contraseña" hitSlop={10}
                 style={styles.iconRight}
                 onPress={() => setShowConfirmPassword(!showConfirmPassword)}
               >
@@ -662,7 +664,7 @@ export default function RegisterScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: palette.surface },
-  header: { paddingHorizontal: 20, paddingTop: 50, paddingBottom: 10 },
+  header: { paddingHorizontal: 20, paddingBottom: 10 },
   backButton: { padding: 6, borderRadius: 20 },
   scrollContent: { paddingHorizontal: 24, paddingBottom: 60 },
   title: {
