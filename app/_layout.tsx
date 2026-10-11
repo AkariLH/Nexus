@@ -21,6 +21,12 @@ function RootNavigator() {
 
     const inAuthGroup = segments[0] === "(auth)";
 
+    // La pantalla de inicio (y la ruta raiz que lleva a ella) se muestra siempre completa; al
+    // terminar su animacion ella misma decide a donde ir. Sin esto, la redireccion de aqui le
+    // ganaba y la animacion no se veia.
+    const route = segments as string[];
+    if (route.length === 0 || route[1] === "splash") return;
+
     if (!user && !inAuthGroup) {
       // No autenticado, enviar a login
       router.replace("/(auth)/login");

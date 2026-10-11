@@ -2,26 +2,31 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Animated, Easing, StyleSheet, View } from "react-native";
 import { palette, gradients } from "../../constants/colors";
 import { decorativeLoop } from "../../utils/motion";
+import { useAuth } from "../../context/AuthContext";
 
 export default function SplashScreen() {
   const router = useRouter();
-  const scaleAnim = new Animated.Value(0);
-  const rotateAnim = new Animated.Value(0);
-  const fadeAnim = new Animated.Value(0);
+  // Al terminar la animacion: con sesion va a la app; sin sesion, a la bienvenida.
+  const { user } = useAuth();
+  const hasSession = useRef(false);
+  hasSession.current = !!user;
+  const scaleAnim = useRef(new Animated.Value(0)).current;
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
   
   // Animaciones para los puntos de carga
-  const dot1Anim = new Animated.Value(0);
-  const dot2Anim = new Animated.Value(0);
-  const dot3Anim = new Animated.Value(0);
+  const dot1Anim = useRef(new Animated.Value(0)).current;
+  const dot2Anim = useRef(new Animated.Value(0)).current;
+  const dot3Anim = useRef(new Animated.Value(0)).current;
 
   // Animaciones para los corazones flotantes
-  const heart1Float = new Animated.Value(0);
-  const heart2Float = new Animated.Value(0);
-  const heart3Float = new Animated.Value(0);
+  const heart1Float = useRef(new Animated.Value(0)).current;
+  const heart2Float = useRef(new Animated.Value(0)).current;
+  const heart3Float = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     // Animación del logo
@@ -99,7 +104,7 @@ export default function SplashScreen() {
 
     // Navegación automática
     const timer = setTimeout(() => {
-      router.replace("/(auth)/welcome");
+      router.replace(hasSession.current ? "/(tabs)" : "/(auth)/welcome");
     }, 2500);
     return () => clearTimeout(timer);
   }, []);
