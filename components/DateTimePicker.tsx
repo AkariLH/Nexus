@@ -9,6 +9,7 @@ import {
   View,
   ScrollView,
 } from "react-native";
+import { palette, gradients } from "../constants/colors";
 
 interface DateTimePickerProps {
   visible: boolean;
@@ -66,7 +67,7 @@ export default function DateTimePicker({
             style={styles.wheelButton}
             onPress={() => updateDate("year", 1)}
           >
-            <Ionicons name="chevron-up" size={24} color="#FF4F81" />
+            <Ionicons name="chevron-up" size={24} color={palette.primary} />
           </TouchableOpacity>
           <View style={styles.wheelValue}>
             <Text style={styles.wheelValueText}>{selectedDate.getFullYear()}</Text>
@@ -75,7 +76,7 @@ export default function DateTimePicker({
             style={styles.wheelButton}
             onPress={() => updateDate("year", -1)}
           >
-            <Ionicons name="chevron-down" size={24} color="#FF4F81" />
+            <Ionicons name="chevron-down" size={24} color={palette.primary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -88,7 +89,7 @@ export default function DateTimePicker({
             style={styles.wheelButton}
             onPress={() => updateDate("month", 1)}
           >
-            <Ionicons name="chevron-up" size={24} color="#FF4F81" />
+            <Ionicons name="chevron-up" size={24} color={palette.primary} />
           </TouchableOpacity>
           <View style={styles.wheelValue}>
             <Text style={styles.wheelValueText}>
@@ -99,7 +100,7 @@ export default function DateTimePicker({
             style={styles.wheelButton}
             onPress={() => updateDate("month", -1)}
           >
-            <Ionicons name="chevron-down" size={24} color="#FF4F81" />
+            <Ionicons name="chevron-down" size={24} color={palette.primary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -112,7 +113,7 @@ export default function DateTimePicker({
             style={styles.wheelButton}
             onPress={() => updateDate("day", 1)}
           >
-            <Ionicons name="chevron-up" size={24} color="#FF4F81" />
+            <Ionicons name="chevron-up" size={24} color={palette.primary} />
           </TouchableOpacity>
           <View style={styles.wheelValue}>
             <Text style={styles.wheelValueText}>{selectedDate.getDate()}</Text>
@@ -121,7 +122,7 @@ export default function DateTimePicker({
             style={styles.wheelButton}
             onPress={() => updateDate("day", -1)}
           >
-            <Ionicons name="chevron-down" size={24} color="#FF4F81" />
+            <Ionicons name="chevron-down" size={24} color={palette.primary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -140,7 +141,7 @@ export default function DateTimePicker({
             style={styles.wheelButton}
             onPress={() => updateTime("hour", 1)}
           >
-            <Ionicons name="chevron-up" size={24} color="#FF4F81" />
+            <Ionicons name="chevron-up" size={24} color={palette.primary} />
           </TouchableOpacity>
           <View style={styles.wheelValue}>
             <Text style={styles.wheelValueText}>
@@ -151,7 +152,7 @@ export default function DateTimePicker({
             style={styles.wheelButton}
             onPress={() => updateTime("hour", -1)}
           >
-            <Ionicons name="chevron-down" size={24} color="#FF4F81" />
+            <Ionicons name="chevron-down" size={24} color={palette.primary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -164,7 +165,7 @@ export default function DateTimePicker({
             style={styles.wheelButton}
             onPress={() => updateTime("minute", 15)}
           >
-            <Ionicons name="chevron-up" size={24} color="#FF4F81" />
+            <Ionicons name="chevron-up" size={24} color={palette.primary} />
           </TouchableOpacity>
           <View style={styles.wheelValue}>
             <Text style={styles.wheelValueText}>
@@ -175,7 +176,7 @@ export default function DateTimePicker({
             style={styles.wheelButton}
             onPress={() => updateTime("minute", -15)}
           >
-            <Ionicons name="chevron-down" size={24} color="#FF4F81" />
+            <Ionicons name="chevron-down" size={24} color={palette.primary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -217,7 +218,7 @@ export default function DateTimePicker({
               onPress={handleConfirm}
             >
               <LinearGradient
-                colors={["#FF4F81", "#8A2BE2"]}
+                colors={gradients.primary}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.confirmButtonGradient}
@@ -235,11 +236,11 @@ export default function DateTimePicker({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: palette.overlay,
     justifyContent: "flex-end",
   },
   modal: {
-    backgroundColor: "#FFF",
+    backgroundColor: palette.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: "80%",
@@ -248,12 +249,12 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 24,
     borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
+    borderBottomColor: palette.divider,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: palette.text,
     textAlign: "center",
   },
   scrollContent: {
@@ -266,7 +267,7 @@ const styles = StyleSheet.create({
   pickerLabel: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1A1A1A",
+    color: palette.text,
     marginBottom: 16,
     textAlign: "center",
   },
@@ -276,7 +277,7 @@ const styles = StyleSheet.create({
   wheelLabel: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#666",
+    color: palette.textSecondary,
     marginBottom: 8,
     textAlign: "center",
   },
@@ -289,7 +290,7 @@ const styles = StyleSheet.create({
   wheelValue: {
     paddingVertical: 12,
     paddingHorizontal: 32,
-    backgroundColor: "#F8F8F8",
+    backgroundColor: palette.background,
     borderRadius: 12,
     minWidth: 120,
     alignItems: "center",
@@ -297,26 +298,26 @@ const styles = StyleSheet.create({
   wheelValueText: {
     fontSize: 24,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: palette.text,
   },
   buttonContainer: {
     flexDirection: "row",
     padding: 24,
     gap: 12,
     borderTopWidth: 1,
-    borderTopColor: "#F0F0F0",
+    borderTopColor: palette.divider,
   },
   cancelButton: {
     flex: 1,
     paddingVertical: 16,
     borderRadius: 16,
-    backgroundColor: "#F0F0F0",
+    backgroundColor: palette.divider,
     alignItems: "center",
   },
   cancelButtonText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#666",
+    color: palette.textSecondary,
   },
   confirmButton: {
     flex: 1,
@@ -330,6 +331,6 @@ const styles = StyleSheet.create({
   confirmButtonText: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#FFF",
+    color: palette.onPrimary,
   },
 });

@@ -15,6 +15,7 @@ import { useState } from "react";
 import { ConfirmModal } from "./ConfirmModal";
 import eventService from "../../services/event.service";
 import { useAuth } from "../../context/AuthContext";
+import { palette, gradients } from "../../constants/colors";
 
 const { height } = Dimensions.get("window");
 
@@ -87,9 +88,9 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, o
   };
 
   const getStatusColor = () => {
-    if (event.creatorApproved && event.partnerApproved) return '#10B981';
-    if (event.status === 'REJECTED' || event.status === 'CANCELLED') return '#EF4444';
-    return '#F59E0B';
+    if (event.creatorApproved && event.partnerApproved) return palette.success;
+    if (event.status === 'REJECTED' || event.status === 'CANCELLED') return palette.error;
+    return palette.warning;
   };
 
   const getStatusText = () => {
@@ -200,7 +201,7 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, o
           <View style={styles.modalContent}>
             {/* Header con color del evento */}
             <LinearGradient
-              colors={[event.color || '#FF4F81', event.color ? `${event.color}CC` : '#FF4F81CC']}
+              colors={[event.color || palette.primary, event.color ? `${event.color}CC` : palette.secondary]}
               style={styles.header}
             >
               <View style={styles.headerTop}>
@@ -208,7 +209,7 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, o
                   <Text style={styles.statusText}>{getStatusText()}</Text>
                 </View>
                 <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                  <Ionicons name="close" size={24} color="#FFF" />
+                  <Ionicons name="close" size={24} color={palette.onPrimary} />
                 </TouchableOpacity>
               </View>
               
@@ -216,7 +217,7 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, o
               
               {event.category && (
                 <View style={styles.categoryBadge}>
-                  <Ionicons name="pricetag" size={14} color="#FFF" />
+                  <Ionicons name="pricetag" size={14} color={palette.onPrimary} />
                   <Text style={styles.categoryText}>{event.category}</Text>
                 </View>
               )}
@@ -230,7 +231,7 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, o
               {/* Fecha y hora */}
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <Ionicons name="calendar" size={20} color={event.color || '#FF4F81'} />
+                  <Ionicons name="calendar" size={20} color={event.color || palette.primary} />
                   <Text style={styles.sectionTitle}>Fecha y hora</Text>
                 </View>
                 
@@ -256,7 +257,7 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, o
 
                 {isAllDay(event.startDateTime, event.endDateTime) && (
                   <View style={styles.allDayBadge}>
-                    <Ionicons name="time" size={16} color="#8A2BE2" />
+                    <Ionicons name="time" size={16} color={palette.secondary} />
                     <Text style={styles.allDayText}>Todo el día</Text>
                   </View>
                 )}
@@ -266,7 +267,7 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, o
               {event.isRecurring && event.recurrencePattern && (
                 <View style={styles.section}>
                   <View style={styles.sectionHeader}>
-                    <Ionicons name="repeat" size={20} color={event.color || '#FF4F81'} />
+                    <Ionicons name="repeat" size={20} color={event.color || palette.primary} />
                     <Text style={styles.sectionTitle}>Recurrencia</Text>
                   </View>
                   <Text style={styles.recurrenceText}>
@@ -279,7 +280,7 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, o
               {event.location && (
                 <View style={styles.section}>
                   <View style={styles.sectionHeader}>
-                    <Ionicons name="location" size={20} color={event.color || '#FF4F81'} />
+                    <Ionicons name="location" size={20} color={event.color || palette.primary} />
                     <Text style={styles.sectionTitle}>Ubicación</Text>
                   </View>
                   <Text style={styles.infoText}>{event.location}</Text>
@@ -290,13 +291,13 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, o
               {event.reminders && event.reminders.length > 0 && (
                 <View style={styles.section}>
                   <View style={styles.sectionHeader}>
-                    <Ionicons name="notifications" size={20} color={event.color || '#FF4F81'} />
+                    <Ionicons name="notifications" size={20} color={event.color || palette.primary} />
                     <Text style={styles.sectionTitle}>Recordatorios</Text>
                   </View>
                   <View style={styles.remindersContainer}>
                     {event.reminders.map((reminder, index) => (
                       <View key={index} style={styles.reminderChip}>
-                        <Ionicons name="alarm" size={14} color="#8A2BE2" />
+                        <Ionicons name="alarm" size={14} color={palette.secondary} />
                         <Text style={styles.reminderText}>{reminder.label}</Text>
                       </View>
                     ))}
@@ -308,7 +309,7 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, o
               {event.description && (
                 <View style={styles.section}>
                   <View style={styles.sectionHeader}>
-                    <Ionicons name="document-text" size={20} color={event.color || '#FF4F81'} />
+                    <Ionicons name="document-text" size={20} color={event.color || palette.primary} />
                     <Text style={styles.sectionTitle}>Descripción</Text>
                   </View>
                   <Text style={styles.description}>{event.description}</Text>
@@ -318,7 +319,7 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, o
               {/* Información de aprobación */}
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <Ionicons name="people" size={20} color={event.color || '#FF4F81'} />
+                  <Ionicons name="people" size={20} color={event.color || palette.primary} />
                   <Text style={styles.sectionTitle}>Estado de aprobación</Text>
                 </View>
                 
@@ -327,7 +328,7 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, o
                     <Ionicons 
                       name={event.creatorApproved ? "checkmark-circle" : "time"} 
                       size={20} 
-                      color={event.creatorApproved ? "#10B981" : "#F59E0B"} 
+                      color={event.creatorApproved ? palette.success : palette.warning} 
                     />
                     <Text style={styles.approvalText}>
                       {event.creatorName || 'Creador'}: {event.creatorApproved ? 'Aprobado' : 'Pendiente'}
@@ -338,7 +339,7 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, o
                     <Ionicons 
                       name={event.partnerApproved ? "checkmark-circle" : "time"} 
                       size={20} 
-                      color={event.partnerApproved ? "#10B981" : "#F59E0B"} 
+                      color={event.partnerApproved ? palette.success : palette.warning} 
                     />
                     <Text style={styles.approvalText}>
                       {event.partnerName || 'Pareja'}: {event.partnerApproved ? 'Aprobado' : 'Pendiente'}
@@ -366,12 +367,12 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, o
                   activeOpacity={0.8}
                 >
                   <LinearGradient
-                    colors={["#FF4F81", "#8A2BE2"]}
+                    colors={gradients.primary}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={styles.editButtonGradient}
                   >
-                    <Ionicons name="create-outline" size={20} color="#FFF" />
+                    <Ionicons name="create-outline" size={20} color={palette.onPrimary} />
                     <Text style={styles.editButtonText}>Editar</Text>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -383,12 +384,12 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, o
                     activeOpacity={0.8}
                   >
                     <LinearGradient
-                      colors={["#EF4444", "#DC2626"]}
+                      colors={gradients.danger}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 0 }}
                       style={styles.deleteButtonGradient}
                     >
-                      <Ionicons name="trash-outline" size={20} color="#FFF" />
+                      <Ionicons name="trash-outline" size={20} color={palette.onPrimary} />
                       <Text style={styles.deleteButtonText}>Eliminar</Text>
                     </LinearGradient>
                   </TouchableOpacity>
@@ -412,12 +413,12 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, o
           <View style={styles.choiceModalContent}>
             {/* Icono */}
             <LinearGradient
-              colors={["#FF4F81", "#8A2BE2"]}
+              colors={gradients.primary}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.iconContainer}
             >
-              <Ionicons name="repeat" size={48} color="#FFFFFF" />
+              <Ionicons name="repeat" size={48} color={palette.onPrimary} />
             </LinearGradient>
 
             {/* Título */}
@@ -432,7 +433,7 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, o
                 style={styles.choiceButton}
                 onPress={() => handleDeleteRecurringChoice('single')}
               >
-                <Ionicons name="document-outline" size={24} color="#8A2BE2" />
+                <Ionicons name="document-outline" size={24} color={palette.secondary} />
                 <View style={styles.choiceTextContainer}>
                   <Text style={styles.choiceButtonTitle}>Solo este evento</Text>
                   <Text style={styles.choiceButtonSubtitle}>Eliminar solo este evento</Text>
@@ -443,7 +444,7 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, o
                 style={styles.choiceButton}
                 onPress={() => handleDeleteRecurringChoice('all')}
               >
-                <Ionicons name="documents-outline" size={24} color="#8A2BE2" />
+                <Ionicons name="documents-outline" size={24} color={palette.secondary} />
                 <View style={styles.choiceTextContainer}>
                   <Text style={styles.choiceButtonTitle}>Toda la serie</Text>
                   <Text style={styles.choiceButtonSubtitle}>Eliminar todos los eventos repetidos</Text>
@@ -454,9 +455,9 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, o
                 style={[styles.choiceButton, styles.cancelChoiceButton]}
                 onPress={() => setShowDeleteRecurringModal(false)}
               >
-                <Ionicons name="close-circle-outline" size={24} color="#666" />
+                <Ionicons name="close-circle-outline" size={24} color={palette.textSecondary} />
                 <View style={styles.choiceTextContainer}>
-                  <Text style={[styles.choiceButtonTitle, { color: '#666' }]}>Cancelar</Text>
+                  <Text style={[styles.choiceButtonTitle, { color: palette.textSecondary }]}>Cancelar</Text>
                 </View>
               </TouchableOpacity>
             </View>
@@ -489,11 +490,11 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     justifyContent: "flex-end",
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: palette.overlay,
   },
   modalContainer: {
     height: height * 0.85,
-    backgroundColor: "#FFF",
+    backgroundColor: palette.surface,
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     overflow: "hidden",
@@ -519,7 +520,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   statusText: {
-    color: "#FFF",
+    color: palette.onPrimary,
     fontSize: 12,
     fontWeight: "600",
   },
@@ -527,14 +528,14 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.2)",
+    backgroundColor: palette.onPrimaryFaint,
     justifyContent: "center",
     alignItems: "center",
   },
   title: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#FFF",
+    color: palette.onPrimary,
     marginBottom: 8,
   },
   categoryBadge: {
@@ -542,13 +543,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 6,
     alignSelf: "flex-start",
-    backgroundColor: "rgba(255,255,255,0.2)",
+    backgroundColor: palette.onPrimaryFaint,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
   },
   categoryText: {
-    color: "#FFF",
+    color: palette.onPrimary,
     fontSize: 13,
     fontWeight: "600",
   },
@@ -568,10 +569,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1A1A1A",
+    color: palette.text,
   },
   dateTimeContainer: {
-    backgroundColor: "#F5F5F5",
+    backgroundColor: palette.surfaceMuted,
     borderRadius: 16,
     padding: 16,
     gap: 12,
@@ -584,12 +585,12 @@ const styles = StyleSheet.create({
   dateTimeLabel: {
     fontSize: 15,
     fontWeight: "500",
-    color: "#666",
+    color: palette.textSecondary,
   },
   dateTimeValue: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#1A1A1A",
+    color: palette.text,
   },
   allDayBadge: {
     flexDirection: "row",
@@ -597,7 +598,7 @@ const styles = StyleSheet.create({
     gap: 6,
     marginTop: 8,
     alignSelf: "flex-start",
-    backgroundColor: "#F5F0FF",
+    backgroundColor: palette.secondarySoft,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
@@ -605,18 +606,18 @@ const styles = StyleSheet.create({
   allDayText: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#8A2BE2",
+    color: palette.textAccent,
   },
   recurrenceText: {
     fontSize: 15,
-    color: "#1A1A1A",
-    backgroundColor: "#F5F5F5",
+    color: palette.text,
+    backgroundColor: palette.surfaceMuted,
     padding: 12,
     borderRadius: 12,
   },
   infoText: {
     fontSize: 15,
-    color: "#1A1A1A",
+    color: palette.text,
     lineHeight: 22,
   },
   remindersContainer: {
@@ -628,23 +629,23 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: "#F5F0FF",
+    backgroundColor: palette.secondarySoft,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 12,
   },
   reminderText: {
     fontSize: 13,
-    color: "#8A2BE2",
+    color: palette.textAccent,
     fontWeight: "500",
   },
   description: {
     fontSize: 15,
-    color: "#1A1A1A",
+    color: palette.text,
     lineHeight: 22,
   },
   approvalContainer: {
-    backgroundColor: "#F5F5F5",
+    backgroundColor: palette.surfaceMuted,
     borderRadius: 16,
     padding: 16,
     gap: 12,
@@ -656,28 +657,28 @@ const styles = StyleSheet.create({
   },
   approvalText: {
     fontSize: 15,
-    color: "#1A1A1A",
+    color: palette.text,
     fontWeight: "500",
   },
   footer: {
     padding: 24,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: "#F0F0F0",
+    borderTopColor: palette.divider,
   },
   // Estilos para modal de opciones de recurrencia
   modalOverlay: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: palette.overlay,
   },
   choiceModalContainer: {
     width: "85%",
     maxWidth: 400,
   },
   choiceModalContent: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: palette.surface,
     borderRadius: 24,
     padding: 24,
     alignItems: "center",
@@ -693,13 +694,13 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 22,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: palette.text,
     marginBottom: 8,
     textAlign: "center",
   },
   modalMessage: {
     fontSize: 15,
-    color: "#666",
+    color: palette.textSecondary,
     textAlign: "center",
     marginBottom: 24,
     lineHeight: 22,
@@ -711,13 +712,13 @@ const styles = StyleSheet.create({
   choiceButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F5F0FF",
+    backgroundColor: palette.secondarySoft,
     padding: 16,
     borderRadius: 16,
     gap: 12,
   },
   cancelChoiceButton: {
-    backgroundColor: "#F5F5F5",
+    backgroundColor: palette.surfaceMuted,
   },
   choiceTextContainer: {
     flex: 1,
@@ -725,12 +726,12 @@ const styles = StyleSheet.create({
   choiceButtonTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1A1A1A",
+    color: palette.text,
     marginBottom: 2,
   },
   choiceButtonSubtitle: {
     fontSize: 13,
-    color: "#666",
+    color: palette.textSecondary,
   },
   actionButtons: {
     flexDirection: "row",
@@ -741,7 +742,7 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 24,
     overflow: "hidden",
-    shadowColor: "#FF4F81",
+    shadowColor: palette.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -752,7 +753,7 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 24,
     overflow: "hidden",
-    shadowColor: "#EF4444",
+    shadowColor: palette.error,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -766,7 +767,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   deleteButtonText: {
-    color: "#FFF",
+    color: palette.onPrimary,
     fontSize: 17,
     fontWeight: "700",
   },
@@ -778,7 +779,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   editButtonText: {
-    color: "#FFF",
+    color: palette.onPrimary,
     fontSize: 17,
     fontWeight: "700",
   },

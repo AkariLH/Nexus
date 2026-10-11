@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { palette, gradients } from "../../constants/colors";
 
 interface SuccessModalProps {
   visible: boolean;
@@ -27,12 +28,12 @@ export function SuccessModal({
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
           <LinearGradient
-            colors={["#FF4F81", "#8A2BE2"]}
+            colors={gradients.primary}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.modalIconWrapper}
           >
-            <Ionicons name="checkmark-circle" size={48} color="#FFF" />
+            <Ionicons name="checkmark-circle" size={48} color={palette.onPrimary} />
           </LinearGradient>
 
           <Text style={styles.modalTitle}>{title}</Text>
@@ -45,7 +46,7 @@ export function SuccessModal({
             activeOpacity={0.9}
           >
             <LinearGradient
-              colors={["#FF4F81", "#8A2BE2"]}
+              colors={gradients.primary}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.modalButton}
@@ -62,19 +63,19 @@ export function SuccessModal({
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: palette.overlay,
     justifyContent: "center",
     alignItems: "center",
     padding: 24,
   },
   modalContent: {
-    backgroundColor: "#FFF",
+    backgroundColor: palette.surface,
     borderRadius: 24,
     padding: 32,
     width: "100%",
     maxWidth: 400,
     alignItems: "center",
-    shadowColor: "#000",
+    shadowColor: palette.shadow,
     shadowOpacity: 0.25,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 8 },
@@ -91,13 +92,13 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 24,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: palette.text,
     marginBottom: 12,
     textAlign: "center",
   },
   modalMessage: {
     fontSize: 15,
-    color: "#1A1A1A",
+    color: palette.text,
     opacity: 0.7,
     marginBottom: 28,
     textAlign: "center",
@@ -107,7 +108,7 @@ const styles = StyleSheet.create({
     width: "100%",
     borderRadius: 24,
     overflow: "hidden",
-    shadowColor: "#000",
+    shadowColor: palette.shadow,
     shadowOpacity: 0.15,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
@@ -119,7 +120,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalButtonText: {
-    color: "#FFF",
+    color: palette.onPrimary,
     fontWeight: "700",
     fontSize: 16,
   },

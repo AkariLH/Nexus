@@ -9,6 +9,7 @@ import {
   ActivityIndicator 
 } from "react-native";
 import { BlurView } from "expo-blur";
+import { palette, gradients } from "../../constants/colors";
 
 type ModalType = "confirm" | "success" | "error" | "info";
 
@@ -40,13 +41,13 @@ export function ConfirmModal({
   const getIcon = () => {
     switch (type) {
       case "success":
-        return { name: "checkmark-circle" as const, color: "#10B981" };
+        return { name: "checkmark-circle" as const, color: palette.success };
       case "error":
-        return { name: "close-circle" as const, color: "#EF4444" };
+        return { name: "close-circle" as const, color: palette.error };
       case "info":
-        return { name: "information-circle" as const, color: "#3B82F6" };
+        return { name: "information-circle" as const, color: palette.info };
       default:
-        return { name: "help-circle" as const, color: "#F59E0B" };
+        return { name: "help-circle" as const, color: palette.warning };
     }
   };
 
@@ -64,12 +65,12 @@ export function ConfirmModal({
           <View style={styles.modalContent}>
             {/* Icono */}
             <LinearGradient
-              colors={["#FF4F81", "#8A2BE2"]}
+              colors={gradients.primary}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.iconContainer}
             >
-              <Ionicons name={icon.name} size={48} color="#FFFFFF" />
+              <Ionicons name={icon.name} size={48} color={palette.onPrimary} />
             </LinearGradient>
 
             {/* Título */}
@@ -105,15 +106,15 @@ export function ConfirmModal({
                   <LinearGradient
                     colors={
                       type === "error"
-                        ? ["#EF4444", "#DC2626"]
-                        : ["#FF4F81", "#8A2BE2"]
+                        ? gradients.danger
+                        : gradients.primary
                     }
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={styles.confirmButtonGradient}
                   >
                     {loading ? (
-                      <ActivityIndicator color="#FFF" size="small" />
+                      <ActivityIndicator color={palette.onPrimary} size="small" />
                     ) : (
                       <Text style={styles.confirmButtonText}>{confirmText}</Text>
                     )}
@@ -133,15 +134,15 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: palette.overlay,
   },
   modalContainer: {
     width: "85%",
     maxWidth: 400,
-    backgroundColor: "#FFF",
+    backgroundColor: palette.surface,
     borderRadius: 24,
     overflow: "hidden",
-    shadowColor: "#000",
+    shadowColor: palette.shadow,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.25,
     shadowRadius: 16,
@@ -162,13 +163,13 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 22,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: palette.text,
     textAlign: "center",
     marginBottom: 12,
   },
   modalMessage: {
     fontSize: 15,
-    color: "#666",
+    color: palette.textSecondary,
     textAlign: "center",
     lineHeight: 22,
     marginBottom: 28,
@@ -186,12 +187,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   cancelButton: {
-    backgroundColor: "#F5F5F5",
+    backgroundColor: palette.surfaceMuted,
   },
   cancelButtonText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#666",
+    color: palette.textSecondary,
   },
   confirmButton: {
     overflow: "hidden",
@@ -205,7 +206,7 @@ const styles = StyleSheet.create({
   confirmButtonText: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#FFF",
+    color: palette.onPrimary,
   },
   buttonDisabled: {
     opacity: 0.6,

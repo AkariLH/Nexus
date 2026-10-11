@@ -10,6 +10,7 @@ import {
   View,
   ActivityIndicator 
 } from "react-native";
+import { palette, gradients } from "../../constants/colors";
 
 interface PasswordConfirmModalProps {
   visible: boolean;
@@ -74,12 +75,12 @@ export function PasswordConfirmModal({
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
           <LinearGradient
-            colors={["#FF4F81", "#8A2BE2"]}
+            colors={gradients.primary}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.dangerIconWrapper}
           >
-            <Ionicons name="shield-checkmark-outline" size={48} color="#FFFFFF" />
+            <Ionicons name="shield-checkmark-outline" size={48} color={palette.onPrimary} />
           </LinearGradient>
 
           <Text style={styles.modalTitle}>{title}</Text>
@@ -90,7 +91,7 @@ export function PasswordConfirmModal({
             <Ionicons
               name="lock-closed-outline"
               size={20}
-              color={error ? "#EF4444" : "#1A1A1A66"}
+              color={error ? palette.error : palette.textMuted}
               style={styles.iconLeft}
             />
             <TextInput
@@ -100,7 +101,7 @@ export function PasswordConfirmModal({
                 setError("");
               }}
               placeholder="Ingresa tu contraseña"
-              placeholderTextColor="#1A1A1A66"
+              placeholderTextColor={palette.textMuted}
               secureTextEntry={!showPassword}
               style={[styles.input, error && styles.inputError]}
               editable={!isLoading}
@@ -114,14 +115,14 @@ export function PasswordConfirmModal({
               <Ionicons
                 name={showPassword ? "eye-off-outline" : "eye-outline"}
                 size={20}
-                color="#1A1A1A66"
+                color={palette.icon}
               />
             </TouchableOpacity>
           </View>
 
           {error ? (
             <View style={styles.errorContainer}>
-              <Ionicons name="alert-circle" size={14} color="#EF4444" />
+              <Ionicons name="alert-circle" size={14} color={palette.error} />
               <Text style={styles.errorText}>{error}</Text>
             </View>
           ) : null}
@@ -143,13 +144,13 @@ export function PasswordConfirmModal({
               disabled={isLoading}
             >
               <LinearGradient
-                colors={["#EF4444", "#DC2626"]}
+                colors={gradients.danger}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.confirmButton}
               >
                 {isLoading ? (
-                  <ActivityIndicator color="#FFF" />
+                  <ActivityIndicator color={palette.onPrimary} />
                 ) : (
                   <Text style={styles.confirmButtonText}>{confirmText}</Text>
                 )}
@@ -165,19 +166,19 @@ export function PasswordConfirmModal({
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: palette.overlay,
     justifyContent: "center",
     alignItems: "center",
     padding: 24,
   },
   modalContent: {
-    backgroundColor: "#FFF",
+    backgroundColor: palette.surface,
     borderRadius: 24,
     padding: 32,
     width: "100%",
     maxWidth: 400,
     alignItems: "center",
-    shadowColor: "#000",
+    shadowColor: palette.shadow,
     shadowOpacity: 0.25,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 8 },
@@ -194,13 +195,13 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 24,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: palette.text,
     marginBottom: 12,
     textAlign: "center",
   },
   modalMessage: {
     fontSize: 15,
-    color: "#1A1A1A",
+    color: palette.text,
     opacity: 0.7,
     marginBottom: 24,
     textAlign: "center",
@@ -209,7 +210,7 @@ const styles = StyleSheet.create({
   inputWrapper: {
     position: "relative",
     width: "100%",
-    backgroundColor: "#F7F7F7",
+    backgroundColor: palette.surfaceMuted,
     borderRadius: 20,
     height: 56,
     justifyContent: "center",
@@ -218,8 +219,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   inputError: {
-    borderColor: "#EF4444",
-    backgroundColor: "#FFF5F7",
+    borderColor: palette.error,
+    backgroundColor: palette.primarySoft,
   },
   iconLeft: {
     position: "absolute",
@@ -234,7 +235,7 @@ const styles = StyleSheet.create({
     paddingLeft: 48,
     paddingRight: 48,
     fontSize: 16,
-    color: "#1A1A1A",
+    color: palette.text,
   },
   errorContainer: {
     flexDirection: "row",
@@ -244,7 +245,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   errorText: {
-    color: "#EF4444",
+    color: palette.error,
     fontSize: 12,
     marginLeft: 4,
     flex: 1,
@@ -260,13 +261,13 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 24,
     borderWidth: 2,
-    borderColor: "#F7F7F7",
-    backgroundColor: "#FFF",
+    borderColor: palette.divider,
+    backgroundColor: palette.surface,
     justifyContent: "center",
     alignItems: "center",
   },
   cancelButtonText: {
-    color: "#1A1A1A",
+    color: palette.text,
     fontWeight: "600",
     fontSize: 16,
   },
@@ -274,7 +275,7 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 24,
     overflow: "hidden",
-    shadowColor: "#000",
+    shadowColor: palette.shadow,
     shadowOpacity: 0.15,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
@@ -286,7 +287,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   confirmButtonText: {
-    color: "#FFF",
+    color: palette.onPrimary,
     fontWeight: "700",
     fontSize: 16,
   },

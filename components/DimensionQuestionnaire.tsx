@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Chip } from './Chip';
 import { LevelSlider } from './LevelSlider';
 import { getPreferenceImage } from '../utils/preferenceImages';
+import { palette, gradients } from '../constants/colors';
 
 interface DimensionQuestionnaireProps {
   dimension: {
@@ -131,13 +132,13 @@ export const DimensionQuestionnaire: React.FC<DimensionQuestionnaireProps> = ({
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <LinearGradient
-        colors={['#FF4F81', '#8A2BE2']}
+        colors={gradients.primary}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.header}
       >
         <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <Ionicons name="arrow-back" size={24} color="white" />
+          <Ionicons name="arrow-back" size={24} color={palette.onPrimary} />
         </TouchableOpacity>
         <View style={styles.headerInfo}>
           <Text style={styles.dimensionEmoji}>{dimension.emoji}</Text>
@@ -180,7 +181,7 @@ export const DimensionQuestionnaire: React.FC<DimensionQuestionnaireProps> = ({
                       <Ionicons 
                         name="close-circle" 
                         size={60} 
-                        color={isSelected ? "#FF4F81" : "#999"} 
+                        color={isSelected ? palette.primary : palette.textMuted} 
                       />
                     </View>
                   ) : (
@@ -192,7 +193,7 @@ export const DimensionQuestionnaire: React.FC<DimensionQuestionnaireProps> = ({
                   )}
                   {isSelected && !isNone && (
                     <View style={styles.selectedOverlay}>
-                      <Ionicons name="checkmark-circle" size={40} color="#FF4F81" />
+                      <Ionicons name="checkmark-circle" size={40} color={palette.primary} />
                     </View>
                   )}
                 </View>
@@ -213,7 +214,7 @@ export const DimensionQuestionnaire: React.FC<DimensionQuestionnaireProps> = ({
                       <Ionicons
                         name={showNotes[pref.id] ? 'create' : 'create-outline'}
                         size={18}
-                        color="#FF4F81"
+                        color={palette.primary}
                       />
                     </TouchableOpacity>
                   )}
@@ -231,7 +232,7 @@ export const DimensionQuestionnaire: React.FC<DimensionQuestionnaireProps> = ({
                       label="¿Qué tanto te interesa?"
                       value={level}
                       onValueChange={(value) => updateLevel(pref.id, value)}
-                      color="#FF4F81"
+                      color={palette.primary}
                       minLabel="Poco"
                       maxLabel="Mucho"
                     />
@@ -265,12 +266,12 @@ export const DimensionQuestionnaire: React.FC<DimensionQuestionnaireProps> = ({
             activeOpacity={0.9}
           >
             <LinearGradient
-              colors={canSave ? ['#FF4F81', '#8A2BE2'] : ['#FFB3CE', '#C5A3E8']}
+              colors={canSave ? gradients.primary : gradients.disabled}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.saveButton}
             >
-              <Ionicons name="checkmark-circle" size={24} color="white" />
+              <Ionicons name="checkmark-circle" size={24} color={palette.onPrimary} />
               <Text style={styles.saveButtonText}>Guardar Preferencias</Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -287,7 +288,7 @@ export const DimensionQuestionnaire: React.FC<DimensionQuestionnaireProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: palette.surfaceMuted,
   },
   header: {
     flexDirection: 'row',
@@ -301,7 +302,7 @@ const styles = StyleSheet.create({
   backButton: {
     padding: 8,
     marginRight: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: palette.onPrimaryFaint,
     borderRadius: 12,
   },
   headerInfo: {
@@ -316,11 +317,11 @@ const styles = StyleSheet.create({
   dimensionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: 'white',
+    color: palette.onPrimary,
   },
   selectedCount: {
     fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: palette.onPrimarySoft,
     marginTop: 4,
   },
   content: {
@@ -328,7 +329,7 @@ const styles = StyleSheet.create({
   },
   instructions: {
     fontSize: 15,
-    color: '#333',
+    color: palette.text,
     lineHeight: 22,
     padding: 20,
     paddingBottom: 12,
@@ -343,11 +344,11 @@ const styles = StyleSheet.create({
   },
   preferenceCard: {
     width: '48%',
-    backgroundColor: 'white',
+    backgroundColor: palette.surface,
     borderRadius: 20,
     marginBottom: 16,
     overflow: 'hidden',
-    shadowColor: '#000',
+    shadowColor: palette.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
@@ -359,13 +360,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     elevation: 5,
     transform: [{ scale: 0.98 }],
-    borderColor: '#FF4F81',
+    borderColor: palette.primary,
   },
   imageContainer: {
     width: '100%',
     height: 120,
     position: 'relative',
-    backgroundColor: '#f8f8f8',
+    backgroundColor: palette.background,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 12,
@@ -382,7 +383,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FF4F8120',
+    backgroundColor: palette.primarySoft,
   },
   preferenceTitleContainer: {
     flexDirection: 'row',
@@ -395,7 +396,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: palette.text,
     lineHeight: 18,
   },
   notesIconButton: {
@@ -404,7 +405,7 @@ const styles = StyleSheet.create({
   },
   preferenceDescription: {
     fontSize: 12,
-    color: '#888',
+    color: palette.textMuted,
     paddingHorizontal: 12,
     paddingBottom: 8,
     lineHeight: 16,
@@ -415,7 +416,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingBottom: 12,
     borderTopWidth: 1,
-    borderTopColor: '#FF4F81',
+    borderTopColor: palette.primary,
   },
   notesSection: {
     marginTop: 12,
@@ -423,31 +424,31 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   notesInput: {
-    backgroundColor: '#f8f8f8',
+    backgroundColor: palette.background,
     borderRadius: 12,
     padding: 12,
     fontSize: 14,
-    color: '#333',
+    color: palette.text,
     minHeight: 80,
     textAlignVertical: 'top',
     borderWidth: 1,
-    borderColor: '#FF4F81',
+    borderColor: palette.primary,
   },
   noneCard: {
-    borderColor: '#ddd',
+    borderColor: palette.border,
   },
   noneIconContainer: {
     width: '100%',
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f8f8f8',
+    backgroundColor: palette.background,
   },
   noneIconSelected: {
-    backgroundColor: '#FFE8EF',
+    backgroundColor: palette.primarySoft,
   },
   noneText: {
-    color: '#666',
+    color: palette.textSecondary,
     fontStyle: 'italic',
   },
   footer: {
@@ -457,7 +458,7 @@ const styles = StyleSheet.create({
   saveButtonWrapper: {
     borderRadius: 24,
     overflow: 'hidden',
-    shadowColor: '#000',
+    shadowColor: palette.shadow,
     shadowOpacity: 0.3,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
@@ -476,7 +477,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   saveButtonText: {
-    color: 'white',
+    color: palette.onPrimary,
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -486,7 +487,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   skipButtonText: {
-    color: '#999',
+    color: palette.textMuted,
     fontSize: 15,
     fontWeight: '500',
   },

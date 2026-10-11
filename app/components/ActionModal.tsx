@@ -8,6 +8,7 @@ import {
   TouchableWithoutFeedback,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { palette } from "../../constants/colors";
 
 interface ActionModalProps {
   visible: boolean;
@@ -53,7 +54,7 @@ export function ActionModal({ visible, onClose, title, actions }: ActionModalPro
                       <Ionicons
                         name={action.icon}
                         size={20}
-                        color={action.destructive ? "#FF4757" : "#1A1A1A"}
+                        color={action.destructive ? palette.error : palette.text}
                         style={styles.actionIcon}
                       />
                     )}
@@ -79,18 +80,18 @@ export function ActionModal({ visible, onClose, title, actions }: ActionModalPro
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: palette.overlay,
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
   },
   modalContainer: {
-    backgroundColor: "#FFF",
+    backgroundColor: palette.surface,
     borderRadius: 24,
     padding: 24,
     width: "100%",
     maxWidth: 400,
-    shadowColor: "#000",
+    shadowColor: palette.shadow,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
@@ -99,7 +100,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: palette.text,
     textAlign: "center",
     marginBottom: 20,
   },
@@ -111,15 +112,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F7F7F7",
+    backgroundColor: palette.surfaceMuted,
     borderRadius: 16,
     padding: 16,
     gap: 8,
   },
   destructiveButton: {
-    backgroundColor: "#FFF",
+    backgroundColor: palette.surface,
     borderWidth: 2,
-    borderColor: "#FFE5E5",
+    borderColor: palette.errorBorder,
   },
   actionIcon: {
     marginRight: 4,
@@ -127,10 +128,10 @@ const styles = StyleSheet.create({
   actionText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1A1A1A",
+    color: palette.text,
   },
   destructiveText: {
-    color: "#FF4757",
+    color: palette.error,
   },
   cancelButton: {
     alignItems: "center",
@@ -139,6 +140,6 @@ const styles = StyleSheet.create({
   cancelText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#666",
+    color: palette.textSecondary,
   },
 });

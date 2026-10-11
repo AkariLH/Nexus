@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { palette, gradients } from "../../constants/colors";
 
 interface ErrorModalProps {
   visible: boolean;
@@ -26,12 +27,12 @@ export function ErrorModal({ visible, onClose, title = "Error", message, actionB
           {/* Ícono de error */}
           <View style={styles.iconWrapper}>
             <LinearGradient
-              colors={["#FF4F81", "#8A2BE2"]}
+              colors={gradients.primary}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.iconGradient}
             >
-              <Ionicons name="alert-circle" size={48} color="#FFF" />
+              <Ionicons name="alert-circle" size={48} color={palette.onPrimary} />
             </LinearGradient>
           </View>
 
@@ -49,7 +50,7 @@ export function ErrorModal({ visible, onClose, title = "Error", message, actionB
               onPress={actionButton.onPress}
             >
               <LinearGradient
-                colors={["#FF4F81", "#8A2BE2"]}
+                colors={gradients.primary}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.button}
@@ -71,7 +72,7 @@ export function ErrorModal({ visible, onClose, title = "Error", message, actionB
               </View>
             ) : (
               <LinearGradient
-                colors={["#FF4F81", "#8A2BE2"]}
+                colors={gradients.primary}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.button}
@@ -89,19 +90,19 @@ export function ErrorModal({ visible, onClose, title = "Error", message, actionB
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: palette.overlay,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 24,
   },
   modalContainer: {
-    backgroundColor: "#FFF",
+    backgroundColor: palette.surface,
     borderRadius: 24,
     padding: 32,
     width: "100%",
     maxWidth: 400,
     alignItems: "center",
-    shadowColor: "#000",
+    shadowColor: palette.shadow,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.2,
     shadowRadius: 16,
@@ -120,13 +121,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: palette.text,
     marginBottom: 12,
     textAlign: "center",
   },
   message: {
     fontSize: 15,
-    color: "#1A1A1A",
+    color: palette.text,
     opacity: 0.7,
     textAlign: "center",
     lineHeight: 22,
@@ -136,7 +137,7 @@ const styles = StyleSheet.create({
     width: "100%",
     borderRadius: 24,
     overflow: "hidden",
-    shadowColor: "#000",
+    shadowColor: palette.shadow,
     shadowOpacity: 0.15,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
@@ -148,7 +149,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   buttonText: {
-    color: "#FFF",
+    color: palette.onPrimary,
     fontWeight: "700",
     fontSize: 16,
   },
@@ -165,11 +166,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "transparent",
     borderWidth: 2,
-    borderColor: "#E0E0E0",
+    borderColor: palette.border,
     borderRadius: 24,
   },
   secondaryButtonText: {
-    color: "#666",
+    color: palette.textSecondary,
     fontWeight: "600",
     fontSize: 16,
   },

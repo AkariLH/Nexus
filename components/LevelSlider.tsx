@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Slider from '@react-native-community/slider';
+import { palette } from '../constants/colors';
 
 interface LevelSliderProps {
   label: string;
@@ -15,7 +16,7 @@ export const LevelSlider: React.FC<LevelSliderProps> = ({
   label,
   value,
   onValueChange,
-  color = '#667eea',
+  color = palette.secondary,
   minLabel = 'Poco',
   maxLabel = 'Mucho',
 }) => {
@@ -32,7 +33,7 @@ export const LevelSlider: React.FC<LevelSliderProps> = ({
           value={value}
           onValueChange={onValueChange}
           minimumTrackTintColor={color}
-          maximumTrackTintColor="#e0e0e0"
+          maximumTrackTintColor={palette.border}
           thumbTintColor={color}
         />
       </View>
@@ -53,7 +54,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#666',
+    color: palette.textSecondary,
     marginBottom: 8,
   },
   sliderContainer: {
@@ -71,12 +72,12 @@ const styles = StyleSheet.create({
   },
   minLabel: {
     fontSize: 11,
-    color: '#999',
+    color: palette.textMuted,
     fontWeight: '500',
   },
   maxLabel: {
     fontSize: 11,
-    color: '#999',
+    color: palette.textMuted,
     fontWeight: '500',
   },
   valueLabel: {

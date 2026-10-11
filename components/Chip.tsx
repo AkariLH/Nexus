@@ -1,6 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { palette } from '../constants/colors';
 
 interface ChipProps {
   label: string;
@@ -14,7 +15,7 @@ export const Chip: React.FC<ChipProps> = ({
   label, 
   selected, 
   onPress, 
-  color = '#667eea',
+  color = palette.secondary,
   style 
 }) => {
   return (
@@ -31,7 +32,7 @@ export const Chip: React.FC<ChipProps> = ({
         <Ionicons 
           name="checkmark-circle" 
           size={16} 
-          color="white" 
+          color={palette.onPrimary} 
           style={styles.checkIcon} 
         />
       )}
@@ -49,12 +50,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 24,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: palette.surfaceMuted,
     marginRight: 8,
     marginBottom: 8,
     borderWidth: 2,
-    borderColor: '#e0e0e0',
-    shadowColor: '#000',
+    borderColor: palette.border,
+    shadowColor: palette.shadow,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -70,11 +71,11 @@ const styles = StyleSheet.create({
   },
   chipText: {
     fontSize: 14,
-    color: '#666',
+    color: palette.textSecondary,
     fontWeight: '500',
   },
   chipTextSelected: {
-    color: 'white',
+    color: palette.onPrimary,
     fontWeight: '700',
   },
 });
