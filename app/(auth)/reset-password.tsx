@@ -17,6 +17,7 @@ import { GradientButton } from "../components/ui/GradientButton";
 import { ErrorModal } from "../components/ErrorModal";
 import { SuccessModal } from "../components/SuccessModal";
 import { authService } from "../../services/auth.service";
+import { palette } from "../../constants/colors";
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
@@ -263,7 +264,7 @@ export default function ResetPasswordScreen() {
         >
           {/* Ícono */}
           <View style={styles.iconWrapper}>
-            <Ionicons name="key-outline" size={48} color="#FF4F81" />
+            <Ionicons name="key-outline" size={48} color={palette.primary} />
           </View>
 
           {step === "verify" ? (
@@ -334,12 +335,12 @@ export default function ResetPasswordScreen() {
                   <Ionicons
                     name="lock-closed-outline"
                     size={20}
-                    color="#1A1A1A66"
+                    color={palette.icon}
                     style={styles.iconLeft}
                   />
                   <TextInput
                     placeholder="••••••••"
-                    placeholderTextColor="#1A1A1A66"
+                    placeholderTextColor={palette.textMuted}
                     value={newPassword}
                     onChangeText={setNewPassword}
                     secureTextEntry={!showNewPassword}
@@ -349,7 +350,7 @@ export default function ResetPasswordScreen() {
                   <Ionicons
                     name={showNewPassword ? "eye-off-outline" : "eye-outline"}
                     size={20}
-                    color="#1A1A1A66"
+                    color={palette.icon}
                     style={styles.iconRight}
                     onPress={() => setShowNewPassword(!showNewPassword)}
                   />
@@ -363,12 +364,12 @@ export default function ResetPasswordScreen() {
                   <Ionicons
                     name="lock-closed-outline"
                     size={20}
-                    color="#1A1A1A66"
+                    color={palette.icon}
                     style={styles.iconLeft}
                   />
                   <TextInput
                     placeholder="••••••••"
-                    placeholderTextColor="#1A1A1A66"
+                    placeholderTextColor={palette.textMuted}
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
                     secureTextEntry={!showConfirmPassword}
@@ -378,7 +379,7 @@ export default function ResetPasswordScreen() {
                   <Ionicons
                     name={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
                     size={20}
-                    color="#1A1A1A66"
+                    color={palette.icon}
                     style={styles.iconRight}
                     onPress={() => setShowConfirmPassword(!showConfirmPassword)}
                   />
@@ -400,7 +401,7 @@ export default function ResetPasswordScreen() {
                 {isLoading && (
                   <ActivityIndicator
                     size="small"
-                    color="#FF4F81"
+                    color={palette.primary}
                     style={styles.loader}
                   />
                 )}
@@ -437,7 +438,7 @@ export default function ResetPasswordScreen() {
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: "#FFF" 
+    backgroundColor: palette.surface 
   },
   scrollContent: {
     flexGrow: 1,
@@ -451,7 +452,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: "rgba(255,79,129,0.1)",
+    backgroundColor: palette.primarySoft,
     alignSelf: "center",
     alignItems: "center",
     justifyContent: "center",
@@ -460,19 +461,19 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: palette.text,
     marginBottom: 8,
     textAlign: "center",
   },
   subtitle: {
-    color: "#1A1A1A99",
+    color: palette.textSecondary,
     textAlign: "center",
     marginBottom: 32,
     paddingHorizontal: 12,
     lineHeight: 20,
   },
   emailHighlight: {
-    color: "#FF4F81",
+    color: palette.textAccent,
     fontWeight: "600",
   },
   codeContainer: {
@@ -485,29 +486,29 @@ const styles = StyleSheet.create({
     width: 50,
     height: 60,
     borderRadius: 16,
-    backgroundColor: "#F7F7F7",
+    backgroundColor: palette.surfaceMuted,
     textAlign: "center",
     fontSize: 24,
-    color: "#1A1A1A",
+    color: palette.text,
     borderWidth: 2,
     borderColor: "transparent",
   },
   codeInputFilled: {
-    borderColor: "#FF4F81",
-    backgroundColor: "#FFF",
+    borderColor: palette.primary,
+    backgroundColor: palette.surface,
   },
   field: {
     marginBottom: 20,
   },
   label: {
-    color: "#1A1A1A",
+    color: palette.text,
     marginBottom: 8,
     fontSize: 14,
     fontWeight: "500",
   },
   inputWrapper: {
     position: "relative",
-    backgroundColor: "#F7F7F7",
+    backgroundColor: palette.surfaceMuted,
     borderRadius: 20,
     height: 56,
     justifyContent: "center",
@@ -519,11 +520,11 @@ const styles = StyleSheet.create({
     paddingLeft: 44,
     paddingRight: 44,
     fontSize: 16,
-    color: "#1A1A1A",
+    color: palette.text,
   },
   passwordHint: {
     fontSize: 12,
-    color: "#1A1A1A",
+    color: palette.text,
     opacity: 0.6,
     marginBottom: 24,
     lineHeight: 16,
@@ -544,11 +545,11 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   resendText: {
-    color: "#1A1A1A99",
+    color: palette.textSecondary,
     fontSize: 14,
   },
   resendLink: {
-    color: "#FF4F81",
+    color: palette.textAccent,
     fontSize: 14,
     fontWeight: "600",
   },

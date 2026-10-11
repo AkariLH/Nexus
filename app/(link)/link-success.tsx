@@ -13,6 +13,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
+import { palette, gradients } from '../../constants/colors';
 
 const { width, height } = Dimensions.get('window');
 
@@ -33,7 +34,7 @@ export default function LinkSuccessScreen() {
 
   return (
     <LinearGradient
-      colors={['#FF4F81', '#8A2BE2']}
+      colors={gradients.primary}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.container}
@@ -122,7 +123,7 @@ function FloatingHeart({ delay }: { delay: number }) {
 
   return (
     <Animated.View style={[styles.floatingHeart, animatedStyle]}>
-      <MaterialCommunityIcons name="heart" size={size} color="rgba(255, 255, 255, 0.3)" />
+      <MaterialCommunityIcons name="heart" size={size} color={palette.onPrimaryFaint} />
     </Animated.View>
   );
 }
@@ -179,7 +180,7 @@ function SparkleAnimation({ delay, index }: { delay: number; index: number }) {
         animatedStyle,
       ]}
     >
-      <Ionicons name="sparkles" size={20 + Math.random() * 10} color="#fff" />
+      <Ionicons name="sparkles" size={20 + Math.random() * 10} color={palette.onPrimary} />
     </Animated.View>
   );
 }
@@ -219,7 +220,7 @@ function HeartAnimation() {
         <MaterialCommunityIcons
           name="heart"
           size={80}
-          color="#FF4F81"
+          color={palette.primary}
         />
       </View>
     </Animated.View>
@@ -325,11 +326,11 @@ const styles = StyleSheet.create({
   heartCircle: {
     width: 128,
     height: 128,
-    backgroundColor: '#fff',
+    backgroundColor: palette.surface,
     borderRadius: 64,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
+    shadowColor: palette.shadow,
     shadowOffset: {
       width: 0,
       height: 10,
@@ -346,13 +347,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#fff',
+    color: palette.onPrimary,
     marginBottom: 16,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 18,
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: palette.onPrimarySoft,
     textAlign: 'center',
     lineHeight: 24,
   },
@@ -363,7 +364,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: palette.onPrimarySoft,
     textDecorationLine: 'underline',
   },
   pulsingRing: {
@@ -377,7 +378,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     borderWidth: 4,
-    borderColor: '#fff',
+    borderColor: palette.surface,
     borderRadius: 150,
   },
 });

@@ -21,6 +21,7 @@ import { ErrorModal } from "../components/ErrorModal";
 import { SuccessModal } from "../components/SuccessModal";
 import { authService } from "../../services/auth.service";
 import { useAuth } from "../../context/AuthContext";
+import { palette } from "../../constants/colors";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -245,7 +246,7 @@ export default function LoginScreen() {
             {isLoading && (
               <ActivityIndicator
                 size="small"
-                color="#FF4F81"
+                color={palette.primary}
                 style={styles.loader}
               />
             )}
@@ -284,7 +285,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFF",
+    backgroundColor: palette.surface,
   },
   scrollContent: {
     flexGrow: 1,
@@ -296,11 +297,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: palette.text,
     marginBottom: 6,
   },
   subtitle: {
-    color: "#1A1A1A99",
+    color: palette.textSecondary,
     marginBottom: 32,
   },
   forgotWrapper: {
@@ -309,7 +310,7 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   forgotText: {
-    color: "#FF4F81",
+    color: palette.textAccent,
     fontWeight: "500",
   },
   buttonContainer: {
@@ -327,10 +328,10 @@ const styles = StyleSheet.create({
     marginTop: 28,
   },
   registerText: {
-    color: "#1A1A1A99",
+    color: palette.textSecondary,
   },
   registerLink: {
-    color: "#FF4F81",
+    color: palette.textAccent,
     fontWeight: "600",
   },
 });

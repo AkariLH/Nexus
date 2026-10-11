@@ -8,6 +8,7 @@ import { ConfirmModal } from '../components/ConfirmModal';
 import preferenceService from '../../services/preference.service';
 import type { PreferenceCategory, UserPreferenceRequest, UserPreference } from '../../types/preferences.api.types';
 import { useAuth } from '../../context/AuthContext';
+import { palette, gradients } from '../../constants/colors';
 
 const DIMENSIONS = [
   { id: 'physical', name: 'Bienestar Físico', icon: 'fitness', emoji: '💪', color: '#FF6B6B' },
@@ -161,7 +162,7 @@ export default function PreferencesScreen() {
       return (
         <SafeAreaView style={styles.container}>
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#FF4F81" />
+            <ActivityIndicator size="large" color={palette.primary} />
             <Text style={styles.loadingText}>Cargando preferencias...</Text>
           </View>
         </SafeAreaView>
@@ -172,7 +173,7 @@ export default function PreferencesScreen() {
       return (
         <SafeAreaView style={styles.container}>
           <View style={styles.errorContainer}>
-            <Ionicons name="alert-circle" size={48} color="#ff6b6b" />
+            <Ionicons name="alert-circle" size={48} color={palette.error} />
             <Text style={styles.errorText}>No se pudieron cargar las preferencias</Text>
             <TouchableOpacity 
               style={styles.retryButton}
@@ -224,7 +225,7 @@ export default function PreferencesScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#667eea" />
+          <ActivityIndicator size="large" color={palette.secondary} />
           <Text style={styles.loadingText}>Cargando...</Text>
         </View>
       </SafeAreaView>
@@ -238,7 +239,7 @@ export default function PreferencesScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <LinearGradient
-          colors={['#FF4F81', '#8A2BE2']}
+          colors={gradients.primary}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.header}
@@ -283,7 +284,7 @@ export default function PreferencesScreen() {
                     <Text style={styles.dimensionEmoji}>{dimension.emoji}</Text>
                     {isCompleted && (
                       <View style={styles.completedBadge}>
-                        <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
+                        <Ionicons name="checkmark-circle" size={24} color={palette.success} />
                       </View>
                     )}
                   </View>
@@ -295,7 +296,7 @@ export default function PreferencesScreen() {
           </View>
 
           <View style={styles.infoCard}>
-            <Ionicons name="information-circle" size={24} color="#8A2BE2" />
+            <Ionicons name="information-circle" size={24} color={palette.secondary} />
             <Text style={styles.infoText}>
               Este cuestionario nos ayudará a sugerirte actividades, eventos y contenido personalizado para tu relación.
             </Text>
@@ -304,7 +305,7 @@ export default function PreferencesScreen() {
           {/* Mensaje de completación */}
           {allCompleted && (
             <View style={styles.completionCard}>
-              <Ionicons name="checkmark-circle" size={48} color="#4CAF50" />
+              <Ionicons name="checkmark-circle" size={48} color={palette.success} />
               <Text style={styles.completionTitle}>¡Cuestionario Completado! 🎉</Text>
               <Text style={styles.completionText}>
                 Has completado todas las dimensiones. Ahora podemos personalizar tu experiencia
@@ -351,7 +352,7 @@ export default function PreferencesScreen() {
           style={styles.backButton}
           onPress={() => setSelectedDimension(null)}
         >
-          <Ionicons name="arrow-back" size={24} color="#333" />
+          <Ionicons name="arrow-back" size={24} color={palette.text} />
         </TouchableOpacity>
         <View style={styles.headerInfo}>
           <Text style={styles.dimensionEmoji}>{currentDimension?.emoji}</Text>
@@ -371,7 +372,7 @@ export default function PreferencesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: palette.surfaceMuted,
   },
   header: {
     padding: 20,
@@ -383,12 +384,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: 'white',
+    color: palette.onPrimary,
     marginBottom: 8,
   },
   headerSubtitle: {
     fontSize: 15,
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: palette.onPrimarySoft,
     lineHeight: 22,
   },
   progressContainer: {
@@ -396,19 +397,19 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: palette.onPrimaryFaint,
     borderRadius: 4,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: 'white',
+    backgroundColor: palette.surface,
     borderRadius: 4,
   },
   progressText: {
     marginTop: 8,
     fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: palette.onPrimarySoft,
     textAlign: 'center',
   },
   content: {
@@ -418,13 +419,13 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
+    color: palette.text,
     marginBottom: 8,
     textAlign: 'center',
   },
   sectionSubtitle: {
     fontSize: 15,
-    color: '#666',
+    color: palette.textSecondary,
     marginBottom: 24,
     lineHeight: 22,
   },
@@ -436,11 +437,11 @@ const styles = StyleSheet.create({
   },
   dimensionCard: {
     width: '47%',
-    backgroundColor: 'white',
+    backgroundColor: palette.surface,
     borderRadius: 20,
     padding: 20,
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: palette.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
@@ -448,7 +449,7 @@ const styles = StyleSheet.create({
   },
   dimensionCardCompleted: {
     borderWidth: 2,
-    borderColor: '#4CAF50',
+    borderColor: palette.success,
   },
   dimensionIconContainer: {
     position: 'relative',
@@ -461,13 +462,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -8,
     right: -8,
-    backgroundColor: 'white',
+    backgroundColor: palette.surface,
     borderRadius: 12,
   },
   dimensionName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: palette.text,
     textAlign: 'center',
     lineHeight: 20,
   },
@@ -479,15 +480,15 @@ const styles = StyleSheet.create({
   },
   infoCard: {
     flexDirection: 'row',
-    backgroundColor: '#8A2BE210',
+    backgroundColor: palette.secondarySoft,
     padding: 16,
     borderRadius: 16,
     borderLeftWidth: 4,
-    borderLeftColor: '#8A2BE2',
+    borderLeftColor: palette.secondary,
     marginTop: 24,
     marginBottom: 40,
     gap: 12,
-    shadowColor: '#8A2BE2',
+    shadowColor: palette.secondary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -496,16 +497,16 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
     fontSize: 14,
-    color: '#333',
+    color: palette.text,
     lineHeight: 20,
   },
   questionnaireHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: 'white',
+    backgroundColor: palette.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: palette.border,
   },
   backButton: {
     padding: 8,
@@ -520,7 +521,7 @@ const styles = StyleSheet.create({
   dimensionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: palette.text,
   },
   questionnaireContent: {
     flex: 1,
@@ -528,7 +529,7 @@ const styles = StyleSheet.create({
   },
   comingSoon: {
     fontSize: 16,
-    color: '#666',
+    color: palette.textSecondary,
     textAlign: 'center',
     marginTop: 40,
   },
@@ -537,12 +538,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 40,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: palette.surfaceMuted,
   },
   loadingText: {
     marginTop: 16,
     fontSize: 14,
-    color: '#666',
+    color: palette.textSecondary,
   },
   errorContainer: {
     flex: 1,
@@ -553,54 +554,54 @@ const styles = StyleSheet.create({
   errorText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#666',
+    color: palette.textSecondary,
     textAlign: 'center',
   },
   retryButton: {
     marginTop: 24,
     paddingHorizontal: 32,
     paddingVertical: 12,
-    backgroundColor: '#FF4F81',
+    backgroundColor: palette.primary,
     borderRadius: 24,
-    shadowColor: '#FF4F81',
+    shadowColor: palette.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 5,
   },
   retryButtonText: {
-    color: 'white',
+    color: palette.onPrimary,
     fontSize: 16,
     fontWeight: '600',
   },
   completionCard: {
-    backgroundColor: '#E8F5E9',
+    backgroundColor: palette.successSoft,
     padding: 24,
     borderRadius: 16,
     alignItems: 'center',
     marginTop: 24,
     marginBottom: 40,
     borderWidth: 2,
-    borderColor: '#4CAF50',
+    borderColor: palette.success,
   },
   completionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#2E7D32',
+    color: palette.success,
     marginTop: 16,
     marginBottom: 8,
     textAlign: 'center',
   },
   completionText: {
     fontSize: 15,
-    color: '#555',
+    color: palette.textSecondary,
     lineHeight: 22,
     textAlign: 'center',
     marginBottom: 12,
   },
   completionSubtext: {
     fontSize: 13,
-    color: '#777',
+    color: palette.textSecondary,
     lineHeight: 18,
     textAlign: 'center',
     fontStyle: 'italic',

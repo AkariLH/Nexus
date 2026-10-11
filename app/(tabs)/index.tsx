@@ -8,6 +8,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
 import eventService, { EventResponse } from "../../services/event.service";
 import linkService from "../../services/link.service";
+import { palette, gradients } from "../../constants/colors";
 
 interface LinkStatus {
   hasActiveLink: boolean;
@@ -116,7 +117,7 @@ export default function HomeScreen() {
             style={styles.notificationButton}
             onPress={() => router.push('/(events)/notifications')}
           >
-            <Ionicons name="notifications-outline" size={26} color="#333" />
+            <Ionicons name="notifications-outline" size={26} color={palette.text} />
             {pendingCount > 0 && (
               <View style={styles.notificationBadge}>
                 <Text style={styles.notificationBadgeText}>
@@ -130,7 +131,7 @@ export default function HomeScreen() {
 
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#FF4F81" />
+          <ActivityIndicator size="large" color={palette.primary} />
         </View>
       ) : (
         <>
@@ -150,17 +151,17 @@ export default function HomeScreen() {
                 disabled={!isLinked}
               >
                 <LinearGradient
-                  colors={isLinked ? ["#8B5CF6", "#EC4899"] : ["#CCC", "#999"]}
+                  colors={isLinked ? gradients.primaryReversed : gradients.locked}
                   style={styles.quickActionGradient}
                 >
-                  <Ionicons name="list" size={32} color="#FFF" />
+                  <Ionicons name="list" size={32} color={palette.onPrimary} />
                 </LinearGradient>
                 <Text style={[styles.quickActionLabel, !isLinked && styles.quickActionLabelDisabled]}>
                   Mis Eventos
                 </Text>
                 {!isLinked && (
                   <View style={styles.lockedBadge}>
-                    <Ionicons name="lock-closed" size={12} color="#999" />
+                    <Ionicons name="lock-closed" size={12} color={palette.icon} />
                   </View>
                 )}
               </TouchableOpacity>
@@ -173,17 +174,17 @@ export default function HomeScreen() {
                 disabled={!isLinked}
               >
                 <LinearGradient
-                  colors={isLinked ? ["#FF4F81", "#8A2BE2"] : ["#CCC", "#999"]}
+                  colors={isLinked ? gradients.primary : gradients.locked}
                   style={styles.quickActionGradient}
                 >
-                  <Ionicons name="add-circle" size={32} color="#FFF" />
+                  <Ionicons name="add-circle" size={32} color={palette.onPrimary} />
                 </LinearGradient>
                 <Text style={[styles.quickActionLabel, !isLinked && styles.quickActionLabelDisabled]}>
                   Crear Evento
                 </Text>
                 {!isLinked && (
                   <View style={styles.lockedBadge}>
-                    <Ionicons name="lock-closed" size={12} color="#999" />
+                    <Ionicons name="lock-closed" size={12} color={palette.icon} />
                   </View>
                 )}
               </TouchableOpacity>
@@ -194,8 +195,8 @@ export default function HomeScreen() {
                 onPress={() => router.push('/(mood)/mood-log')}
                 activeOpacity={0.8}
               >
-                <LinearGradient colors={["#F59E0B", "#EF4444"]} style={styles.quickActionGradient}>
-                  <Ionicons name="happy" size={32} color="#FFF" />
+                <LinearGradient colors={gradients.primaryReversed} style={styles.quickActionGradient}>
+                  <Ionicons name="happy" size={32} color={palette.onPrimary} />
                 </LinearGradient>
                 <Text style={styles.quickActionLabel}>¿Cómo estuvo tu día?</Text>
               </TouchableOpacity>
@@ -208,17 +209,17 @@ export default function HomeScreen() {
                 disabled={!isLinked}
               >
                 <LinearGradient
-                  colors={isLinked ? ["#10B981", "#3B82F6"] : ["#CCC", "#999"]}
+                  colors={isLinked ? gradients.primary : gradients.locked}
                   style={styles.quickActionGradient}
                 >
-                  <Ionicons name="bulb" size={32} color="#FFF" />
+                  <Ionicons name="bulb" size={32} color={palette.onPrimary} />
                 </LinearGradient>
                 <Text style={[styles.quickActionLabel, !isLinked && styles.quickActionLabelDisabled]}>
                   Banco de ideas
                 </Text>
                 {!isLinked && (
                   <View style={styles.lockedBadge}>
-                    <Ionicons name="lock-closed" size={12} color="#999" />
+                    <Ionicons name="lock-closed" size={12} color={palette.icon} />
                   </View>
                 )}
               </TouchableOpacity>
@@ -234,7 +235,7 @@ export default function HomeScreen() {
               style={styles.infoCard}
             >
               <View style={styles.infoIconContainer}>
-                <Ionicons name="information-circle" size={24} color="#8A2BE2" />
+                <Ionicons name="information-circle" size={24} color={palette.secondary} />
               </View>
               <View style={styles.infoTextContainer}>
                 <Text style={styles.infoTitle}>Funciones limitadas</Text>
@@ -271,7 +272,7 @@ export default function HomeScreen() {
                       onPress={() => router.push('/(tabs)/calendario')}
                       activeOpacity={0.7}
                     >
-                      <View style={[styles.eventDateBadge, { backgroundColor: event.color || '#8B5CF6' }]}>
+                      <View style={[styles.eventDateBadge, { backgroundColor: event.color || palette.secondary }]}>
                         <Text style={styles.eventDayName}>{dayName.toUpperCase()}</Text>
                         <Text style={styles.eventDayNumber}>{dayNumber}</Text>
                         <Text style={styles.eventMonth}>{month.toUpperCase()}</Text>
@@ -279,17 +280,17 @@ export default function HomeScreen() {
                       <View style={styles.eventDetailsContainer}>
                         <Text style={styles.eventTitle} numberOfLines={1}>{event.title}</Text>
                         <View style={styles.eventTimeRow}>
-                          <Ionicons name="time-outline" size={14} color="#666" />
+                          <Ionicons name="time-outline" size={14} color={palette.textSecondary} />
                           <Text style={styles.eventTime}>{startTime} - {endTime}</Text>
                         </View>
                         {event.location && (
                           <View style={styles.eventLocationRow}>
-                            <Ionicons name="location-outline" size={14} color="#666" />
+                            <Ionicons name="location-outline" size={14} color={palette.textSecondary} />
                             <Text style={styles.eventLocation} numberOfLines={1}>{event.location}</Text>
                           </View>
                         )}
                       </View>
-                      <Ionicons name="chevron-forward" size={20} color="#999" />
+                      <Ionicons name="chevron-forward" size={20} color={palette.icon} />
                     </TouchableOpacity>
                   );
                 })}
@@ -305,7 +306,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: palette.surfaceMuted,
   },
   content: {
     padding: 20,
@@ -323,23 +324,23 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#333",
+    color: palette.text,
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 16,
-    color: "#666",
+    color: palette.textSecondary,
   },
   notificationButton: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#FFF',
+    backgroundColor: palette.surface,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
     elevation: 3,
-    shadowColor: '#000',
+    shadowColor: palette.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -348,7 +349,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     right: 0,
-    backgroundColor: '#FF4F81',
+    backgroundColor: palette.primary,
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -356,10 +357,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 4,
     borderWidth: 2,
-    borderColor: '#F5F5F5',
+    borderColor: palette.divider,
   },
   notificationBadgeText: {
-    color: '#FFF',
+    color: palette.onPrimary,
     fontSize: 11,
     fontWeight: '700',
   },
@@ -372,7 +373,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#333",
+    color: palette.text,
     marginBottom: 16,
   },
 
@@ -385,12 +386,12 @@ const styles = StyleSheet.create({
   },
   quickActionCard: {
     width: '47%',
-    backgroundColor: '#FFF',
+    backgroundColor: palette.surface,
     borderRadius: 20,
     padding: 20,
     alignItems: 'center',
     elevation: 3,
-    shadowColor: '#000',
+    shadowColor: palette.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -409,16 +410,16 @@ const styles = StyleSheet.create({
   quickActionLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: palette.text,
     textAlign: 'center',
   },
   quickActionLabelDisabled: {
-    color: '#999',
+    color: palette.textMuted,
   },
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#4CAF5010',
+    backgroundColor: palette.successSoft,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
@@ -429,15 +430,15 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#4CAF50',
+    backgroundColor: palette.success,
   },
   statusText: {
     fontSize: 10,
-    color: '#4CAF50',
+    color: palette.success,
     fontWeight: '600',
   },
   lockedBadge: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: palette.surfaceMuted,
     padding: 6,
     borderRadius: 12,
     marginTop: 8,
@@ -446,13 +447,13 @@ const styles = StyleSheet.create({
   // Card informativa
   infoCard: {
     flexDirection: "row",
-    backgroundColor: "#8A2BE210",
+    backgroundColor: palette.secondarySoft,
     padding: 16,
     borderRadius: 16,
     borderLeftWidth: 4,
-    borderLeftColor: "#8A2BE2",
+    borderLeftColor: palette.secondary,
     elevation: 2,
-    shadowColor: "#8A2BE2",
+    shadowColor: palette.secondary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -466,12 +467,12 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#333",
+    color: palette.text,
     marginBottom: 4,
   },
   infoDescription: {
     fontSize: 12,
-    color: "#666",
+    color: palette.textSecondary,
     lineHeight: 18,
   },
 
@@ -482,11 +483,11 @@ const styles = StyleSheet.create({
   upcomingEventCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF',
+    backgroundColor: palette.surface,
     borderRadius: 16,
     padding: 14,
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: palette.shadow,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -502,19 +503,19 @@ const styles = StyleSheet.create({
   eventDayName: {
     fontSize: 10,
     fontWeight: '600',
-    color: '#FFF',
+    color: palette.onPrimary,
     opacity: 0.9,
   },
   eventDayNumber: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#FFF',
+    color: palette.onPrimary,
     marginVertical: 2,
   },
   eventMonth: {
     fontSize: 10,
     fontWeight: '600',
-    color: '#FFF',
+    color: palette.onPrimary,
     opacity: 0.9,
   },
   eventDetailsContainer: {
@@ -524,7 +525,7 @@ const styles = StyleSheet.create({
   eventTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#333',
+    color: palette.text,
     marginBottom: 4,
   },
   eventTimeRow: {
@@ -535,7 +536,7 @@ const styles = StyleSheet.create({
   },
   eventTime: {
     fontSize: 13,
-    color: '#666',
+    color: palette.textSecondary,
   },
   eventLocationRow: {
     flexDirection: 'row',
@@ -544,7 +545,7 @@ const styles = StyleSheet.create({
   },
   eventLocation: {
     fontSize: 13,
-    color: '#666',
+    color: palette.textSecondary,
     flex: 1,
   },
 });

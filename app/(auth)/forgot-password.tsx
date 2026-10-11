@@ -18,6 +18,7 @@ import { GradientButton } from "../components/ui/GradientButton";
 import { ErrorModal } from "../components/ErrorModal";
 import { SuccessModal } from "../components/SuccessModal";
 import { authService } from "../../services/auth.service";
+import { palette } from "../../constants/colors";
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
@@ -125,7 +126,7 @@ export default function ForgotPasswordScreen() {
         >
           {/* Ícono */}
           <View style={styles.iconWrapper}>
-            <Ionicons name="lock-closed-outline" size={48} color="#FF4F81" />
+            <Ionicons name="lock-closed-outline" size={48} color={palette.primary} />
           </View>
 
           <Text style={styles.title}>¿Olvidaste tu contraseña?</Text>
@@ -158,7 +159,7 @@ export default function ForgotPasswordScreen() {
               {isLoading && (
                 <ActivityIndicator
                   size="small"
-                  color="#FF4F81"
+                  color={palette.primary}
                   style={styles.loader}
                 />
               )}
@@ -194,7 +195,7 @@ export default function ForgotPasswordScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFF",
+    backgroundColor: palette.surface,
   },
   scrollContent: {
     flexGrow: 1,
@@ -209,7 +210,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: "rgba(255, 79, 129, 0.1)",
+    backgroundColor: palette.primarySoft,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 24,
@@ -217,13 +218,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: palette.text,
     marginBottom: 8,
     textAlign: "center",
   },
   subtitle: {
     fontSize: 14,
-    color: "#1A1A1A99",
+    color: palette.textSecondary,
     textAlign: "center",
     marginBottom: 32,
     lineHeight: 20,
@@ -245,7 +246,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   backLoginText: {
-    color: "#FF4F81",
+    color: palette.textAccent,
     fontWeight: "600",
     fontSize: 14,
   },

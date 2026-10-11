@@ -11,6 +11,7 @@ import { ErrorModal } from "../components/ErrorModal";
 import { SuccessModal } from "../components/SuccessModal";
 import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
 import { API_CONFIG, rebaseApiUrl } from "../../config/api.config";
+import { palette, gradients } from "../../constants/colors";
 
 interface LinkStatusData {
   hasActiveLink: boolean;
@@ -131,7 +132,7 @@ export default function LinkScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#FF4F81" />
+          <ActivityIndicator size="large" color={palette.primary} />
         </View>
       </View>
     );
@@ -144,7 +145,7 @@ export default function LinkScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.emptyContainerWrapper}>
           <View style={styles.emptyContainer}>
-          <Ionicons name="heart-dislike-outline" size={80} color="#FF4F81" style={styles.emptyIcon} />
+          <Ionicons name="heart-dislike-outline" size={80} color={palette.primary} style={styles.emptyIcon} />
           <Text style={styles.emptyTitle}>Aún no estás vinculado</Text>
           <Text style={styles.emptyText}>
             Para conectar con tu pareja, pueden usar cualquiera de estas opciones:
@@ -156,12 +157,12 @@ export default function LinkScreen() {
             activeOpacity={0.8}
           >
             <LinearGradient
-              colors={["#FF4F81", "#8A2BE2"]}
+              colors={gradients.primary}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.gradientButton}
             >
-              <Ionicons name="qr-code-outline" size={20} color="#FFF" />
+              <Ionicons name="qr-code-outline" size={20} color={palette.onPrimary} />
               <Text style={styles.buttonText}>Generar mi código</Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -172,7 +173,7 @@ export default function LinkScreen() {
             activeOpacity={0.8}
           >
             <View style={styles.outlineButton}>
-              <Ionicons name="keypad-outline" size={20} color="#FF4F81" />
+              <Ionicons name="keypad-outline" size={20} color={palette.primary} />
               <Text style={styles.outlineButtonText}>Ingresar código</Text>
             </View>
           </TouchableOpacity>
@@ -222,7 +223,7 @@ export default function LinkScreen() {
             }}
           >
             <LinearGradient
-              colors={["#FF4F81", "#8A2BE2"]}
+              colors={gradients.primary}
               style={styles.avatar}
             >
               {userPhoto && !userPhotoError ? (
@@ -246,7 +247,7 @@ export default function LinkScreen() {
               loop: true,
             }}
           >
-            <Ionicons name="heart" size={48} color="#FF4F81" />
+            <Ionicons name="heart" size={48} color={palette.primary} />
           </MotiView>
 
           <MotiView
@@ -260,7 +261,7 @@ export default function LinkScreen() {
             }}
           >
             <LinearGradient
-              colors={["#8A2BE2", "#FF4F81"]}
+              colors={gradients.primaryReversed}
               style={styles.avatar}
             >
               {partnerPhoto && !partnerPhotoError ? (
@@ -284,12 +285,12 @@ export default function LinkScreen() {
         transition={{ type: "timing", delay: 300 }}
       >
         <LinearGradient
-          colors={["#FF4F8110", "#8A2BE210"]}
+          colors={gradients.soft}
           style={styles.infoCard}
         >
           <Text style={styles.connectedTitle}>Conectado con {partnerName}</Text>
           <View style={styles.dateContainer}>
-            <Ionicons name="calendar-outline" size={16} color="#666" />
+            <Ionicons name="calendar-outline" size={16} color={palette.textSecondary} />
             <Text style={styles.dateText}>Desde {formatLinkDate()}</Text>
           </View>
         </LinearGradient>
@@ -334,9 +335,9 @@ export default function LinkScreen() {
               </Text>
             </View>
             {isUnlinking ? (
-              <ActivityIndicator size="small" color="#FF4757" />
+              <ActivityIndicator size="small" color={palette.error} />
             ) : (
-              <Ionicons name="chevron-forward" size={20} color="#FF4757" />
+              <Ionicons name="chevron-forward" size={20} color={palette.error} />
             )}
           </View>
         </TouchableOpacity>
@@ -378,7 +379,7 @@ export default function LinkScreen() {
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: "#FFF",
+    backgroundColor: palette.surface,
   },
   scrollContainer: {
     flex: 1,
@@ -390,7 +391,7 @@ const styles = StyleSheet.create({
   title: { 
     fontSize: 30, 
     fontWeight: "700", 
-    color: "#1A1A1A", 
+    color: palette.text, 
     marginBottom: 24,
   },
   emptyContainerWrapper: {
@@ -404,9 +405,9 @@ const styles = StyleSheet.create({
   linkCard: { 
     borderRadius: 24, 
     padding: 24,
-    backgroundColor: '#FFF',
+    backgroundColor: palette.surface,
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: palette.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -424,7 +425,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: 16,
     elevation: 4,
-    shadowColor: '#FF4F81',
+    shadowColor: palette.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
@@ -433,17 +434,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   subText: { 
-    color: "#666", 
+    color: palette.textSecondary, 
     fontSize: 14,
     marginBottom: 4,
   },
   partner: { 
-    color: "#1A1A1A", 
+    color: palette.text, 
     fontSize: 20, 
     fontWeight: "700" 
   },
   details: { 
-    color: "#FF4F81", 
+    color: palette.textAccent, 
     fontWeight: "600",
     fontSize: 14,
   },
@@ -460,12 +461,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#1A1A1A',
+    color: palette.text,
     marginBottom: 12,
   },
   emptyText: {
     fontSize: 14,
-    color: '#666',
+    color: palette.textSecondary,
     textAlign: 'center',
     marginBottom: 32,
     paddingHorizontal: 20,
@@ -486,7 +487,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   buttonText: {
-    color: '#FFF',
+    color: palette.onPrimary,
     fontSize: 16,
     fontWeight: '700',
   },
@@ -498,12 +499,12 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderWidth: 2,
-    borderColor: '#FF4F81',
+    borderColor: palette.primary,
     borderRadius: 16,
-    backgroundColor: '#FFF',
+    backgroundColor: palette.surface,
   },
   outlineButtonText: {
-    color: '#FF4F81',
+    color: palette.textAccent,
     fontSize: 16,
     fontWeight: '700',
   },
@@ -523,7 +524,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     elevation: 8,
-    shadowColor: "#FF4F81",
+    shadowColor: palette.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
@@ -531,7 +532,7 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 32,
     fontWeight: "600",
-    color: "#FFF",
+    color: palette.onPrimary,
   },
   avatarImage: {
     width: 96,
@@ -547,7 +548,7 @@ const styles = StyleSheet.create({
   connectedTitle: {
     fontSize: 24,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: palette.text,
     marginBottom: 12,
     textAlign: "center",
   },
@@ -558,7 +559,7 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 14,
-    color: "#666",
+    color: palette.textSecondary,
   },
   statsContainer: {
     flexDirection: "row",
@@ -567,9 +568,9 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: "#FFF",
+    backgroundColor: palette.surface,
     borderWidth: 2,
-    borderColor: "#F5F5F5",
+    borderColor: palette.divider,
     borderRadius: 20,
     padding: 20,
     alignItems: "center",
@@ -577,24 +578,24 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 32,
     fontWeight: "700",
-    color: "#FF4F81",
+    color: palette.textAccent,
     marginBottom: 4,
   },
   statNumberSecondary: {
-    color: "#8A2BE2",
+    color: palette.textAccent,
   },
   statLabel: {
     fontSize: 12,
-    color: "#666",
+    color: palette.textSecondary,
     textAlign: "center",
   },
   actionsContainer: {
     gap: 12,
   },
   unlinkButton: {
-    backgroundColor: "#FFF",
+    backgroundColor: palette.surface,
     borderWidth: 2,
-    borderColor: "#FFE5E5",
+    borderColor: palette.errorBorder,
     borderRadius: 20,
     padding: 16,
   },
@@ -606,11 +607,11 @@ const styles = StyleSheet.create({
   unlinkTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#FF4757",
+    color: palette.error,
     marginBottom: 4,
   },
   unlinkSubtitle: {
     fontSize: 13,
-    color: "#666",
+    color: palette.textSecondary,
   },
 });

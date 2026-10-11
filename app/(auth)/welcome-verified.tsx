@@ -10,6 +10,7 @@ import {
   Dimensions,
   TouchableOpacity,
 } from "react-native";
+import { palette, gradients } from "../../constants/colors";
 
 const { width, height } = Dimensions.get("window");
 
@@ -193,7 +194,7 @@ export default function WelcomeVerifiedScreen() {
 
   return (
     <LinearGradient
-      colors={["#FF4F81", "#8A2BE2"]}
+      colors={gradients.primary}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.container}
@@ -218,7 +219,7 @@ export default function WelcomeVerifiedScreen() {
           <Ionicons
             name="heart"
             size={20 + Math.random() * 20}
-            color="rgba(255, 255, 255, 0.3)"
+            color={palette.onPrimaryFaint}
           />
         </Animated.View>
       ))}
@@ -248,7 +249,7 @@ export default function WelcomeVerifiedScreen() {
               },
             ]}
           >
-            <Ionicons name="sparkles" size={24} color="#FFF" />
+            <Ionicons name="sparkles" size={24} color={palette.onPrimary} />
           </Animated.View>
         );
       })}
@@ -281,7 +282,7 @@ export default function WelcomeVerifiedScreen() {
           ]}
         >
           <View style={styles.checkCircle}>
-            <Ionicons name="checkmark-circle" size={80} color="#FF4F81" />
+            <Ionicons name="checkmark-circle" size={80} color={palette.primary} />
           </View>
         </Animated.View>
 
@@ -339,7 +340,7 @@ const styles = StyleSheet.create({
     height: 300,
     borderRadius: 150,
     borderWidth: 4,
-    borderColor: "#FFF",
+    borderColor: palette.surface,
     top: height / 2 - 150,
     left: width / 2 - 150,
   },
@@ -352,10 +353,10 @@ const styles = StyleSheet.create({
     width: 128,
     height: 128,
     borderRadius: 64,
-    backgroundColor: "#FFF",
+    backgroundColor: palette.surface,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#000",
+    shadowColor: palette.shadow,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 16,
@@ -370,19 +371,19 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: "700",
-    color: "#FFF",
+    color: palette.onPrimary,
     marginBottom: 16,
     textAlign: "center",
   },
   welcomeText: {
     fontSize: 18,
-    color: "rgba(255, 255, 255, 0.9)",
+    color: palette.onPrimarySoft,
     textAlign: "center",
     fontWeight: "500",
   },
   subtitle: {
     fontSize: 16,
-    color: "rgba(255, 255, 255, 0.8)",
+    color: palette.onPrimarySoft,
     textAlign: "center",
     marginTop: 12,
   },
@@ -392,7 +393,7 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   buttonText: {
-    color: "rgba(255, 255, 255, 0.9)",
+    color: palette.onPrimarySoft,
     fontSize: 16,
     fontWeight: "600",
     textDecorationLine: "underline",

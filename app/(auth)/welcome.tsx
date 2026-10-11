@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { palette, gradients } from "../../constants/colors";
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -114,13 +115,13 @@ export default function WelcomeScreen() {
           <Animated.View
             style={[styles.iconTopRight, { transform: [{ scale: iconScale1 }] }]}
           >
-            <Ionicons name="calendar-outline" size={48} color="#8A2BE2" />
+            <Ionicons name="calendar-outline" size={48} color={palette.secondary} />
           </Animated.View>
 
           <Animated.View
             style={[styles.iconBottomLeft, { transform: [{ scale: iconScale2 }] }]}
           >
-            <Ionicons name="link" size={48} color="#FF4F81" />
+            <Ionicons name="link" size={48} color={palette.primary} />
           </Animated.View>
         </View>
 
@@ -150,7 +151,7 @@ export default function WelcomeScreen() {
           onPress={() => router.push("/(auth)/login")}
         >
           <LinearGradient
-            colors={["#FF4F81", "#8A2BE2"]}
+            colors={gradients.primary}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.gradient}
@@ -174,7 +175,7 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: palette.surface,
     alignItems: "center",
     justifyContent: "space-between",
     padding: 32,
@@ -185,7 +186,7 @@ const styles = StyleSheet.create({
     width: 256,
     height: 256,
     borderRadius: 128,
-    backgroundColor: "rgba(255,79,129,0.1)",
+    backgroundColor: palette.primarySoft,
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
@@ -198,11 +199,11 @@ const styles = StyleSheet.create({
   iconTopRight: { position: "absolute", top: 50, right: 25 },
   iconBottomLeft: { position: "absolute", bottom: 50, left: 60 },
   textContainer: { marginTop: 32, alignItems: "center" },
-  title: { fontSize: 28, fontWeight: "700", color: "#1A1A1A", marginBottom: 8 },
+  title: { fontSize: 28, fontWeight: "700", color: palette.text, marginBottom: 8 },
   subtitle: {
     textAlign: "center",
     fontSize: 14,
-    color: "#4A4A4A",
+    color: palette.textSecondary,
     lineHeight: 20,
     paddingHorizontal: 16,
   },
@@ -211,7 +212,7 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 24,
     overflow: "hidden",
-    shadowColor: "#000",
+    shadowColor: palette.shadow,
     shadowOpacity: 0.15,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 4 },
@@ -223,7 +224,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   primaryText: {
-    color: "#FFFFFF",
+    color: palette.onPrimary,
     fontWeight: "700",
     fontSize: 16,
   },
@@ -231,12 +232,12 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 24,
     borderWidth: 2,
-    borderColor: "#FF4F81",
+    borderColor: palette.primary,
     justifyContent: "center",
     alignItems: "center",
   },
   secondaryText: {
-    color: "#FF4F81",
+    color: palette.textAccent,
     fontWeight: "700",
     fontSize: 16,
   },

@@ -15,6 +15,7 @@ import { Header } from "../components/layout/Header";
 import { GradientButton } from "../components/ui/GradientButton";
 import { ErrorModal } from "../components/ErrorModal";
 import { authService } from "../../services/auth.service";
+import { palette } from "../../constants/colors";
 
 export default function VerifyEmailScreen() {
   const router = useRouter();
@@ -198,7 +199,7 @@ export default function VerifyEmailScreen() {
       >
         {/* Ícono */}
         <View style={styles.iconWrapper}>
-          <Ionicons name="mail-outline" size={48} color="#FF4F81" />
+          <Ionicons name="mail-outline" size={48} color={palette.primary} />
         </View>
 
         <Text style={styles.title}>Verifica tu correo</Text>
@@ -240,7 +241,7 @@ export default function VerifyEmailScreen() {
           {isLoading && (
             <ActivityIndicator
               size="small"
-              color="#FF4F81"
+              color={palette.primary}
               style={styles.loader}
             />
           )}
@@ -280,7 +281,7 @@ export default function VerifyEmailScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#FFF" },
+  container: { flex: 1, backgroundColor: palette.surface },
   header: { paddingHorizontal: 20, paddingTop: 50, paddingBottom: 10 },
   backButton: { padding: 6, borderRadius: 20 },
   content: {
@@ -293,7 +294,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: "rgba(255,79,129,0.1)",
+    backgroundColor: palette.primarySoft,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 24,
@@ -301,19 +302,19 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: palette.text,
     marginBottom: 8,
     textAlign: "center",
   },
   subtitle: {
-    color: "#1A1A1A99",
+    color: palette.textSecondary,
     textAlign: "center",
     marginBottom: 32,
     paddingHorizontal: 12,
     lineHeight: 20,
   },
   emailHighlight: {
-    color: "#FF4F81",
+    color: palette.textAccent,
     fontWeight: "600",
   },
   codeContainer: {
@@ -326,16 +327,16 @@ const styles = StyleSheet.create({
     width: 50,
     height: 60,
     borderRadius: 16,
-    backgroundColor: "#F7F7F7",
+    backgroundColor: palette.surfaceMuted,
     textAlign: "center",
     fontSize: 24,
-    color: "#1A1A1A",
+    color: palette.text,
     borderWidth: 2,
     borderColor: "transparent",
   },
   codeInputFilled: {
-    borderColor: "#FF4F81",
-    backgroundColor: "#FFF",
+    borderColor: palette.primary,
+    backgroundColor: palette.surface,
   },
   buttonContainer: {
     width: "100%",
@@ -352,10 +353,10 @@ const styles = StyleSheet.create({
     marginTop: 28,
   },
   resendText: {
-    color: "#1A1A1A99",
+    color: palette.textSecondary,
   },
   resendLink: {
-    color: "#FF4F81",
+    color: palette.textAccent,
     fontWeight: "600",
   },
   resendLinkDisabled: {

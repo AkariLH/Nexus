@@ -4,6 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
 import { Animated, Easing, StyleSheet, View } from "react-native";
+import { palette, gradients } from "../../constants/colors";
 
 export default function SplashScreen() {
   const router = useRouter();
@@ -109,7 +110,7 @@ export default function SplashScreen() {
 
   return (
     <LinearGradient
-      colors={["#FF4F81", "#8A2BE2"]}
+      colors={gradients.primary}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.container}
@@ -139,7 +140,7 @@ export default function SplashScreen() {
           },
         ]}
       >
-        <Ionicons name="heart" size={32} color="white" />
+        <Ionicons name="heart" size={32} color={palette.onPrimary} />
       </Animated.View>
       <Animated.View
         style={[
@@ -165,7 +166,7 @@ export default function SplashScreen() {
           },
         ]}
       >
-        <Ionicons name="heart" size={26} color="white" />
+        <Ionicons name="heart" size={26} color={palette.onPrimary} />
       </Animated.View>
       <Animated.View
         style={[
@@ -191,7 +192,7 @@ export default function SplashScreen() {
           },
         ]}
       >
-        <Ionicons name="heart" size={36} color="white" />
+        <Ionicons name="heart" size={36} color={palette.onPrimary} />
       </Animated.View>
 
       {/* Logo central */}
@@ -294,11 +295,11 @@ const styles = StyleSheet.create({
   logoBox: {
     width: 110,
     height: 110,
-    backgroundColor: "white",
+    backgroundColor: palette.surface,
     borderRadius: 28,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#000",
+    shadowColor: palette.shadow,
     shadowOpacity: 0.3,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 6 },
@@ -312,7 +313,7 @@ const styles = StyleSheet.create({
     marginTop: 24,
     fontSize: 44,
     fontWeight: "700",
-    color: "white",
+    color: palette.onPrimary,
     letterSpacing: 2,
   },
   loader: {
@@ -324,7 +325,7 @@ const styles = StyleSheet.create({
   dot: {
     width: 10,
     height: 10,
-    backgroundColor: "white",
+    backgroundColor: palette.surface,
     borderRadius: 5,
   },
 });
