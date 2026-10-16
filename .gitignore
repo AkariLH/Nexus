@@ -40,6 +40,10 @@ yarn-error.*
 .env*.local
 !.env.example
 
+# Configuracion de Firebase de cada desarrollador (llaves del proyecto): no se versiona
+google-services.json
+GoogleService-Info.plist
+
 # typescript
 *.tsbuildinfo
 
