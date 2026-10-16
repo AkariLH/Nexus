@@ -22,20 +22,21 @@ import { palette } from '../../constants/colors';
 import { ScreenHeader } from '../components/layout/ScreenHeader';
 
 /**
- * RF-34 - Banco de ideas de citas, por categoria. RF-35 - "Proponer a mi pareja" prellena
+ * RF-34 - Banco de ideas de citas, por dimension del bienestar. RF-35 - "Proponer a mi pareja" prellena
  * Crear evento; la aprobacion es la de siempre (RF-30). RN-29: sin vinculo el backend responde 403.
  */
 
 type LoadState = 'loading' | 'ready' | 'error' | 'no-link';
 
+/** Las 7 dimensiones del bienestar del cuestionario (IdeaCategory en el backend). */
 const CATEGORY_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
-  COMER_Y_BEBER: 'restaurant',
-  CULTURA: 'film',
-  AIRE_LIBRE: 'leaf',
-  DEPORTE: 'bicycle',
-  APRENDER: 'school',
-  JUEGOS_Y_RELAX: 'game-controller',
-  OTRAS: 'sparkles',
+  FISICO: 'barbell',
+  EMOCIONAL: 'heart',
+  SOCIAL: 'people',
+  INTELECTUAL: 'book',
+  PROFESIONAL: 'briefcase',
+  AMBIENTAL: 'leaf',
+  ESPIRITUAL: 'flower',
 };
 
 const iconFor = (category: string) => CATEGORY_ICONS[category] ?? 'sparkles';
