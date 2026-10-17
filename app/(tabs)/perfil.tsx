@@ -48,9 +48,8 @@ export default function PerfilScreen() {
       setDisplayName(user.displayName);
       setNickname(user.nickname || "");
       setEmail(user.email);
-      // Intentar cargar avatar si existe, si falla o es null, quedará null
-      const avatarUrl = profileService.getAvatarUrl(user.userId);
-      setAvatarUri(avatarUrl);
+      // La foto exige sesion: se pide por apiClient (sin foto queda null)
+      profileService.fetchAvatar(user.userId).then(setAvatarUri);
     }
   }, [user]);
   
@@ -194,8 +193,8 @@ export default function PerfilScreen() {
         });
       } else {
         console.log('✅ Avatar actualizado');
-        // Actualizar la URI local con timestamp para forzar recarga
-        setAvatarUri(`${profileService.getAvatarUrl(user.userId)}?t=${Date.now()}`);
+        // Mostrar la foto recien guardada tal como la devuelve el servidor
+        setAvatarUri(await profileService.fetchAvatar(user.userId));
         setSuccessModal({
           visible: true,
           message: "Foto de perfil actualizada correctamente",

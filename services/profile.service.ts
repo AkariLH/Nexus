@@ -1,5 +1,6 @@
 import apiClient from './api.client';
 import { API_CONFIG } from '../config/api.config';
+import { bytesToDataUri } from '../utils/dataUri';
 import type { 
   UpdateProfileRequest, 
   UpdateProfileResponse,
@@ -92,6 +93,24 @@ export const profileService = {
    */
   getAvatarUrl: (userId: number): string => {
     return `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PROFILE.GET_AVATAR.replace(':userId', userId.toString())}`;
+  },
+
+  /**
+   * Foto de perfil (propia o de la pareja vinculada) como data URI, o null si no tiene.
+   * Va por apiClient porque la ruta exige sesion: un <Image uri> no manda el Authorization y el
+   * servidor responde 401 (nexus-SEC-04).
+   */
+  fetchAvatar: async (userId: number): Promise<string | null> => {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.PROFILE.GET_AVATAR.replace(':userId', userId.toString());
+      const response = await apiClient.get(endpoint, { responseType: 'arraybuffer' });
+      const data = response.data as ArrayBuffer;
+      if (!data || data.byteLength === 0) return null;
+      const mime = String(response.headers?.['content-type'] ?? 'image/jpeg').split(';')[0];
+      return bytesToDataUri(data, mime);
+    } catch {
+      return null;
+    }
   },
 
   /**

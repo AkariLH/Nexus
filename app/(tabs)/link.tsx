@@ -10,7 +10,7 @@ import { ActionModal } from "../components/ActionModal";
 import { ErrorModal } from "../components/ErrorModal";
 import { SuccessModal } from "../components/SuccessModal";
 import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
-import { API_CONFIG, rebaseApiUrl } from "../../config/api.config";
+import { profileService } from "../../services/profile.service";
 import { palette, gradients } from "../../constants/colors";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -32,8 +32,8 @@ export default function LinkScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [linkStatus, setLinkStatus] = useState<LinkStatusData | null>(null);
-  const [userPhotoError, setUserPhotoError] = useState(false);
-  const [partnerPhotoError, setPartnerPhotoError] = useState(false);
+  const [userPhoto, setUserPhoto] = useState<string | null>(null);
+  const [partnerPhoto, setPartnerPhoto] = useState<string | null>(null);
   const [showUnlinkModal, setShowUnlinkModal] = useState(false);
   const [isUnlinking, setIsUnlinking] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -45,9 +45,13 @@ export default function LinkScreen() {
     try {
       const data: LinkStatusData = await linkService.getLinkStatus(user.userId);
       setLinkStatus(data);
-      // Resetear estados de error de imágenes al obtener nuevos datos
-      setUserPhotoError(false);
-      setPartnerPhotoError(false);
+      // Las fotos exigen sesion: se piden por apiClient (un <Image uri> recibia 401)
+      profileService.fetchAvatar(user.userId).then(setUserPhoto);
+      if (data.partner?.profilePhoto) {
+        profileService.fetchAvatar(data.partner.userId).then(setPartnerPhoto);
+      } else {
+        setPartnerPhoto(null);
+      }
     } catch (error) {
       console.error('Error verificando estado del vínculo:', error);
     } finally {
@@ -192,15 +196,6 @@ export default function LinkScreen() {
   
   const userName = user?.displayName || user?.nickname || user?.email?.split('@')[0] || "Usuario";
   const userInitial = userName.charAt(0).toUpperCase();
-  // Agregar timestamp para forzar recarga de imágenes
-  const timestamp = Date.now();
-  const userPhoto = user?.userId ? `${API_CONFIG.BASE_URL}/profile/${user.userId}/avatar?t=${timestamp}` : null;
-  // El backend emite esta URL absoluta con su propio host dentro (LinkService.java:172,206).
-  // Se reapunta a la base configurada; sin esto la foto de la pareja queda rota en cuanto el
-  // host del backend no coincide con el que se compilo en el servidor.
-  const partnerPhoto = linkStatus.partner?.profilePhoto
-    ? `${rebaseApiUrl(linkStatus.partner.profilePhoto, API_CONFIG.BASE_URL)}?t=${timestamp}`
-    : null;
 
   return (
     <SafeAreaView edges={["left", "right"]} style={styles.container}>
@@ -228,11 +223,11 @@ export default function LinkScreen() {
               colors={gradients.primary}
               style={styles.avatar}
             >
-              {userPhoto && !userPhotoError ? (
+              {userPhoto ? (
                 <Image 
                   source={{ uri: userPhoto }} 
                   style={styles.avatarImage}
-                  onError={() => setUserPhotoError(true)}
+                  onError={() => setUserPhoto(null)}
                 />
               ) : (
                 <Text style={styles.avatarText}>{userInitial}</Text>
@@ -266,11 +261,11 @@ export default function LinkScreen() {
               colors={gradients.primaryReversed}
               style={styles.avatar}
             >
-              {partnerPhoto && !partnerPhotoError ? (
+              {partnerPhoto ? (
                 <Image 
                   source={{ uri: partnerPhoto }} 
                   style={styles.avatarImage}
-                  onError={() => setPartnerPhotoError(true)}
+                  onError={() => setPartnerPhoto(null)}
                 />
               ) : (
                 <Text style={styles.avatarText}>{partnerInitial}</Text>
