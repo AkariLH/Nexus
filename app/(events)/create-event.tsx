@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
+import { parseSuggestion } from "../../utils/calendarLayout";
 import {
   ScrollView,
   StyleSheet,
@@ -28,18 +29,23 @@ export default function CreateEventScreen() {
   const router = useRouter();
   const { user } = useAuth();
   // RF-35: al proponer una idea del banco, llega prellenado (ver utils/ideaFormat.proposalParams).
-  const { ideaTitle, ideaDescription, ideaDuration } = useLocalSearchParams<{
+  const { ideaTitle, ideaDescription, ideaDuration, suggestedDate, suggestedStart, suggestedEnd } = useLocalSearchParams<{
     ideaTitle?: string;
     ideaDescription?: string;
     ideaDuration?: string;
+    suggestedDate?: string;
+    suggestedStart?: string;
+    suggestedEnd?: string;
   }>();
+  // Figma E: desde el calendario llega el dia elegido o un horario libre de los dos.
+  const suggestion = parseSuggestion(suggestedDate, suggestedStart, suggestedEnd);
 
   // Estados del formulario
   const [title, setTitle] = useState(ideaTitle ?? '');
-  const [startDate, setStartDate] = useState<Date>(new Date());
-  const [endDate, setEndDate] = useState<Date>(new Date());
-  const [startTime, setStartTime] = useState<Date>(new Date());
-  const [endTime, setEndTime] = useState<Date>(new Date());
+  const [startDate, setStartDate] = useState<Date>(suggestion?.day ?? new Date());
+  const [endDate, setEndDate] = useState<Date>(suggestion?.day ?? new Date());
+  const [startTime, setStartTime] = useState<Date>(suggestion?.start ?? new Date());
+  const [endTime, setEndTime] = useState<Date>(suggestion?.end ?? new Date());
   const [isAllDay, setIsAllDay] = useState(false);
   const [isRecurring, setIsRecurring] = useState(false);
   const [showRecurrenceModal, setShowRecurrenceModal] = useState(false);
@@ -58,10 +64,10 @@ export default function CreateEventScreen() {
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
-  const [startDateSelected, setStartDateSelected] = useState(false);
-  const [endDateSelected, setEndDateSelected] = useState(false);
-  const [startTimeSelected, setStartTimeSelected] = useState(false);
-  const [endTimeSelected, setEndTimeSelected] = useState(false);
+  const [startDateSelected, setStartDateSelected] = useState(!!suggestion);
+  const [endDateSelected, setEndDateSelected] = useState(!!suggestion);
+  const [startTimeSelected, setStartTimeSelected] = useState(!!suggestion?.start);
+  const [endTimeSelected, setEndTimeSelected] = useState(!!suggestion?.end);
   
   // Estados para modales de confirmación
   const [showErrorModal, setShowErrorModal] = useState(false);

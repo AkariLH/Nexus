@@ -112,12 +112,6 @@ export default function TabLayout() {
           href: null, // No mostrar en tabs, accesible desde configuraciones
         }}
       />
-      <Tabs.Screen
-        name="recommendations"
-        options={{
-          href: null, // No mostrar en tabs, accesible desde configuraciones
-        }}
-      />
     </Tabs>
   );
 }

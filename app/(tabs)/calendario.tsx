@@ -1,572 +1,185 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter, useFocusEffect } from "expo-router";
-import { useState, useCallback } from "react";
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  ActivityIndicator
-} from "react-native";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { gradients, palette } from "../../constants/colors";
 import { useAuth } from "../../context/AuthContext";
 import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
+import { findMutualAvailability, MutualAvailabilityResponse } from "../../services/availabilityService";
 import eventService, { EventResponse } from "../../services/event.service";
-import linkService from "../../services/link.service";
-import { expandRecurringEvent } from "../../utils/recurrenceUtils";
-import { EventDetailsModal } from "../components/EventDetailsModal";
 import { externalCalendarIntegration, ExternalEventDTO } from "../../services/externalCalendar.integration.service";
-import { ExternalEventDetailModal, ExternalEventDetail } from "../components/ExternalEventDetailModal";
-import { palette, gradients } from "../../constants/colors";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import linkService from "../../services/link.service";
+import {
+  buildCalendarItems,
+  CalendarItem,
+  dayTitle,
+  FreeSlot,
+  freeSlotsOn,
+  freeTogetherDays,
+  isoDate,
+  itemsOnDay,
+  monthTitle,
+  sameDay,
+  shortDay,
+  weekOf,
+} from "../../utils/calendarLayout";
+import { CalendarMode, CalendarTop } from "../../components/calendar/CalendarTop";
+import { MonthGrid } from "../../components/calendar/MonthGrid";
+import { DayStrip } from "../../components/calendar/DayStrip";
+import { EventRow } from "../../components/calendar/EventRow";
+import { TimeGrid } from "../../components/calendar/TimeGrid";
+import { FreeTogetherBubble, FreeTogetherModal } from "../../components/calendar/FreeTogether";
+import { barColor, SOURCE_COLORS } from "../../components/calendar/calendarColors";
+import { EventDetailsModal } from "../components/EventDetailsModal";
+import { ExternalEventDetail, ExternalEventDetailModal } from "../components/ExternalEventDetailModal";
 
-type ViewMode = "month" | "week" | "day";
+const addDays = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
 
-interface Event {
-  id: string;
-  title: string;
-  date: Date;
-  endDate: Date;
-  color: string;
-  isShared: boolean;
-  isAllDay: boolean;
-  isExternal?: boolean; // Marca si viene de calendario externo
-  isReadOnly?: boolean; // Marca si es solo lectura
-}
-
+/**
+ * Figma E1-E4 - Calendario compartido: Mes, Semana y Día con los eventos de los dos, del
+ * calendario propio y del de la pareja (solo lectura), y la burbuja "Libres juntos" que abre los
+ * horarios libres de los dos para crear una cita con esa hora.
+ */
 export default function CalendarioScreen() {
   const insets = useSafeAreaInsets();
   useQuestionnaireGuard();
   const { user } = useAuth();
   const router = useRouter();
+  const { freeTogether } = useLocalSearchParams<{ freeTogether?: string }>();
+
   const [loading, setLoading] = useState(true);
   const [hasActiveLink, setHasActiveLink] = useState(false);
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<ViewMode>("month");
-  const [events, setEvents] = useState<Event[]>([]);
+  const [partner, setPartner] = useState<{ id: number; name: string } | null>(null);
+  const [mode, setMode] = useState<CalendarMode>("month");
+  const [selected, setSelected] = useState(() => new Date());
+  const [events, setEvents] = useState<EventResponse[]>([]);
+  const [external, setExternal] = useState<ExternalEventDTO[]>([]);
+  const [mutual, setMutual] = useState<MutualAvailabilityResponse | null>(null);
+  const [showFree, setShowFree] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<EventResponse | null>(null);
-  const [showEventModal, setShowEventModal] = useState(false);
-  const [fullEventsData, setFullEventsData] = useState<EventResponse[]>([]);
-  const [partnerId, setPartnerId] = useState<number | null>(null);
-  const [externalEventDetails, setExternalEventDetails] = useState<ExternalEventDetail | null>(null);
-  const [showExternalEventModal, setShowExternalEventModal] = useState(false);
-  const [externalEventsData, setExternalEventsData] = useState<ExternalEventDTO[]>([]);
+  const [externalDetail, setExternalDetail] = useState<ExternalEventDetail | null>(null);
 
-  const checkLinkStatus = useCallback(async () => {
+  const now = new Date();
+  const range = useMemo(() => {
+    const start = new Date();
+    start.setMonth(start.getMonth() - 6);
+    const end = new Date();
+    end.setMonth(end.getMonth() + 12);
+    return { start, end };
+  }, []);
+
+  const load = useCallback(async () => {
     if (!user?.userId) return;
-
     try {
-      const data = await linkService.getLinkStatus(user.userId);
-      setHasActiveLink(data.hasActiveLink);
-      
-      // Guardar partnerId para cargar sus eventos externos
-      if (data.hasActiveLink && data.partner) {
-        setPartnerId(data.partner.userId);
-      } else {
-        setPartnerId(null);
-      }
+      const link = await linkService.getLinkStatus(user.userId);
+      setHasActiveLink(link.hasActiveLink);
+      const partnerId = link.hasActiveLink && link.partner ? link.partner.userId : null;
+      setPartner(
+        partnerId && link.partner
+          ? { id: partnerId, name: link.partner.displayName || link.partner.nickname || "tu pareja" }
+          : null,
+      );
+      if (!link.hasActiveLink) return;
+
+      const [mine, ext, free] = await Promise.all([
+        eventService.getUserEvents(user.userId),
+        externalCalendarIntegration
+          .getExternalEvents(user.userId, range.start, range.end, partnerId ?? undefined)
+          .catch(() => [] as ExternalEventDTO[]),
+        partnerId ? findMutualAvailability(user.userId, partnerId, 7).catch(() => null) : Promise.resolve(null),
+      ]);
+      setEvents(mine);
+      setExternal(ext);
+      setMutual(free);
     } catch (error) {
-      console.error('Error verificando estado del vínculo:', error);
+      console.error("Error cargando el calendario:", error);
     } finally {
       setLoading(false);
     }
-  }, [user?.userId]);
+  }, [user?.userId, range]);
 
-  const loadApprovedEvents = useCallback(async () => {
-    if (!user?.userId) return;
-
-    try {
-      const userEvents = await eventService.getUserEvents(user.userId);
-      // Guardar eventos completos para el modal
-      setFullEventsData(userEvents);
-      
-      console.log('=== DEBUG CARGA DE EVENTOS ===');
-      console.log(`Total eventos del usuario: ${userEvents.length}`);
-      
-      // Mostrar detalles de cada evento
-      userEvents.forEach((event: EventResponse, index: number) => {
-        console.log(`\nEvento ${index + 1}:`, {
-          id: event.id,
-          title: event.title,
-          status: event.status,
-          creatorApproved: event.creatorApproved,
-          partnerApproved: event.partnerApproved,
-          fullyApproved: event.fullyApproved,
-          startDateTime: event.startDateTime,
-          isRecurring: event.isRecurring,
-          recurrencePattern: event.recurrencePattern,
-          // Verificar tipos
-          typeOfIsRecurring: typeof event.isRecurring,
-          typeOfPattern: typeof event.recurrencePattern,
-        });
-        
-        // Alertar si hay inconsistencias
-        if (event.isRecurring && !event.recurrencePattern) {
-          console.warn(`⚠️ EVENTO ${event.id}: Marcado como recurrente pero SIN patrón`);
-        }
-        if (!event.isRecurring && event.recurrencePattern) {
-          console.warn(`⚠️ EVENTO ${event.id}: Tiene patrón pero NO marcado como recurrente`);
-        }
-      });
-      
-      // Filtrar eventos que deben mostrarse en el calendario:
-      // SOLO eventos completamente aprobados por ambos miembros de la pareja
-      const approvedEvents = userEvents.filter((event: EventResponse) => 
-        event.fullyApproved === true
-      );
-      
-      console.log(`\nEventos filtrados para mostrar (solo aprobados por ambos): ${approvedEvents.length}`);
-      
-      // Calcular rango de expansión: 6 meses antes y 12 meses después
-      const startRange = new Date();
-      startRange.setMonth(startRange.getMonth() - 6);
-      const endRange = new Date();
-      endRange.setMonth(endRange.getMonth() + 12);
-
-      console.log('=== CALENDARIO DEBUG ===');
-      console.log('Total eventos aprobados:', approvedEvents.length);
-      console.log('Rango expansión:', startRange.toISOString(), 'hasta', endRange.toISOString());
-
-      // Expandir eventos recurrentes
-      const formattedEvents: Event[] = [];
-      
-      approvedEvents.forEach((event: EventResponse) => {
-        console.log('\n--- Evento:', event.id, event.title);
-        console.log('isRecurring:', event.isRecurring, 'pattern:', event.recurrencePattern);
-        console.log('Fecha inicio:', event.startDateTime);
-        
-        // Parsear fechas del backend (formato UTC ISO)
-        let startDate: Date;
-        let endDate: Date;
-        
-        // Verificar si es evento de todo el día comparando las horas en UTC
-        const tempStart = new Date(event.startDateTime);
-        const tempEnd = new Date(event.endDateTime);
-        
-        console.log(`🔍 Verificando si es todo el día:`);
-        console.log(`   Start UTC: ${event.startDateTime} -> ${tempStart.getUTCHours()}:${tempStart.getUTCMinutes()}`);
-        console.log(`   End UTC: ${event.endDateTime} -> ${tempEnd.getUTCHours()}:${tempEnd.getUTCMinutes()}`);
-        
-        // Evento de todo el día si:
-        // - Empieza a medianoche UTC (00:00)
-        // - Y termina a las 23:59 UTC del mismo día
-        const startsAtMidnight = tempStart.getUTCHours() === 0 && tempStart.getUTCMinutes() === 0;
-        const endsAt2359 = tempEnd.getUTCHours() === 23 && tempEnd.getUTCMinutes() === 59;
-        
-        // TAMBIÉN aceptar eventos que abarcan 24 horas completas (creados antes del fix)
-        // Por ejemplo: 2025-12-14 06:00:00 hasta 2025-12-15 05:59:59 en zona UTC-6
-        const durationHours = (tempEnd.getTime() - tempStart.getTime()) / (1000 * 60 * 60);
-        const isFullDayDuration = Math.abs(durationHours - 24) < 0.1; // ~24 horas
-        
-        const isAllDay = (startsAtMidnight && endsAt2359) || isFullDayDuration;
-        
-        console.log(`   Es todo el día: ${isAllDay} (midnight: ${startsAtMidnight}, ends2359: ${endsAt2359}, duration: ${durationHours}h)`);
-        
-        if (isAllDay) {
-          // Para eventos de todo el día, extraer fecha sin conversión de zona horaria
-          const startISO = event.startDateTime.substring(0, 10);
-          const endISO = event.endDateTime.substring(0, 10);
-          
-          const [startYear, startMonth, startDay] = startISO.split('-').map(Number);
-          const [endYear, endMonth, endDay] = endISO.split('-').map(Number);
-          
-          startDate = new Date(startYear, startMonth - 1, startDay, 0, 0, 0, 0);
-          endDate = new Date(endYear, endMonth - 1, endDay, 23, 59, 59, 999);
-          
-          console.log(`📅 Evento todo el día regular: ${event.title} -> ${startDate.toLocaleDateString()}`);
-        } else {
-          // Para eventos con hora específica, usar conversión estándar UTC -> local
-          startDate = new Date(event.startDateTime);
-          endDate = new Date(event.endDateTime);
-        }
-        
-        if (event.isRecurring && event.recurrencePattern) {
-          console.log('🔄 Expandiendo evento recurrente:', {
-            id: event.id,
-            title: event.title,
-            pattern: event.recurrencePattern,
-            start: event.startDateTime
-          });
-          
-          // Expandir el evento recurrente en múltiples ocurrencias
-          const occurrences = expandRecurringEvent(
-            {
-              startDateTime: event.startDateTime,
-              endDateTime: event.endDateTime,
-              isRecurring: event.isRecurring,
-              recurrencePattern: event.recurrencePattern,
-              rruleDtstartUtc: event.rruleDtstartUtc,
-            },
-            startRange,
-            endRange
-          );
-
-          console.log('✅ Ocurrencias generadas:', occurrences.length);
-          if (occurrences.length === 0) {
-            console.warn('⚠️ No se generaron ocurrencias para evento recurrente:', event.id, event.title);
-          }
-          
-          // Debug: Ver las excepciones del evento
-          console.log(`📋 Evento ${event.id} (${event.title}):`, {
-            isRecurring: event.isRecurring,
-            exceptionDates: event.exceptionDates,
-            exceptionCount: event.exceptionDates?.length || 0
-          });
-          
-          // Convertir las fechas de excepción a timestamps para comparación
-          const exceptionTimestamps = (event.exceptionDates || []).map(dateStr => {
-            const exceptionDate = new Date(dateStr);
-            // Normalizar a medianoche UTC para comparar
-            const normalized = Date.UTC(exceptionDate.getUTCFullYear(), exceptionDate.getUTCMonth(), exceptionDate.getUTCDate());
-            console.log(`  🚫 Excepción: ${dateStr} → timestamp: ${normalized} (${new Date(normalized).toLocaleDateString()})`);
-            return normalized;
-          });
-          
-          // Crear un evento para cada ocurrencia (filtrando excepciones)
-          occurrences.forEach(occurrenceDate => {
-            // Normalizar la fecha de ocurrencia a medianoche UTC para comparar
-            const normalizedOccurrence = Date.UTC(
-              occurrenceDate.getFullYear(),
-              occurrenceDate.getMonth(),
-              occurrenceDate.getDate()
-            );
-            
-            console.log(`  ⏰ Ocurrencia: ${occurrenceDate.toLocaleDateString()} → timestamp: ${normalizedOccurrence}`);
-            
-            // Saltar esta ocurrencia si está en la lista de excepciones
-            if (exceptionTimestamps.includes(normalizedOccurrence)) {
-              console.log(`  ❌ SALTANDO ocurrencia excluida: ${occurrenceDate.toLocaleDateString()}`);
-              return;
-            }
-            
-            console.log(`  ✅ Incluyendo ocurrencia: ${occurrenceDate.toLocaleDateString()}`);
-            
-            // Calcular endDate manteniendo la misma duración
-            const duration = endDate.getTime() - startDate.getTime();
-            const occurrenceEnd = new Date(occurrenceDate.getTime() + duration);
-            
-            formattedEvents.push({
-              id: `${event.id}-${occurrenceDate.getTime()}`,
-              title: event.title,
-              date: occurrenceDate,
-              endDate: occurrenceEnd,
-              color: event.color || palette.secondary,
-              isShared: true,
-              isAllDay: isAllDay,
-            });
-          });
-        } else {
-          // Evento normal (no recurrente)
-          formattedEvents.push({
-            id: event.id.toString(),
-            title: event.title,
-            date: startDate,
-            endDate: endDate,
-            color: event.color || palette.secondary,
-            isShared: true,
-            isAllDay: isAllDay,
-          });
-        }
-      });
-
-      // Función para detectar si un evento externo es duplicado de uno de Nexus
-      const isDuplicateEvent = (externalEvent: ExternalEventDTO, nexusEvents: EventResponse[]): boolean => {
-        return nexusEvents.some(nexusEvent => {
-          // Comparar título (case insensitive y normalizado)
-          const externalTitle = externalEvent.title.trim().toLowerCase();
-          const nexusTitle = nexusEvent.title.trim().toLowerCase();
-          
-          if (externalTitle !== nexusTitle) {
-            return false;
-          }
-          
-          // Comparar fechas de inicio con tolerancia de ±5 minutos
-          const externalStart = new Date(externalEvent.startDatetime).getTime();
-          const nexusStart = new Date(nexusEvent.startDateTime).getTime();
-          const timeDiff = Math.abs(externalStart - nexusStart);
-          const fiveMinutes = 5 * 60 * 1000;
-          
-          if (timeDiff > fiveMinutes) {
-            return false;
-          }
-          
-          // Verificar duración del evento (opcional, pero aumenta precisión)
-          const externalDuration = new Date(externalEvent.endDatetime).getTime() - externalStart;
-          const nexusDuration = new Date(nexusEvent.endDateTime).getTime() - nexusStart;
-          const durationDiff = Math.abs(externalDuration - nexusDuration);
-          const tenMinutes = 10 * 60 * 1000;
-          
-          if (durationDiff > tenMinutes) {
-            return false;
-          }
-          
-          // Si ubicación está presente en ambos, compararla
-          if (externalEvent.location && nexusEvent.location) {
-            const externalLoc = externalEvent.location.trim().toLowerCase();
-            const nexusLoc = nexusEvent.location.trim().toLowerCase();
-            
-            // Si las ubicaciones son muy diferentes, probablemente no es el mismo evento
-            if (externalLoc !== nexusLoc && !externalLoc.includes(nexusLoc) && !nexusLoc.includes(externalLoc)) {
-              return false;
-            }
-          }
-          
-          // Si título, fecha y duración coinciden (y opcionalmente ubicación), es duplicado
-          console.log(`🔍 Duplicado detectado: "${externalEvent.title}" (${new Date(externalEvent.startDatetime).toLocaleString()}) en calendario externo coincide con evento de Nexus (ID: ${nexusEvent.id})`);
-          return true;
-        });
-      };
-
-      // Cargar eventos externos del backend (RF-23)
-      try {
-        console.log('📅 Cargando eventos externos...');
-        const externalEvents = await externalCalendarIntegration.getExternalEvents(
-          user.userId,
-          startRange,
-          endRange,
-          partnerId || undefined // Pasar partnerId para obtener también sus eventos
-        );
-        
-        console.log(`✅ Eventos externos cargados: ${externalEvents.length}`);
-        
-        // Filtrar eventos externos que son duplicados de eventos de Nexus
-        const nonDuplicateExternalEvents = externalEvents.filter(extEvent => {
-          const isDuplicate = isDuplicateEvent(extEvent, approvedEvents);
-          if (isDuplicate) {
-            console.log(`⏭️ Omitiendo evento externo duplicado: "${extEvent.title}"`);
-          }
-          return !isDuplicate;
-        });
-        
-        console.log(`📊 Eventos externos después de filtrar duplicados: ${nonDuplicateExternalEvents.length} (omitidos: ${externalEvents.length - nonDuplicateExternalEvents.length})`);
-        
-        // Guardar eventos externos completos para el modal
-        setExternalEventsData(nonDuplicateExternalEvents);
-        
-        // Convertir eventos externos a formato Event
-        nonDuplicateExternalEvents.forEach((extEvent: ExternalEventDTO) => {
-          // El backend envía Instant (ISO string en UTC), convertir a fecha local
-          // Para eventos de todo el día, mantener la fecha sin ajuste de zona
-          let startDate: Date;
-          let endDate: Date;
-          
-          if (extEvent.isAllDay) {
-            // Para eventos de todo el día, extraer la fecha sin conversión de zona horaria
-            // El backend envía: "2025-12-03T00:00:00.000Z"
-            // Queremos: 3 de diciembre (sin importar la zona horaria)
-            
-            // Extraer año-mes-día del string ISO
-            const startISO = extEvent.startDatetime.substring(0, 10); // "2025-12-03"
-            const endISO = extEvent.endDatetime.substring(0, 10);
-            
-            const [startYear, startMonth, startDay] = startISO.split('-').map(Number);
-            const [endYear, endMonth, endDay] = endISO.split('-').map(Number);
-            
-            // Crear fecha local con esos componentes (mes es 0-indexed)
-            startDate = new Date(startYear, startMonth - 1, startDay, 0, 0, 0, 0);
-            endDate = new Date(endYear, endMonth - 1, endDay, 23, 59, 59, 999);
-            
-            console.log(`📅 Evento todo el día: ${extEvent.title}`);
-            console.log(`   ISO: ${startISO} -> Local: ${startDate.toLocaleDateString()} (${startDate.getDate()}/${startDate.getMonth()}/${startDate.getFullYear()})`);
-          } else {
-            // Para eventos con hora, usar la conversión estándar (UTC -> local)
-            startDate = new Date(extEvent.startDatetime);
-            endDate = new Date(extEvent.endDatetime);
-          }
-          
-          // Si la privacidad es BUSY_ONLY, ocultar detalles
-          const isBusyOnly = extEvent.visibility === 'BUSY_ONLY';
-          
-          // Determinar si el evento es del usuario o de la pareja
-          const isOwnEvent = extEvent.ownerId === user.userId;
-          
-          // Si el evento tiene recurrencia, expandirlo
-          if (extEvent.recurrenceRule) {
-            try {
-              console.log(`🔁 Expandiendo evento externo recurrente: ${extEvent.title}`);
-              console.log(`   Start UTC: ${extEvent.startDatetime}`);
-              console.log(`   Start Local: ${startDate.toISOString()}`);
-              console.log(`   Pattern: ${extEvent.recurrenceRule}`);
-              console.log(`   RRULE DTSTART: ${extEvent.rruleDtstartUtc}`);
-              console.log(`   RRULE UNTIL: ${extEvent.rruleUntilUtc}`);
-              console.log(`   RRULE COUNT: ${extEvent.rruleCount}`);
-              
-              // Convertir las fechas locales a formato ISO local (sin el offset)
-              // Para que expandRecurringEvent use las horas correctas
-              const localStartISO = new Date(
-                startDate.getTime() - (startDate.getTimezoneOffset() * 60000)
-              ).toISOString();
-              
-              const localEndISO = new Date(
-                endDate.getTime() - (endDate.getTimezoneOffset() * 60000)
-              ).toISOString();
-              
-              // Usar rruleDtstartUtc si está disponible, pero convertido a local
-              let rruleDtstartLocal: string | undefined;
-              if (extEvent.rruleDtstartUtc) {
-                const rruleStart = new Date(extEvent.rruleDtstartUtc);
-                rruleDtstartLocal = new Date(
-                  rruleStart.getTime() - (rruleStart.getTimezoneOffset() * 60000)
-                ).toISOString();
-                console.log(`   RRULE DTSTART convertido a local: ${rruleDtstartLocal}`);
-              }
-              
-              const occurrences = expandRecurringEvent(
-                {
-                  startDateTime: localStartISO,
-                  endDateTime: localEndISO,
-                  isRecurring: true,
-                  recurrencePattern: extEvent.recurrenceRule,
-                  rruleDtstartUtc: rruleDtstartLocal,
-                },
-                startRange,
-                endRange
-              );
-
-              console.log(`✅ Evento externo "${extEvent.title}" expandido a ${occurrences.length} ocurrencias`);
-              
-              // Crear un evento para cada ocurrencia
-              const duration = endDate.getTime() - startDate.getTime();
-              
-              occurrences.forEach(occurrenceDate => {
-                const occurrenceEnd = new Date(occurrenceDate.getTime() + duration);
-                
-                formattedEvents.push({
-                  id: `external-${extEvent.id}-${occurrenceDate.getTime()}`,
-                  title: isBusyOnly ? '🔒 Ocupado' : extEvent.title,
-                  date: occurrenceDate,
-                  endDate: occurrenceEnd,
-                  color: isBusyOnly ? palette.textMuted : (isOwnEvent ? palette.success : palette.info),
-                  isShared: !isOwnEvent,
-                  isAllDay: extEvent.isAllDay,
-                  isExternal: true,
-                  isReadOnly: true,
-                });
-              });
-            } catch (error) {
-              console.error(`❌ Error expandiendo evento externo recurrente "${extEvent.title}":`, error);
-              // Si falla la expansión, agregar al menos el evento base
-              formattedEvents.push({
-                id: `external-${extEvent.id}`,
-                title: isBusyOnly ? '🔒 Ocupado' : extEvent.title,
-                date: startDate,
-                endDate: endDate,
-                color: isBusyOnly ? palette.textMuted : (isOwnEvent ? palette.success : palette.info),
-                isShared: !isOwnEvent,
-                isAllDay: extEvent.isAllDay,
-                isExternal: true,
-                isReadOnly: true,
-              });
-            }
-          } else {
-            // Evento no recurrente
-            formattedEvents.push({
-              id: `external-${extEvent.id}`,
-              title: isBusyOnly ? '🔒 Ocupado' : extEvent.title,
-              date: startDate,
-              endDate: endDate,
-              color: isBusyOnly ? palette.textMuted : (isOwnEvent ? palette.success : palette.info),
-              isShared: !isOwnEvent,
-              isAllDay: extEvent.isAllDay,
-              isExternal: true,
-              isReadOnly: true,
-            });
-          }
-        });
-        
-        console.log(`📊 Total eventos (locales + externos): ${formattedEvents.length}`);
-      } catch (error) {
-        console.error('❌ Error cargando eventos externos:', error);
-        // Continuar sin eventos externos
-      }
-
-      setEvents(formattedEvents);
-    } catch (error) {
-      console.error('Error cargando eventos aprobados:', error);
-    }
-  }, [user?.userId, partnerId]); // Agregar partnerId como dependencia
-
-  const handleEventPress = (eventId: string) => {
-    // Verificar si es un evento externo
-    if (eventId.startsWith('external-')) {
-      // Extraer el ID del evento externo (formato: "external-{id}" o "external-{id}-{timestamp}")
-      const externalIdPart = eventId.replace('external-', '');
-      const realExternalId = externalIdPart.includes('-') ? externalIdPart.split('-')[0] : externalIdPart;
-      
-      // Buscar el evento en los datos externos completos
-      const externalEvent = externalEventsData.find(e => e.id === parseInt(realExternalId));
-      
-      if (externalEvent && externalEvent.visibility === 'FULL_DETAILS') {
-        // Solo mostrar detalles si la privacidad lo permite
-        setExternalEventDetails({
-          title: externalEvent.title,
-          description: externalEvent.description || undefined,
-          location: externalEvent.location || undefined,
-          startDate: externalEvent.startDatetime,
-          endDate: externalEvent.endDatetime,
-          allDay: externalEvent.isAllDay,
-          recurrenceRule: externalEvent.recurrenceRule || undefined,
-        });
-        setShowExternalEventModal(true);
-      }
-      return;
-    }
-    
-    // Extraer el ID real del evento (quitar timestamp si es recurrente)
-    const realEventId = eventId.includes('-') ? eventId.split('-')[0] : eventId;
-    const fullEvent = fullEventsData.find(e => e.id === parseInt(realEventId));
-    
-    if (fullEvent) {
-      // Si es una instancia recurrente, mantener el ID compuesto
-      if (eventId.includes('-')) {
-        setSelectedEvent({
-          ...fullEvent,
-          id: eventId as any, // Mantener el ID compuesto "eventId-timestamp"
-        });
-      } else {
-        setSelectedEvent(fullEvent);
-      }
-      setShowEventModal(true);
-    }
-  };
-
-  const handleEditEvent = (eventId: number) => {
-    router.push(`/(events)/edit-event?eventId=${eventId}`);
-  };
-  
-  const handleDeleteEvent = async (eventId: number) => {
-    if (!user?.userId) return;
-    
-    try {
-      await eventService.deleteEvent(eventId, user.userId);
-      // Recargar eventos después de eliminar
-      await loadApprovedEvents();
-    } catch (error: any) {
-      console.error('Error eliminando evento:', error);
-      throw error; // Re-throw para que el modal maneje el error
-    }
-  };
-
-  // Verificar cada vez que el tab obtiene foco
   useFocusEffect(
     useCallback(() => {
-      const loadData = async () => {
-        await checkLinkStatus(); // Primero obtener partnerId
-        await loadApprovedEvents(); // Luego cargar eventos con partnerId actualizado
-      };
-      loadData();
-    }, [checkLinkStatus, loadApprovedEvents])
+      load();
+    }, [load]),
   );
 
-  // Vista cuando no hay vínculo activo
+  // Desde Vínculo ("Horarios libres juntos") se llega con ?freeTogether=1.
+  useEffect(() => {
+    if (freeTogether === "1") {
+      setShowFree(true);
+      router.setParams({ freeTogether: undefined });
+    }
+  }, [freeTogether]);
+
+  const items = useMemo(
+    () =>
+      user?.userId
+        ? buildCalendarItems({ events, external, userId: user.userId, partnerName: partner?.name ?? "tu pareja", range })
+        : [],
+    [events, external, user?.userId, partner?.name, range],
+  );
+  const freeDays = useMemo(() => freeTogetherDays(mutual, now), [mutual, now.getHours()]);
+  const freeCount = freeDays.reduce((n, d) => n + d.slots.length, 0);
+
+  const openItem = (item: CalendarItem) => {
+    if (item.eventId !== null) {
+      const event = events.find((e) => e.id === item.eventId);
+      // Las repeticiones guardan el id compuesto "id-fecha" para editar o borrar solo esa.
+      if (event) setSelectedEvent(item.id.includes("-") ? { ...event, id: item.id as any } : event);
+      return;
+    }
+    const ext = external.find((e) => e.id === item.externalId);
+    if (ext) {
+      setExternalDetail({
+        title: ext.title,
+        description: ext.description || undefined,
+        location: ext.location || undefined,
+        startDate: ext.startDatetime,
+        endDate: ext.endDatetime,
+        allDay: ext.isAllDay,
+        recurrenceRule: ext.recurrenceRule || undefined,
+      });
+    }
+  };
+
+  const createAt = (slot?: FreeSlot) => {
+    setShowFree(false);
+    router.push({
+      pathname: "/(events)/create-event",
+      params: slot
+        ? { suggestedDate: slot.date, suggestedStart: slot.startTime, suggestedEnd: slot.endTime }
+        : { suggestedDate: isoDate(selected) },
+    });
+  };
+
+  const move = (direction: 1 | -1) => {
+    if (mode === "month") {
+      const first = new Date(selected.getFullYear(), selected.getMonth() + direction, 1);
+      setSelected(first.getFullYear() === now.getFullYear() && first.getMonth() === now.getMonth() ? new Date() : first);
+    } else {
+      setSelected(addDays(selected, direction * (mode === "week" ? 7 : 1)));
+    }
+  };
+
+  const header = (
+    <CalendarTop
+      title={monthTitle(selected)}
+      mode={mode}
+      onMode={setMode}
+      onToday={() => setSelected(new Date())}
+      onPrevious={() => move(-1)}
+      onNext={() => move(1)}
+    />
+  );
+
   if (loading) {
     return (
       <View style={styles.container}>
-        <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-          <Text style={styles.headerTitle}>Calendario</Text>
-        </View>
-        <View style={styles.emptyStateContainer}>
+        {header}
+        <View style={styles.center}>
           <ActivityIndicator size="large" color={palette.primary} />
         </View>
       </View>
@@ -575,33 +188,18 @@ export default function CalendarioScreen() {
 
   if (!hasActiveLink) {
     return (
-      <View style={styles.container}>
-        <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-          <Text style={styles.headerTitle}>Calendario</Text>
-        </View>
-        <View style={styles.emptyStateContainer}>
-          <LinearGradient
-            colors={gradients.soft}
-            style={styles.emptyStateCard}
-          >
-            <Ionicons name="calendar-outline" size={64} color={palette.primary} style={styles.emptyIcon} />
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <View style={styles.center}>
+          <LinearGradient colors={gradients.soft} style={styles.emptyCard}>
+            <Ionicons name="calendar-outline" size={56} color={palette.primary} />
             <Text style={styles.emptyTitle}>Calendario no disponible</Text>
             <Text style={styles.emptyText}>
               Necesitas establecer un vínculo con tu pareja para acceder al calendario compartido
             </Text>
-            <TouchableOpacity 
-              style={styles.linkButton}
-              onPress={() => router.push('/(tabs)/link')}
-              activeOpacity={0.8}
-            >
-              <LinearGradient
-                colors={gradients.primary}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.linkButtonGradient}
-              >
+            <TouchableOpacity style={styles.emptyButton} onPress={() => router.push("/(tabs)/link")} accessibilityRole="button">
+              <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.emptyButtonInner}>
                 <Ionicons name="heart" size={20} color={palette.onPrimary} />
-                <Text style={styles.linkButtonText}>Establecer vínculo</Text>
+                <Text style={styles.emptyButtonText}>Establecer vínculo</Text>
               </LinearGradient>
             </TouchableOpacity>
           </LinearGradient>
@@ -610,825 +208,124 @@ export default function CalendarioScreen() {
     );
   }
 
-  const monthNames = [
-    "Enero",
-    "Febrero",
-    "Marzo",
-    "Abril",
-    "Mayo",
-    "Junio",
-    "Julio",
-    "Agosto",
-    "Septiembre",
-    "Octubre",
-    "Noviembre",
-    "Diciembre",
-  ];
-
-  const daysOfWeek = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
-  const daysOfWeekShort = ["D", "L", "M", "M", "J", "V", "S"];
-
-  const getDaysInMonth = (date: Date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
-
-    const days: (Date | null)[] = [];
-    for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(null);
-    }
-    for (let i = 1; i <= daysInMonth; i++) {
-      days.push(new Date(year, month, i));
-    }
-    return days;
-  };
-
-  const getWeekDays = (date: Date) => {
-    const day = date.getDay();
-    const diff = date.getDate() - day;
-    
-    const week = [];
-    for (let i = 0; i < 7; i++) {
-      // Crear cada día a medianoche para evitar problemas de zona horaria
-      const weekDay = new Date(
-        date.getFullYear(),
-        date.getMonth(),
-        diff + i,
-        0, 0, 0, 0
-      );
-      week.push(weekDay);
-    }
-    
-    return week;
-  };
-
-  // Comparación robusta de fecha (día, mes, año) en hora local
-  const isSameLocalDay = (a: Date, b: Date) => {
-    return (
-      a.getFullYear() === b.getFullYear() &&
-      a.getMonth() === b.getMonth() &&
-      a.getDate() === b.getDate()
-    );
-  };
-
-  const getEventsForDay = (date: Date | null) => {
-    if (!date) return [];
-    const filtered = events.filter(
-      (event) =>
-        event.date.getDate() === date.getDate() &&
-        event.date.getMonth() === date.getMonth() &&
-        event.date.getFullYear() === date.getFullYear()
-    );
-    
-    // Debug: mostrar eventos para días con muchos eventos
-    if (filtered.length > 5) {
-      console.log(`📅 ${date.toLocaleDateString()}: ${filtered.length} eventos`);
-    }
-    
-    return filtered;
-  };
-
-  const getEventsForHour = (date: Date, hour: number) => {
-    return events.filter(
-      (event) =>
-        event.date.getDate() === date.getDate() &&
-        event.date.getMonth() === date.getMonth() &&
-        event.date.getFullYear() === date.getFullYear() &&
-        event.date.getHours() === hour
-    );
-  };
-
-  const previousPeriod = () => {
-    if (viewMode === "month") {
-      setCurrentDate(
-        new Date(currentDate.getFullYear(), currentDate.getMonth() - 1)
-      );
-    } else if (viewMode === "week") {
-      const newDate = new Date(currentDate);
-      newDate.setDate(currentDate.getDate() - 7);
-      setCurrentDate(newDate);
-    } else {
-      const newDate = new Date(currentDate);
-      newDate.setDate(currentDate.getDate() - 1);
-      setCurrentDate(newDate);
-    }
-  };
-
-  const nextPeriod = () => {
-    if (viewMode === "month") {
-      setCurrentDate(
-        new Date(currentDate.getFullYear(), currentDate.getMonth() + 1)
-      );
-    } else if (viewMode === "week") {
-      const newDate = new Date(currentDate);
-      newDate.setDate(currentDate.getDate() + 7);
-      setCurrentDate(newDate);
-    } else {
-      const newDate = new Date(currentDate);
-      newDate.setDate(currentDate.getDate() + 1);
-      setCurrentDate(newDate);
-    }
-  };
-
-  const getHeaderTitle = () => {
-    if (viewMode === "month") {
-      return `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
-    } else if (viewMode === "week") {
-      const weekDays = getWeekDays(currentDate);
-      const firstDay = weekDays[0];
-      const lastDay = weekDays[6];
-
-      if (firstDay.getMonth() === lastDay.getMonth()) {
-        return `${monthNames[firstDay.getMonth()]} ${firstDay.getFullYear()}`;
-      } else {
-        return `${monthNames[firstDay.getMonth()]} - ${monthNames[lastDay.getMonth()]} ${firstDay.getFullYear()}`;
-      }
-    } else {
-      return `${currentDate.getDate()} ${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
-    }
-  };
-
-  const days = getDaysInMonth(currentDate);
-  const weekDays = getWeekDays(currentDate);
-  const today = new Date();
-
-  const renderMonthView = () => (
-    <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-      {/* Day headers */}
-      <View style={styles.weekHeader}>
-        {daysOfWeekShort.map((day, index) => (
-          <View key={index} style={styles.dayHeaderCell}>
-            <Text style={styles.dayHeaderText}>{day}</Text>
-          </View>
-        ))}
-      </View>
-
-      {/* Days grid */}
-      <View style={styles.daysGrid}>
-        {days.map((date, index) => {
-          const dayEvents = getEventsForDay(date);
-          const isToday =
-            date &&
-            date.getDate() === today.getDate() &&
-            date.getMonth() === today.getMonth() &&
-            date.getFullYear() === today.getFullYear();
-
-          return (
-            <TouchableOpacity
-              key={index}
-              style={[
-                styles.dayCell,
-                isToday && styles.todayCell,
-              ]}
-              disabled={!date}
-              onPress={() => {
-                if (date) {
-                  setCurrentDate(date);
-                  setViewMode("day");
-                }
-              }}
-              activeOpacity={0.7}
-            >
-              {date && (
-                <View style={styles.dayCellContent}>
-                  <Text style={[styles.dayNumber, isToday && styles.todayText]}>
-                    {date.getDate()}
-                  </Text>
-                  <View style={styles.eventDots}>
-                    {dayEvents.slice(0, 3).map((event) => (
-                      <View
-                        key={event.id}
-                        style={[
-                          styles.eventDot,
-                          { backgroundColor: event.color },
-                        ]}
-                      />
-                    ))}
-                    {dayEvents.length > 3 && (
-                      <Text style={styles.moreEvents}>+{dayEvents.length - 3}</Text>
-                    )}
-                  </View>
-                </View>
-              )}
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-
-      {/* Upcoming events */}
-      <View style={styles.upcomingSection}>
-        <Text style={styles.sectionTitle}>Próximos eventos</Text>
-        {events
-          .filter((e) => e.date >= today)
-          .sort((a, b) => a.date.getTime() - b.date.getTime())
-          .slice(0, 5)
-          .map((event) => (
-            <TouchableOpacity
-              key={event.id}
-              style={styles.eventCard}
-              onPress={() => handleEventPress(event.id)}
-              disabled={event.isReadOnly}
-            >
-              <View
-                style={[styles.eventColorBox, { backgroundColor: event.color }]}
-              />
-              <View style={styles.eventInfo}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Text style={styles.eventTitle}>{event.title}</Text>
-                  {event.isExternal && (
-                    <Ionicons name="cloud-outline" size={16} color={palette.success} />
-                  )}
-                  {event.isReadOnly && (
-                    <Ionicons name="lock-closed-outline" size={14} color={palette.textSecondary} />
-                  )}
-                </View>
-                <Text style={styles.eventDate}>
-                  {event.date.toLocaleDateString("es", {
-                    month: "short",
-                    day: "numeric",
-                  })}{" "}
-                  •{" "}
-                  {event.date.toLocaleTimeString("es", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </Text>
-              </View>
-              {event.isShared && (
-                <Ionicons name="heart" size={20} color={palette.primary} />
-              )}
-            </TouchableOpacity>
-          ))}
-        {events.filter((e) => e.date >= today).length === 0 && (
-          <View style={styles.noEventsContainer}>
-            <Ionicons name="calendar-outline" size={32} color={palette.icon} />
-            <Text style={styles.noEventsText}>No hay eventos próximos</Text>
-          </View>
-        )}
-      </View>
-    </ScrollView>
+  const week = weekOf(selected);
+  const shownDays = mode === "day" ? [selected] : week;
+  const allDay = shownDays.flatMap((day) =>
+    itemsOnDay(items, day)
+      .filter((i) => i.allDay)
+      .map((item) => ({ day, item })),
   );
-
-  const renderWeekView = () => {
-    // Separar eventos de todo el día y eventos con hora
-    const allDayEvents = events.filter(e => 
-      e.isAllDay && weekDays.some(d => isSameLocalDay(d, e.date))
-    );
-
-    return (
-      <View style={styles.weekViewContainer}>
-        {/* Week header con días */}
-        <View style={styles.weekViewHeader}>
-          <View style={styles.weekTimeGutter} />
-          {weekDays.map((date, index) => {
-            const isToday =
-              date.getDate() === today.getDate() &&
-              date.getMonth() === today.getMonth() &&
-              date.getFullYear() === today.getFullYear();
-
-            return (
-              <View key={index} style={styles.weekDayHeader}>
-                <Text style={[styles.weekDayName, isToday && styles.weekDayNameToday]}>
-                  {daysOfWeek[index].substring(0, 3)}
-                </Text>
-                <View
-                  style={[
-                    styles.weekDayNumber,
-                    isToday && styles.weekDayNumberToday,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.weekDayNumberText,
-                      isToday && styles.weekDayNumberTextToday,
-                    ]}
-                  >
-                    {date.getDate()}
-                  </Text>
-                </View>
-              </View>
-            );
-          })}
-        </View>
-
-        {/* Eventos de todo el día */}
-        {allDayEvents.length > 0 && (
-          <View style={styles.allDaySection}>
-            <View style={{ flexDirection: 'row' }}>
-              <View style={styles.allDayLabel}>
-                <Text style={styles.allDayLabelText}>Todo el día</Text>
-              </View>
-              <View style={styles.allDayEventsContainer}>
-                {weekDays.map((date, dayIndex) => {
-                  const dayAllDayEvents = allDayEvents.filter(e => isSameLocalDay(e.date, date));
-
-                  return (
-                    <View key={dayIndex} style={styles.allDayColumn}>
-                      {dayAllDayEvents.map((event) => (
-                        <TouchableOpacity
-                          key={event.id}
-                          style={[
-                            styles.allDayEvent, 
-                            { backgroundColor: event.color },
-                            event.isReadOnly && { opacity: 0.85 }
-                          ]}
-                          onPress={() => handleEventPress(event.id)}
-                          disabled={event.isReadOnly}
-                        >
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                            <Text style={styles.allDayEventText} numberOfLines={1}>
-                              {event.title}
-                            </Text>
-                            {event.isExternal && (
-                              <Ionicons name="cloud-outline" size={10} color={palette.onPrimary} />
-                            )}
-                          </View>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  );
-                })}
-              </View>
-            </View>
-          </View>
-        )}
-
-        {/* Timeline con horas */}
-        <ScrollView style={styles.weekScrollView}>
-          <View style={styles.weekTimelineContainer}>
-            {Array.from({ length: 24 }, (_, hour) => {
-              const hourString = hour.toString().padStart(2, "0") + ":00";
-
-              return (
-                <View key={hour} style={styles.weekTimelineRow}>
-                  {/* Columna de hora */}
-                  <View style={styles.weekTimeColumn}>
-                    <Text style={styles.weekTimeText}>{hourString}</Text>
-                  </View>
-
-                  {/* Columnas de días */}
-                  {weekDays.map((date, dayIndex) => {
-                    const isToday = isSameLocalDay(date, today);
-
-                    // Obtener eventos de esta hora que NO sean de todo el día
-                    const hourEvents = events.filter(
-                      (event) =>
-                        !event.isAllDay &&
-                        isSameLocalDay(event.date, date) &&
-                        event.date.getHours() === hour
-                    );
-
-                    // Detectar eventos que se superponen y asignar columnas
-                    const eventsWithColumns: Array<{ event: typeof hourEvents[0], column: number, totalColumns: number }> = [];
-                    
-                    hourEvents.forEach((event, index) => {
-                      const eventStart = event.date.getTime();
-                      const eventEnd = event.endDate.getTime();
-                      
-                      // Encontrar qué columnas ya están ocupadas por eventos que se superponen
-                      const usedColumns = new Set<number>();
-                      
-                      eventsWithColumns.forEach(({ event: existingEvent, column }) => {
-                        const existingStart = existingEvent.date.getTime();
-                        const existingEnd = existingEvent.endDate.getTime();
-                        
-                        // Si hay superposición, marcar esa columna como ocupada
-                        if ((eventStart < existingEnd) && (existingStart < eventEnd)) {
-                          usedColumns.add(column);
-                        }
-                      });
-                      
-                      // Asignar la primera columna disponible
-                      let column = 0;
-                      while (usedColumns.has(column)) {
-                        column++;
-                      }
-                      
-                      eventsWithColumns.push({ event, column, totalColumns: 1 });
-                    });
-                    
-                    // Calcular el total de columnas necesarias
-                    const maxColumn = eventsWithColumns.reduce((max, e) => Math.max(max, e.column), 0);
-                    const totalColumns = maxColumn + 1;
-                    
-                    // Actualizar totalColumns para todos los eventos
-                    eventsWithColumns.forEach(e => e.totalColumns = totalColumns);
-
-                    return (
-                      <View
-                        key={dayIndex}
-                        style={[
-                          styles.weekDayCell,
-                          isToday && styles.weekDayCellToday,
-                        ]}
-                      >
-                        {eventsWithColumns.map(({ event, column, totalColumns }) => {
-                          const minute = event.date.getMinutes();
-                          const minuteOffset = (minute / 60) * 60; // Offset en px desde el inicio de la hora
-                          
-                          // Calcular altura basada en duración
-                          const durationMs = event.endDate.getTime() - event.date.getTime();
-                          const durationHours = durationMs / (1000 * 60 * 60);
-                          const eventHeight = Math.max(40, durationHours * 60); // Mínimo 40px
-                          
-                          // Posicionamiento horizontal basado en columna asignada
-                          const eventWidthPercent = totalColumns > 1 ? 95 / totalColumns : 100;
-                          const marginLeftPercent = column * (100 / totalColumns);
-                          
-                          return (
-                          <TouchableOpacity
-                            key={event.id}
-                            style={[
-                              styles.weekTimeEvent,
-                              { 
-                                backgroundColor: event.color, 
-                                minHeight: eventHeight,
-                                width: `${eventWidthPercent}%`,
-                                marginLeft: `${marginLeftPercent}%`,
-                                position: 'absolute',
-                                top: minuteOffset,
-                              },
-                              event.isReadOnly && { opacity: 0.85 }
-                            ]}
-                              onPress={() => handleEventPress(event.id)}
-                              disabled={event.isReadOnly}
-                            >
-                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                                <Text style={styles.weekTimeEventTitle} numberOfLines={1}>
-                                  {event.title}
-                                </Text>
-                                {event.isExternal && (
-                                  <Ionicons name="cloud-outline" size={12} color={palette.onPrimary} />
-                                )}
-                              </View>
-                              <Text style={styles.weekTimeEventTime}>
-                                {event.date.toLocaleTimeString("es", {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
-                              </Text>
-                            </TouchableOpacity>
-                            );
-                        })}
-                      </View>
-                    );
-                  })}
-                </View>
-              );
-            })}
-          </View>
-        </ScrollView>
-      </View>
-    );
-  };
-
-  const renderDayView = () => {
-    // Separar eventos de todo el día
-    const dayAllDayEvents = events.filter(e => 
-      e.isAllDay &&
-      e.date.getDate() === currentDate.getDate() &&
-      e.date.getMonth() === currentDate.getMonth() &&
-      e.date.getFullYear() === currentDate.getFullYear()
-    );
-
-    return (
-      <View style={styles.dayViewContainer}>
-        {/* Day header */}
-        <View style={styles.dayViewHeader}>
-          <Text style={styles.dayViewDayName}>
-            {daysOfWeek[currentDate.getDay()]}
-          </Text>
-          <Text style={styles.dayViewDate}>{currentDate.getDate()}</Text>
-        </View>
-
-        {/* Eventos de todo el día */}
-        {dayAllDayEvents.length > 0 && (
-          <View style={styles.dayAllDaySection}>
-            <Text style={styles.dayAllDayTitle}>Todo el día</Text>
-            {dayAllDayEvents.map((event) => (
-              <TouchableOpacity
-                key={event.id}
-                style={[styles.dayAllDayEvent, { backgroundColor: event.color }]}
-                onPress={() => handleEventPress(event.id)}
-                disabled={event.isReadOnly}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Text style={styles.dayAllDayEventText}>{event.title}</Text>
-                  {event.isExternal && (
-                    <Ionicons name="cloud-outline" size={14} color={palette.onPrimary} />
-                  )}
-                </View>
-                {event.isShared && (
-                  <Ionicons name="heart" size={16} color={palette.onPrimary} />
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-
-        {/* Timeline */}
-        <ScrollView style={styles.scrollView}>
-          <View style={styles.timeline}>
-            {Array.from({ length: 24 }, (_, i) => i).map((hour) => {
-              // Filtrar eventos que NO sean de todo el día
-              const hourEvents = events.filter(
-                (event) =>
-                  !event.isAllDay &&
-                  event.date.getDate() === currentDate.getDate() &&
-                  event.date.getMonth() === currentDate.getMonth() &&
-                  event.date.getFullYear() === currentDate.getFullYear() &&
-                  event.date.getHours() === hour
-              );
-              
-              // Detectar eventos que se superponen y asignar columnas
-              const eventsWithColumns: Array<{ event: typeof hourEvents[0], column: number, totalColumns: number }> = [];
-              
-              hourEvents.forEach((event, index) => {
-                const eventStart = event.date.getTime();
-                const eventEnd = event.endDate.getTime();
-                
-                // Encontrar qué columnas ya están ocupadas por eventos que se superponen
-                const usedColumns = new Set<number>();
-                
-                eventsWithColumns.forEach(({ event: existingEvent, column }) => {
-                  const existingStart = existingEvent.date.getTime();
-                  const existingEnd = existingEvent.endDate.getTime();
-                  
-                  // Si hay superposición, marcar esa columna como ocupada
-                  if ((eventStart < existingEnd) && (existingStart < eventEnd)) {
-                    usedColumns.add(column);
-                  }
-                });
-                
-                // Asignar la primera columna disponible
-                let column = 0;
-                while (usedColumns.has(column)) {
-                  column++;
-                }
-                
-                eventsWithColumns.push({ event, column, totalColumns: 1 });
-              });
-              
-              // Calcular el total de columnas necesarias
-              const maxColumn = eventsWithColumns.reduce((max, e) => Math.max(max, e.column), 0);
-              const totalColumns = maxColumn + 1;
-              
-              // Actualizar totalColumns para todos los eventos
-              eventsWithColumns.forEach(e => e.totalColumns = totalColumns);
-              
-              const hourString = hour.toString().padStart(2, "0") + ":00";
-
-              return (
-                <View key={hour} style={styles.timelineRow}>
-                  <View style={styles.timelineHour}>
-                    <Text style={styles.timelineHourText}>{hourString}</Text>
-                  </View>
-                  <View style={styles.timelineContent}>
-                    {hourEvents.length > 0 ? (
-                      <View style={styles.timelineEvents}>
-                        {eventsWithColumns.map(({ event, column, totalColumns }) => {
-                          const minute = event.date.getMinutes();
-                          const minuteOffset = (minute / 60) * 60; // Offset en px desde el inicio de la hora
-                          
-                          // Calcular altura basada en duración (1 hora = 60px)
-                          const durationMs = event.endDate.getTime() - event.date.getTime();
-                          const durationHours = durationMs / (1000 * 60 * 60);
-                          const eventHeight = Math.max(60, durationHours * 60); // Mínimo 60px
-                          
-                          // Posicionamiento horizontal basado en columna asignada
-                          const eventWidthPercent = totalColumns > 1 ? 95 / totalColumns : 100;
-                          const marginLeftPercent = column * (100 / totalColumns);
-                          
-                          return (
-                          <TouchableOpacity
-                            key={event.id}
-                            style={[
-                              styles.timelineEventCard,
-                              { 
-                                backgroundColor: event.color, 
-                                minHeight: eventHeight,
-                                width: `${eventWidthPercent}%`,
-                                marginLeft: `${marginLeftPercent}%`,
-                                position: 'absolute',
-                                top: minuteOffset,
-                              },
-                              event.isReadOnly && { opacity: 0.85 }
-                            ]}
-                            onPress={() => handleEventPress(event.id)}
-                            disabled={event.isReadOnly}
-                          >
-                            <View style={styles.timelineEventContent}>
-                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                <Text style={styles.timelineEventTitle} numberOfLines={1}>
-                                  {event.title}
-                                </Text>
-                                {event.isExternal && (
-                                  <Ionicons name="cloud-outline" size={14} color={palette.onPrimary} />
-                                )}
-                              </View>
-                              <Text style={styles.timelineEventTime}>
-                                {event.date.toLocaleTimeString("es", {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
-                              </Text>
-                            </View>
-                            {event.isShared && (
-                              <Ionicons name="heart" size={20} color={palette.onPrimary} />
-                            )}
-                          </TouchableOpacity>
-                          );
-                        })}
-                      </View>
-                    ) : null}
-                  </View>
-                </View>
-              );
-            })}
-          </View>
-        </ScrollView>
-      </View>
-    );
-  };
+  const timedHours = shownDays.flatMap((day) =>
+    itemsOnDay(items, day)
+      .filter((i) => !i.allDay)
+      .map((i) => (sameDay(i.start, day) ? i.start.getHours() : 0)),
+  );
+  const firstHour = Math.min(8, ...timedHours);
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-        <View style={styles.headerTop}>
-          <TouchableOpacity
-            style={styles.navButton}
-            onPress={previousPeriod}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="Periodo anterior"
-          >
-            <Ionicons name="chevron-back" size={20} color={palette.text} />
-          </TouchableOpacity>
+      {header}
 
-          <View style={styles.headerTitleContainer}>
-            <Text style={styles.headerTitle}>{getHeaderTitle()}</Text>
-            <TouchableOpacity
-              style={styles.todayButton}
-              onPress={() => setCurrentDate(new Date())}
-            >
-              <Text style={styles.todayButtonText}>Hoy</Text>
-            </TouchableOpacity>
+      {mode === "month" && (
+        <ScrollView contentContainerStyle={styles.monthContent}>
+          <MonthGrid month={selected} selected={selected} today={now} items={items} onSelect={setSelected} />
+          <View style={styles.legend}>
+            {[
+              { color: SOURCE_COLORS.couple, label: "De los dos" },
+              { color: SOURCE_COLORS.mine, label: "Tu calendario" },
+              { color: SOURCE_COLORS.partner, label: `De ${partner?.name ?? "tu pareja"}` },
+            ].map((l) => (
+              <View key={l.label} style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: l.color }]} />
+                <Text style={styles.legendText}>{l.label}</Text>
+              </View>
+            ))}
           </View>
+          <Text style={styles.dayTitle}>{dayTitle(selected)}</Text>
+          {itemsOnDay(items, selected).length === 0 ? (
+            <Text style={styles.noEvents}>Sin eventos este día.</Text>
+          ) : (
+            <View style={styles.list}>
+              {itemsOnDay(items, selected).map((item) => (
+                <EventRow
+                  key={item.id}
+                  item={item}
+                  onPress={item.eventId !== null || item.externalId !== null ? () => openItem(item) : undefined}
+                />
+              ))}
+            </View>
+          )}
+        </ScrollView>
+      )}
 
-          <TouchableOpacity
-            style={styles.navButton}
-            onPress={nextPeriod}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="Periodo siguiente"
-          >
-            <Ionicons name="chevron-forward" size={20} color={palette.text} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => router.push('/(events)/create-event')}
-            accessibilityRole="button"
-            accessibilityLabel="Crear evento"
-          >
-            <LinearGradient
-              colors={gradients.primary}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.addButtonGradient}
+      {mode !== "month" && (
+        <View style={styles.gridContent}>
+          <DayStrip
+            days={week}
+            today={now}
+            selected={mode === "day" ? selected : undefined}
+            onSelect={(day) => {
+              setSelected(day);
+              setMode("day");
+            }}
+          />
+          {mode === "day" && <Text style={styles.dayTitle}>{dayTitle(selected)}</Text>}
+          {allDay.map(({ day, item }) => (
+            <TouchableOpacity
+              key={`${isoDate(day)}-${item.id}`}
+              style={styles.allDay}
+              onPress={() => openItem(item)}
+              accessibilityRole="button"
             >
-              <Ionicons name="add" size={24} color={palette.onPrimary} />
-            </LinearGradient>
-          </TouchableOpacity>
+              <View style={[styles.legendDot, { backgroundColor: barColor(item) }]} />
+              <Text style={styles.allDayText} numberOfLines={1}>
+                {mode === "week" ? `${shortDay(day)} · ` : ""}Todo el día · {item.title}
+              </Text>
+            </TouchableOpacity>
+          ))}
+          <TimeGrid
+            key={mode}
+            days={shownDays}
+            items={items}
+            compact={mode === "week"}
+            firstHour={firstHour}
+            freeSlots={mode === "day" ? freeSlotsOn(mutual, selected, now) : []}
+            onPressItem={openItem}
+            onPressFree={createAt}
+          />
         </View>
+      )}
 
-        {/* View mode selector */}
-        <View style={styles.viewModeContainer}>
-          <View style={styles.viewModeSelector}>
-            <TouchableOpacity
-              style={[
-                styles.viewModeButton,
-                viewMode === "month" && styles.viewModeButtonActive,
-              ]}
-              onPress={() => setViewMode("month")}
-            >
-              {viewMode === "month" ? (
-                <LinearGradient
-                  colors={gradients.primary}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.viewModeButtonGradient}
-                >
-                  <Ionicons name="calendar" size={16} color={palette.onPrimary} />
-                  <Text style={styles.viewModeTextActive}>Mes</Text>
-                </LinearGradient>
-              ) : (
-                <>
-                  <Ionicons name="calendar-outline" size={16} color={palette.icon} />
-                  <Text style={styles.viewModeText}>Mes</Text>
-                </>
-              )}
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.viewModeButton,
-                viewMode === "week" && styles.viewModeButtonActive,
-              ]}
-              onPress={() => setViewMode("week")}
-            >
-              {viewMode === "week" ? (
-                <LinearGradient
-                  colors={gradients.primary}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.viewModeButtonGradient}
-                >
-                  <Ionicons name="calendar" size={16} color={palette.onPrimary} />
-                  <Text style={styles.viewModeTextActive}>Semana</Text>
-                </LinearGradient>
-              ) : (
-                <>
-                  <Ionicons name="calendar-outline" size={16} color={palette.icon} />
-                  <Text style={styles.viewModeText}>Semana</Text>
-                </>
-              )}
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.viewModeButton,
-                viewMode === "day" && styles.viewModeButtonActive,
-              ]}
-              onPress={() => setViewMode("day")}
-            >
-              {viewMode === "day" ? (
-                <LinearGradient
-                  colors={gradients.primary}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.viewModeButtonGradient}
-                >
-                  <Ionicons name="time" size={16} color={palette.onPrimary} />
-                  <Text style={styles.viewModeTextActive}>Día</Text>
-                </LinearGradient>
-              ) : (
-                <>
-                  <Ionicons name="time-outline" size={16} color={palette.icon} />
-                  <Text style={styles.viewModeText}>Día</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
+      <View style={styles.floating} pointerEvents="box-none">
+        <FreeTogetherBubble count={freeCount} onPress={() => setShowFree(true)} />
+        <View style={styles.flex} />
+        <TouchableOpacity style={styles.fab} onPress={() => createAt()} accessibilityRole="button" accessibilityLabel="Crear evento">
+          <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.fabInner}>
+            <Ionicons name="add" size={28} color={palette.onPrimary} />
+          </LinearGradient>
+        </TouchableOpacity>
       </View>
 
-      {/* Content */}
-      {viewMode === "month" && renderMonthView()}
-      {viewMode === "week" && renderWeekView()}
-      {viewMode === "day" && renderDayView()}
+      <FreeTogetherModal visible={showFree} days={freeDays} onPick={createAt} onClose={() => setShowFree(false)} />
 
-      {/* Modal de detalles del evento */}
       <EventDetailsModal
-        visible={showEventModal}
+        visible={selectedEvent !== null}
         event={selectedEvent}
-        onClose={() => {
-          setShowEventModal(false);
-          setSelectedEvent(null);
+        onClose={() => setSelectedEvent(null)}
+        onEdit={(eventId: number) => router.push(`/(events)/edit-event?eventId=${eventId}`)}
+        onDelete={async (eventId: number) => {
+          if (!user?.userId) return;
+          await eventService.deleteEvent(eventId, user.userId);
+          await load();
         }}
-        onEdit={handleEditEvent}
-        onDelete={handleDeleteEvent}
-        onRefresh={loadApprovedEvents}
+        onRefresh={load}
       />
 
-      {/* Modal de detalles de evento externo */}
       <ExternalEventDetailModal
-        visible={showExternalEventModal}
-        event={externalEventDetails}
-        onClose={() => {
-          setShowExternalEventModal(false);
-          setExternalEventDetails(null);
-        }}
+        visible={externalDetail !== null}
+        event={externalDetail}
+        onClose={() => setExternalDetail(null)}
       />
-
-      {/* Botón flotante de recomendaciones */}
-      <TouchableOpacity accessibilityRole="button" accessibilityLabel="Ver recomendaciones" hitSlop={10}
-        style={styles.recommendationsButton}
-        onPress={() => router.push('/(tabs)/recommendations')}
-      >
-        <LinearGradient
-          colors={gradients.primary}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.recommendationsGradient}
-        >
-          <Ionicons name="bulb" size={24} color={palette.onPrimary} />
-        </LinearGradient>
-      </TouchableOpacity>
     </View>
   );
 }
@@ -1436,500 +333,133 @@ export default function CalendarioScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: palette.surface,
+    backgroundColor: palette.background,
   },
-  header: {
-    borderBottomWidth: 2,
-    borderBottomColor: palette.divider,
-  },
-  emptyStateContainer: {
+  center: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  emptyStateCard: {
-    borderRadius: 24,
-    padding: 32,
-    alignItems: 'center',
-    width: '100%',
-  },
-  emptyIcon: {
-    marginBottom: 16,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: palette.text,
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  emptyText: {
-    fontSize: 14,
-    color: palette.textSecondary,
-    textAlign: 'center',
-    marginBottom: 24,
-    lineHeight: 20,
-  },
-  linkButton: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    width: '100%',
-  },
-  linkButtonGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-  },
-  linkButtonText: {
-    color: palette.onPrimary,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  headerTop: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-  },
-  navButton: {
-    padding: 8,
-  },
-  headerTitleContainer: {
-    flex: 1,
-    alignItems: "center",
-    gap: 4,
-  },
-  headerTitle: {
-    fontSize: 18,
-    color: palette.text,
-    fontWeight: "600",
-    textAlign: "center",
-  },
-  todayButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    backgroundColor: palette.primarySoft,
-    borderRadius: 12,
-  },
-  todayButtonText: {
-    fontSize: 12,
-    color: palette.textAccent,
-    fontWeight: "600",
-  },
-  addButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    overflow: "hidden",
-  },
-  addButtonGradient: {
-    flex: 1,
-    alignItems: "center",
     justifyContent: "center",
-  },
-  viewModeContainer: {
-    paddingHorizontal: 24,
-    paddingBottom: 16,
-  },
-  viewModeSelector: {
-    flexDirection: "row",
-    backgroundColor: palette.surfaceMuted,
-    borderRadius: 16,
-    padding: 4,
-    gap: 4,
-  },
-  viewModeButton: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 12,
     alignItems: "center",
+    padding: 24,
+  },
+  monthContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 96,
+  },
+  legend: {
+    flexDirection: "row",
     justifyContent: "center",
-  },
-  viewModeButtonActive: {
-    overflow: "hidden",
-  },
-  viewModeButtonGradient: {
-    flex: 1,
-    width: "100%",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    borderRadius: 12,
-  },
-  viewModeText: {
-    fontSize: 14,
-    color: palette.textMuted,
-    marginLeft: 8,
-  },
-  viewModeTextActive: {
-    fontSize: 14,
-    color: palette.onPrimary,
-    fontWeight: "600",
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 16,
-  },
-  weekHeader: {
-    flexDirection: "row",
-    marginBottom: 8,
-  },
-  dayHeaderCell: {
-    flex: 1,
-    alignItems: "center",
-    paddingVertical: 8,
-  },
-  dayHeaderText: {
-    fontSize: 12,
-    color: palette.textMuted,
-  },
-  daysGrid: {
-    flexDirection: "row",
     flexWrap: "wrap",
+    gap: 16,
+    marginTop: 12,
   },
-  dayCell: {
-    width: "14.28571%", // 100% / 7 días
-    aspectRatio: 1,
-    padding: 2,
-    borderRadius: 12,
-  },
-  todayCell: {
-    backgroundColor: palette.primarySoft,
-  },
-  dayCellContent: {
-    flex: 1,
-  },
-  dayNumber: {
-    fontSize: 14,
-    color: palette.text,
-    textAlign: "center",
-    marginBottom: 4,
-  },
-  todayText: {
-    color: palette.textAccent,
-    fontWeight: "600",
-  },
-  eventDots: {
-    flexDirection: "column",
-    gap: 2,
+  legendItem: {
+    flexDirection: "row",
     alignItems: "center",
+    gap: 6,
   },
-  eventDot: {
-    width: "100%",
-    height: 4,
-    borderRadius: 2,
-    alignItems: "center",
-    justifyContent: "center",
+  legendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
-  moreEvents: {
-    fontSize: 10,
-    color: palette.textMuted,
-    textAlign: "center",
+  legendText: {
+    fontSize: 12,
+    color: palette.textSecondary,
   },
-  upcomingSection: {
-    marginTop: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    color: palette.text,
-    fontWeight: "600",
+  dayTitle: {
+    marginTop: 16,
     marginBottom: 12,
-    paddingHorizontal: 8,
-  },
-  eventCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: palette.surface,
-    borderWidth: 2,
-    borderColor: palette.divider,
-    borderRadius: 16,
-    padding: 12,
-    marginBottom: 8,
-    gap: 12,
-  },
-  eventColorBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-  },
-  eventInfo: {
-    flex: 1,
-  },
-  eventTitle: {
     fontSize: 16,
+    fontWeight: "600",
     color: palette.text,
-    fontWeight: "500",
   },
-  eventDate: {
+  noEvents: {
     fontSize: 14,
-    color: palette.textMuted,
-    marginTop: 2,
-  },
-  noEventsContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 32,
-  },
-  noEventsText: {
-    fontSize: 14,
-    color: palette.textMuted,
-    marginTop: 8,
-  },
-  // Vista Semanal - Estilo Google Calendar
-  weekViewContainer: {
-    flex: 1,
-    backgroundColor: palette.surface,
-  },
-  weekViewHeader: {
-    flexDirection: "row",
-    backgroundColor: palette.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: palette.border,
-    paddingVertical: 8,
-  },
-  weekTimeGutter: {
-    width: 60,
-  },
-  weekDayHeader: {
-    flex: 1,
-    alignItems: "center",
-    paddingVertical: 8,
-  },
-  weekDayName: {
-    fontSize: 11,
     color: palette.textSecondary,
-    textTransform: "uppercase",
-    marginBottom: 4,
   },
-  weekDayNameToday: {
-    color: palette.textAccent,
-    fontWeight: "600",
+  list: {
+    gap: 10,
   },
-  weekDayNumber: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  weekDayNumberToday: {
-    backgroundColor: palette.primary,
-  },
-  weekDayNumberText: {
-    fontSize: 18,
-    color: palette.text,
-    fontWeight: "500",
-  },
-  weekDayNumberTextToday: {
-    color: palette.onPrimary,
-    fontWeight: "600",
-  },
-  // Sección de eventos de todo el día
-  allDaySection: {
-    backgroundColor: palette.background,
-    borderBottomWidth: 1,
-    borderBottomColor: palette.border,
-  },
-  allDayLabel: {
-    width: 60,
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-  },
-  allDayLabelText: {
-    fontSize: 10,
-    color: palette.textSecondary,
-    textTransform: "uppercase",
-  },
-  allDayEventsContainer: {
+  gridContent: {
     flex: 1,
-    flexDirection: "row",
-    paddingBottom: 8,
+    paddingHorizontal: 16,
+    paddingBottom: 80,
+    gap: 10,
   },
-  allDayColumn: {
-    flex: 1,
-    paddingHorizontal: 2,
-  },
-  allDayEvent: {
-    borderRadius: 4,
-    padding: 6,
-    marginBottom: 4,
-  },
-  allDayEventText: {
-    color: palette.onPrimary,
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  // Timeline de horas
-  weekScrollView: {
-    flex: 1,
-  },
-  weekTimelineContainer: {
-    flexDirection: "column",
-  },
-  weekTimelineRow: {
-    flexDirection: "row",
-    height: 60,
-    borderBottomWidth: 1,
-    borderBottomColor: palette.divider,
-  },
-  weekTimeColumn: {
-    width: 60,
-    paddingTop: 4,
-    paddingRight: 8,
-    alignItems: "flex-end",
-  },
-  weekTimeText: {
-    fontSize: 11,
-    color: palette.textMuted,
-  },
-  weekDayCell: {
-    flex: 1,
-    borderLeftWidth: 1,
-    borderLeftColor: palette.divider,
-    position: "relative",
-  },
-  weekDayCellToday: {
-    backgroundColor: palette.primarySoft,
-  },
-  weekTimeEvent: {
-    position: "absolute",
-    left: 2,
-    right: 2,
-    top: 2,
-    borderRadius: 4,
-    padding: 4,
-    zIndex: 1,
-  },
-  weekTimeEventTitle: {
-    fontSize: 11,
-    color: palette.onPrimary,
-    fontWeight: "600",
-    marginBottom: 2,
-  },
-  weekTimeEventTime: {
-    fontSize: 10,
-    color: palette.onPrimarySoft,
-  },
-  // Mantener estilos antiguos para compatibilidad
-  dayViewHeader: {
-    alignItems: "center",
-    backgroundColor: palette.surfaceMuted,
-    paddingVertical: 16,
-  },
-  dayViewDayName: {
-    fontSize: 14,
-    color: palette.textMuted,
-    marginBottom: 4,
-  },
-  dayViewDate: {
-    fontSize: 24,
-    color: palette.text,
-    fontWeight: "600",
-  },
-  timeline: {
-    padding: 16,
-  },
-  timelineRow: {
-    flexDirection: "row",
-    minHeight: 60,
-    gap: 12,
-  },
-  timelineHour: {
-    width: 64,
-    paddingTop: 4,
-  },
-  timelineHourText: {
-    fontSize: 14,
-    color: palette.textMuted,
-  },
-  timelineContent: {
-    flex: 1,
-    borderLeftWidth: 2,
-    borderLeftColor: palette.divider,
-    paddingLeft: 12,
-    paddingBottom: 8,
-  },
-  timelineEvents: {
-    position: 'relative',
-    minHeight: 60,
-    width: '100%',
-  },
-  timelineEventCard: {
+  allDay: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 12,
-    borderRadius: 16,
     gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: palette.secondarySoft,
   },
-  timelineEventContent: {
+  allDayText: {
     flex: 1,
+    fontSize: 13,
+    color: palette.text,
   },
-  timelineEventTitle: {
-    fontSize: 16,
-    color: palette.onPrimary,
-    fontWeight: "500",
-    marginBottom: 4,
-  },
-  timelineEventTime: {
-    fontSize: 14,
-    color: palette.onPrimarySoft,
-  },
-  // Day view - all-day events styles
-  dayViewContainer: {
-    flex: 1,
-    backgroundColor: palette.surface,
-  },
-  dayAllDaySection: {
-    backgroundColor: palette.background,
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: palette.border,
-  },
-  dayAllDayTitle: {
-    fontSize: 12,
-    color: palette.textSecondary,
-    fontWeight: "600",
-    marginBottom: 8,
-    textTransform: "uppercase",
-  },
-  dayAllDayEvent: {
+  floating: {
+    position: "absolute",
+    left: 16,
+    right: 16,
+    bottom: 16,
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
   },
-  dayAllDayEventText: {
-    fontSize: 14,
-    color: palette.onPrimary,
-    fontWeight: "600",
+  flex: {
     flex: 1,
   },
-  recommendationsButton: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
+  fab: {
     borderRadius: 28,
-    elevation: 5,
-    shadowColor: palette.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowColor: palette.secondary,
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
   },
-  recommendationsGradient: {
+  fabInner: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  emptyCard: {
+    width: "100%",
+    padding: 32,
+    borderRadius: 24,
+    alignItems: "center",
+  },
+  emptyTitle: {
+    marginTop: 16,
+    fontSize: 20,
+    fontWeight: "700",
+    color: palette.text,
+  },
+  emptyText: {
+    marginTop: 8,
+    fontSize: 14,
+    lineHeight: 20,
+    color: palette.textSecondary,
+    textAlign: "center",
+  },
+  emptyButton: {
+    marginTop: 24,
+    borderRadius: 24,
+    overflow: "hidden",
+  },
+  emptyButtonInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+  },
+  emptyButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: palette.onPrimary,
   },
 });
-

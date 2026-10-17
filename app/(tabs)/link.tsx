@@ -223,7 +223,7 @@ export default function LinkScreen() {
           icon="calendar-outline"
           title="Horarios libres juntos"
           subtitle="Cuándo tienen tiempo los dos"
-          onPress={() => router.push("/(tabs)/recommendations")}
+          onPress={() => router.push({ pathname: "/(tabs)/calendario", params: { freeTogether: "1" } })}
         />
         <ListRow
           icon="people-outline"
