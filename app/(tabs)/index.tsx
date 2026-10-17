@@ -1,9 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter, useFocusEffect } from "expo-router";
+import { Href, useRouter, useFocusEffect } from "expo-router";
 import { useState, useCallback } from "react";
 import { StyleSheet, Text, TouchableOpacity, View, ScrollView, ActivityIndicator } from "react-native";
-import { MotiView } from "moti";
+import { Card, GradientIcon, ListRow, MetaLine, SectionLabel } from "../../components/ui/Surface";
 import { useAuth } from "../../context/AuthContext";
 import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
 import eventService, { EventResponse } from "../../services/event.service";
@@ -11,14 +11,13 @@ import linkService from "../../services/link.service";
 import { palette, gradients } from "../../constants/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { loadTracked, nextNotice, Notice, settle } from "../../utils/inviteTracker";
-import { costLabel, dayPhrase, slotLabel } from "../../utils/recommendationFormat";
+import { costLabel, dayPhrase, placeLabel, slotLabel } from "../../utils/recommendationFormat";
 import { ResultModal } from "../components/ResultModal";
 import { PlanSummaryCard } from "../components/PlanSummaryCard";
 import planningService, { PlanningView } from "../../services/planning.service";
 import appNotificationService from "../../services/appNotification.service";
 import { markSeen, PlanningNotice, wasSeen } from "../../utils/planningSeen";
 import { remainingLabel } from "../../utils/planningFormat";
-import { placeLabel } from "../../utils/recommendationFormat";
 
 const OPEN_PHASES = ["INVITED", "FILTERS", "OPTIONS", "PROPOSAL"];
 
@@ -200,37 +199,36 @@ export default function HomeScreen() {
     />
   );
 
+  const displayName = user?.displayName || user?.nickname || "Usuario";
+  const badgeCount = pendingCount + unreadNotices;
+  const quickActions: { icon: keyof typeof Ionicons.glyphMap; label: string; route: Href; needsLink: boolean }[] = [
+    { icon: "list-outline", label: "Mis eventos", route: "/(events)/my-events", needsLink: true },
+    { icon: "add", label: "Crear evento", route: "/(events)/create-event", needsLink: true },
+    { icon: "happy-outline", label: "¿Cómo estuvo tu día?", route: "/(mood)/mood-log", needsLink: false },
+    { icon: "bulb-outline", label: "Banco de ideas", route: "/(ideas)/idea-bank", needsLink: true },
+  ];
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: insets.top + 24 }]}>
-      {/* Header */}
-      <MotiView
-        from={{ opacity: 0, translateY: -20 }}
-        animate={{ opacity: 1, translateY: 0 }}
-        transition={{ type: "timing", duration: 600 }}
-        style={styles.header}
-      >
-        <View style={styles.headerContent}>
-          <View>
-            <Text style={styles.greeting}>Hola, {user?.displayName || user?.nickname || "Usuario"} 👋</Text>
-            <Text style={styles.subtitle}>
-              {isLinked ? `Conectado con ${partnerName} ❤️` : "Bienvenido a Nexus"}
-            </Text>
-          </View>
-          <TouchableOpacity
-            style={styles.notificationButton}
-            onPress={() => router.push('/(events)/notifications')}
-          >
-            <Ionicons name="notifications-outline" size={26} color={palette.text} />
-            {pendingCount + unreadNotices > 0 && (
-              <View style={styles.notificationBadge}>
-                <Text style={styles.notificationBadgeText}>
-                  {pendingCount + unreadNotices > 9 ? '9+' : pendingCount + unreadNotices}
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
+    <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: insets.top + 20 }]}>
+      <View style={styles.header}>
+        <View style={styles.headerText}>
+          <Text style={styles.greeting}>Hola, {displayName}</Text>
+          <Text style={styles.subtitle}>{isLinked ? `Conectado con ${partnerName}` : "Bienvenido a Nexus"}</Text>
         </View>
-      </MotiView>
+        <TouchableOpacity
+          style={styles.bell}
+          onPress={() => router.push("/(events)/notifications")}
+          accessibilityRole="button"
+          accessibilityLabel="Notificaciones"
+        >
+          <Ionicons name="notifications-outline" size={24} color={palette.text} />
+          {badgeCount > 0 && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{badgeCount > 9 ? "9+" : badgeCount}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
 
       {loading ? (
         <View style={styles.loadingContainer}>
@@ -238,131 +236,39 @@ export default function HomeScreen() {
         </View>
       ) : (
         <>
-          {/* Dashboard - Accesos rápidos */}
-          <MotiView
-            from={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: "timing", duration: 600, delay: 200 }}
-          >
-            <Text style={styles.sectionTitle}>Accesos rápidos</Text>
-            <View style={styles.quickActionsGrid}>
-              {/* Mis Eventos */}
-              <TouchableOpacity
-                style={[styles.quickActionCard, !isLinked && styles.quickActionDisabled]}
-                onPress={() => isLinked && router.push("/(events)/my-events")}
-                activeOpacity={0.8}
-                disabled={!isLinked}
-              >
-                <LinearGradient
-                  colors={isLinked ? gradients.primaryReversed : gradients.locked}
-                  style={styles.quickActionGradient}
-                >
-                  <Ionicons name="list" size={32} color={palette.onPrimary} />
-                </LinearGradient>
-                <Text style={[styles.quickActionLabel, !isLinked && styles.quickActionLabelDisabled]}>
-                  Mis Eventos
-                </Text>
-                {!isLinked && (
-                  <View style={styles.lockedBadge}>
-                    <Ionicons name="lock-closed" size={12} color={palette.icon} />
-                  </View>
-                )}
-              </TouchableOpacity>
-
-              {/* Crear Evento */}
-              <TouchableOpacity
-                style={[styles.quickActionCard, !isLinked && styles.quickActionDisabled]}
-                onPress={() => isLinked && router.push("/(events)/create-event")}
-                activeOpacity={0.8}
-                disabled={!isLinked}
-              >
-                <LinearGradient
-                  colors={isLinked ? gradients.primary : gradients.locked}
-                  style={styles.quickActionGradient}
-                >
-                  <Ionicons name="add-circle" size={32} color={palette.onPrimary} />
-                </LinearGradient>
-                <Text style={[styles.quickActionLabel, !isLinked && styles.quickActionLabelDisabled]}>
-                  Crear Evento
-                </Text>
-                {!isLinked && (
-                  <View style={styles.lockedBadge}>
-                    <Ionicons name="lock-closed" size={12} color={palette.icon} />
-                  </View>
-                )}
-              </TouchableOpacity>
-
-              {/* Registrar estado de ánimo (RF-31) */}
-              <TouchableOpacity
-                style={styles.quickActionCard}
-                onPress={() => router.push('/(mood)/mood-log')}
-                activeOpacity={0.8}
-              >
-                <LinearGradient colors={gradients.primaryReversed} style={styles.quickActionGradient}>
-                  <Ionicons name="happy" size={32} color={palette.onPrimary} />
-                </LinearGradient>
-                <Text style={styles.quickActionLabel}>¿Cómo estuvo tu día?</Text>
-              </TouchableOpacity>
-
-              {/* Banco de ideas (RF-34; RN-29: requiere vínculo) */}
-              <TouchableOpacity
-                style={[styles.quickActionCard, !isLinked && styles.quickActionDisabled]}
-                onPress={() => isLinked && router.push('/(ideas)/idea-bank')}
-                activeOpacity={0.8}
-                disabled={!isLinked}
-              >
-                <LinearGradient
-                  colors={isLinked ? gradients.primary : gradients.locked}
-                  style={styles.quickActionGradient}
-                >
-                  <Ionicons name="bulb" size={32} color={palette.onPrimary} />
-                </LinearGradient>
-                <Text style={[styles.quickActionLabel, !isLinked && styles.quickActionLabelDisabled]}>
-                  Banco de ideas
-                </Text>
-                {!isLinked && (
-                  <View style={styles.lockedBadge}>
-                    <Ionicons name="lock-closed" size={12} color={palette.icon} />
-                  </View>
-                )}
-              </TouchableOpacity>
-            </View>
-          </MotiView>
-
-          {/* Mensaje informativo si no está vinculado */}
-          {!isLinked && (
-            <MotiView
-              from={{ opacity: 0, translateY: 20 }}
-              animate={{ opacity: 1, translateY: 0 }}
-              transition={{ type: "spring", delay: 400 }}
-              style={styles.infoCard}
+          {/* RF-37: entrada principal para pedir una recomendacion */}
+          {isLinked && (
+            <TouchableOpacity
+              onPress={() => router.push("/(recommend)/mode")}
+              activeOpacity={0.9}
+              accessibilityRole="button"
+              style={styles.heroWrap}
             >
-              <View style={styles.infoIconContainer}>
-                <Ionicons name="information-circle" size={24} color={palette.secondary} />
-              </View>
-              <View style={styles.infoTextContainer}>
-                <Text style={styles.infoTitle}>Funciones limitadas</Text>
-                <Text style={styles.infoDescription}>
-                  Necesitas estar vinculado para acceder al calendario y otras funciones
-                </Text>
-              </View>
-            </MotiView>
+              <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.hero}>
+                <View style={styles.heroIcon}>
+                  <Ionicons name="sparkles-outline" size={24} color={palette.onPrimary} />
+                </View>
+                <View style={styles.heroText}>
+                  <Text style={styles.heroTitle}>Pedir recomendación</Text>
+                  <Text style={styles.heroSubtitle}>Nexus les sugiere planes para su próxima cita.</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={22} color={palette.onPrimary} />
+              </LinearGradient>
+            </TouchableOpacity>
           )}
 
           {/* Volver a una planeacion en pareja abierta (se puede salir y volver sin perder nada) */}
-          {planning && OPEN_PHASES.includes(planning.phase) && planningNotice !== 'INVITE' && (
+          {planning && OPEN_PHASES.includes(planning.phase) && planningNotice !== "INVITE" && (
             <TouchableOpacity
               style={styles.planningBanner}
-              onPress={() => router.push('/(planning)/session')}
+              onPress={() => router.push("/(planning)/session")}
               accessibilityRole="button"
             >
-              <LinearGradient colors={gradients.primary} style={styles.planningIcon}>
-                <Ionicons name="people-outline" size={22} color={palette.onPrimary} />
-              </LinearGradient>
+              <GradientIcon name="people-outline" />
               <View style={styles.planningText}>
                 <Text style={styles.planningTitle}>Planeación con {planning.partner.name}</Text>
                 <Text style={styles.planningSubtitle}>
-                  {planning.phase === 'INVITED'
+                  {planning.phase === "INVITED"
                     ? `Esperando a que ${planning.partner.name} se una`
                     : `Quedan ${remainingLabel(planning.sessionExpiresAt, now)} para decidir`}
                 </Text>
@@ -371,56 +277,80 @@ export default function HomeScreen() {
             </TouchableOpacity>
           )}
 
-          {/* Próximos eventos (próximos 7 días) */}
-          {isLinked && upcomingEvents.length > 0 && (
-            <MotiView
-              from={{ opacity: 0, translateY: 20 }}
-              animate={{ opacity: 1, translateY: 0 }}
-              transition={{ type: "spring", delay: 500 }}
-              style={{ marginTop: 8 }}
-            >
-              <Text style={styles.sectionTitle}>Próximos eventos</Text>
-              <View style={styles.upcomingEventsContainer}>
-                {upcomingEvents.map((event, index) => {
-                  const startDate = new Date(event.startDateTime);
-                  const endDate = new Date(event.endDateTime);
-                  const dayName = startDate.toLocaleDateString('es-ES', { weekday: 'short' });
-                  const dayNumber = startDate.getDate();
-                  const month = startDate.toLocaleDateString('es-ES', { month: 'short' });
-                  const startTime = startDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-                  const endTime = endDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+          {!isLinked && (
+            <Card>
+              <ListRow
+                icon="link-outline"
+                title="Vincúlate con tu pareja"
+                subtitle="El calendario y las citas se comparten con tu pareja."
+                onPress={() => router.push("/(tabs)/link")}
+              />
+            </Card>
+          )}
 
-                  return (
-                    <TouchableOpacity
-                      key={`${event.id}-${index}`}
-                      style={styles.upcomingEventCard}
-                      onPress={() => router.push('/(tabs)/calendario')}
-                      activeOpacity={0.7}
-                    >
-                      <View style={[styles.eventDateBadge, { backgroundColor: event.color || palette.secondary }]}>
-                        <Text style={styles.eventDayName}>{dayName.toUpperCase()}</Text>
-                        <Text style={styles.eventDayNumber}>{dayNumber}</Text>
-                        <Text style={styles.eventMonth}>{month.toUpperCase()}</Text>
+          <View style={styles.section}>
+            <SectionLabel>Accesos rápidos</SectionLabel>
+            <View style={styles.grid}>
+              {quickActions.map((q) => {
+                const locked = q.needsLink && !isLinked;
+                return (
+                  <TouchableOpacity
+                    key={q.label}
+                    style={[styles.quick, locked && styles.quickLocked]}
+                    onPress={() => router.push(q.route)}
+                    disabled={locked}
+                    activeOpacity={0.8}
+                    accessibilityRole="button"
+                    accessibilityState={{ disabled: locked }}
+                  >
+                    <GradientIcon name={q.icon} />
+                    <Text style={styles.quickLabel}>{q.label}</Text>
+                    {locked && (
+                      <View style={styles.lock}>
+                        <Ionicons name="lock-closed" size={12} color={palette.icon} />
                       </View>
-                      <View style={styles.eventDetailsContainer}>
-                        <Text style={styles.eventTitle} numberOfLines={1}>{event.title}</Text>
-                        <View style={styles.eventTimeRow}>
-                          <Ionicons name="time-outline" size={14} color={palette.textSecondary} />
-                          <Text style={styles.eventTime}>{startTime} - {endTime}</Text>
-                        </View>
-                        {event.location && (
-                          <View style={styles.eventLocationRow}>
-                            <Ionicons name="location-outline" size={14} color={palette.textSecondary} />
-                            <Text style={styles.eventLocation} numberOfLines={1}>{event.location}</Text>
-                          </View>
-                        )}
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          {isLinked && upcomingEvents.length > 0 && (
+            <View style={styles.section}>
+              <SectionLabel>Próximos eventos</SectionLabel>
+              {upcomingEvents.map((event, index) => {
+                const start = new Date(event.startDateTime);
+                const end = new Date(event.endDateTime);
+                const time = (d: Date) => d.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", hour12: false });
+                return (
+                  <TouchableOpacity
+                    key={`${event.id}-${index}`}
+                    onPress={() => router.push("/(tabs)/calendario")}
+                    activeOpacity={0.8}
+                    accessibilityRole="button"
+                  >
+                    <Card style={styles.eventCard}>
+                      <View style={styles.dateBadge}>
+                        <Text style={styles.dateSmall}>
+                          {start.toLocaleDateString("es-MX", { weekday: "short" }).replace(".", "").toUpperCase()}
+                        </Text>
+                        <Text style={styles.dateNumber}>{start.getDate()}</Text>
+                        <Text style={styles.dateSmall}>
+                          {start.toLocaleDateString("es-MX", { month: "short" }).replace(".", "").toUpperCase()}
+                        </Text>
+                      </View>
+                      <View style={styles.eventInfo}>
+                        <Text style={styles.eventTitle} numberOfLines={2}>{event.title}</Text>
+                        <MetaLine icon="time-outline" text={`${time(start)} – ${time(end)}`} />
+                        {event.location ? <MetaLine icon="location-outline" text={event.location} /> : null}
                       </View>
                       <Ionicons name="chevron-forward" size={20} color={palette.icon} />
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </MotiView>
+                    </Card>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           )}
         </>
       )}
@@ -536,258 +466,102 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: palette.background },
+  content: { paddingHorizontal: 16, paddingBottom: 32, gap: 24 },
+  header: { flexDirection: "row", alignItems: "center", gap: 12 },
+  headerText: { flex: 1, gap: 4 },
+  greeting: { fontSize: 24, fontWeight: "700", color: palette.text },
+  subtitle: { fontSize: 14, color: palette.textSecondary },
+  bell: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: palette.surface,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: palette.shadow,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  badge: {
+    position: "absolute",
+    top: -2,
+    right: -2,
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: 5,
+    borderRadius: 9,
+    backgroundColor: palette.primary,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  badgeText: { fontSize: 11, fontWeight: "700", color: palette.onPrimary },
+  loadingContainer: { paddingVertical: 48, alignItems: "center" },
+  heroWrap: {
+    borderRadius: 20,
+    overflow: "hidden",
+    shadowColor: palette.shadow,
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
+  },
+  hero: { flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 16, paddingVertical: 18 },
+  heroIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: palette.onPrimaryFaint,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  heroText: { flex: 1, gap: 4 },
+  heroTitle: { fontSize: 16, fontWeight: "700", color: palette.onPrimary },
+  heroSubtitle: { fontSize: 14, color: palette.onPrimarySoft },
   planningBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
     padding: 14,
-    marginBottom: 20,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: palette.primaryBorder,
     backgroundColor: palette.primarySoft,
   },
-  planningIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  planningText: {
-    flex: 1,
-    gap: 2,
-  },
-  planningTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: palette.text,
-  },
-  planningSubtitle: {
-    fontSize: 13,
-    color: palette.textSecondary,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: palette.surfaceMuted,
-  },
-  content: {
-    padding: 20,
-    paddingBottom: 40,
-  },
-  header: {
-    marginBottom: 30,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  greeting: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: palette.text,
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: palette.textSecondary,
-  },
-  notificationButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: palette.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-    elevation: 3,
-    shadowColor: palette.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-  },
-  notificationBadge: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    backgroundColor: palette.primary,
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 4,
-    borderWidth: 2,
-    borderColor: palette.divider,
-  },
-  notificationBadgeText: {
-    color: palette.onPrimary,
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: 40,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: palette.text,
-    marginBottom: 16,
-  },
-
-  // Dashboard - Accesos rápidos
-  quickActionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 16,
-    marginBottom: 24,
-  },
-  quickActionCard: {
-    width: '47%',
-    backgroundColor: palette.surface,
-    borderRadius: 20,
-    padding: 20,
-    alignItems: 'center',
-    elevation: 3,
-    shadowColor: palette.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-  },
-  quickActionDisabled: {
-    opacity: 0.6,
-  },
-  quickActionGradient: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  quickActionLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: palette.text,
-    textAlign: 'center',
-  },
-  quickActionLabelDisabled: {
-    color: palette.textMuted,
-  },
-  lockedBadge: {
-    backgroundColor: palette.surfaceMuted,
-    padding: 6,
-    borderRadius: 12,
-    marginTop: 8,
-  },
-
-  // Card informativa
-  infoCard: {
-    flexDirection: "row",
-    backgroundColor: palette.secondarySoft,
+  planningText: { flex: 1, gap: 2 },
+  planningTitle: { fontSize: 15, fontWeight: "600", color: palette.text },
+  planningSubtitle: { fontSize: 12, color: palette.textSecondary },
+  section: { gap: 12 },
+  grid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
+  quick: {
+    width: "47.5%",
+    minHeight: 120,
+    gap: 12,
     padding: 16,
     borderRadius: 16,
-    borderLeftWidth: 4,
-    borderLeftColor: palette.secondary,
-    elevation: 2,
-    shadowColor: palette.secondary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-  },
-  infoIconContainer: {
-    marginRight: 12,
-  },
-  infoTextContainer: {
-    flex: 1,
-  },
-  infoTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: palette.text,
-    marginBottom: 4,
-  },
-  infoDescription: {
-    fontSize: 12,
-    color: palette.textSecondary,
-    lineHeight: 18,
-  },
-
-  // Próximos eventos
-  upcomingEventsContainer: {
-    gap: 12,
-  },
-  upcomingEventCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: palette.surface,
-    borderRadius: 16,
-    padding: 14,
-    elevation: 2,
     shadowColor: palette.shadow,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
-  eventDateBadge: {
-    width: 60,
-    height: 70,
+  quickLocked: { opacity: 0.5 },
+  quickLabel: { fontSize: 14, fontWeight: "500", color: palette.text },
+  lock: { position: "absolute", top: 12, right: 12 },
+  eventCard: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12, paddingLeft: 12 },
+  dateBadge: {
+    width: 52,
+    height: 60,
     borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 14,
+    backgroundColor: palette.secondarySoft,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  eventDayName: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: palette.onPrimary,
-    opacity: 0.9,
-  },
-  eventDayNumber: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: palette.onPrimary,
-    marginVertical: 2,
-  },
-  eventMonth: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: palette.onPrimary,
-    opacity: 0.9,
-  },
-  eventDetailsContainer: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  eventTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: palette.text,
-    marginBottom: 4,
-  },
-  eventTimeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 2,
-  },
-  eventTime: {
-    fontSize: 13,
-    color: palette.textSecondary,
-  },
-  eventLocationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  eventLocation: {
-    fontSize: 13,
-    color: palette.textSecondary,
-    flex: 1,
-  },
+  dateSmall: { fontSize: 11, fontWeight: "600", color: palette.textAccent },
+  dateNumber: { fontSize: 20, fontWeight: "700", color: palette.textAccent },
+  eventInfo: { flex: 1, gap: 4 },
+  eventTitle: { fontSize: 15, fontWeight: "500", color: palette.text },
 });
-

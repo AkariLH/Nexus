@@ -1,9 +1,9 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Header } from "../components/layout/Header";
+import { ScreenHeader } from "../components/layout/ScreenHeader";
+import { ListCard, ListRow, SectionLabel } from "../../components/ui/Surface";
 import { ErrorModal } from "../components/ErrorModal";
 import { SuccessModal } from "../components/SuccessModal";
 import { ConfirmModal } from "../components/ConfirmModal";
@@ -118,89 +118,49 @@ export default function ConfiguracionesScreen() {
 
   return (
     <View style={styles.container}>
-      <Header onBack={() => router.back()} />
+      <ScreenHeader title="Configuraciones" onBack={() => router.back()} />
 
-      <View style={styles.content}>
-        {/* Horarios permitidos */}
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => router.push('/(settings)/availability-schedule')}
-          disabled={isLoading}
-        >
-          <View style={styles.actionLeft}>
-            <View style={styles.iconContainer}>
-              <Ionicons name="time-outline" size={24} color={palette.text} />
-            </View>
-            <View>
-              <Text style={styles.actionTitle}>Horarios permitidos</Text>
-              <Text style={styles.actionSubtitle}>Define tu disponibilidad para recomendaciones</Text>
-            </View>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={palette.icon} />
-        </TouchableOpacity>
+      <ScrollView contentContainerStyle={styles.content}>
+        <SectionLabel muted>Disponibilidad</SectionLabel>
+        <ListCard>
+          <ListRow
+            icon="time-outline"
+            title="Horarios permitidos"
+            subtitle="Cuándo puede Nexus sugerirles planes"
+            onPress={() => router.push("/(settings)/availability-schedule")}
+            disabled={isLoading}
+          />
+          <ListRow
+            icon="calendar-outline"
+            title="Calendarios externos"
+            subtitle="Vincula el calendario de tu teléfono"
+            onPress={() => router.push("/(tabs)/link-external-calendars")}
+            disabled={isLoading}
+          />
+        </ListCard>
 
-        {/* Calendarios Externos */}
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => router.push('/(tabs)/link-external-calendars')}
-          disabled={isLoading}
-        >
-          <View style={styles.actionLeft}>
-            <View style={styles.iconContainer}>
-              <Ionicons name="calendar-outline" size={24} color={palette.text} />
-            </View>
-            <View>
-              <Text style={styles.actionTitle}>Calendarios externos</Text>
-              <Text style={styles.actionSubtitle}>Vincular el calendario de tu dispositivo</Text>
-            </View>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={palette.icon} />
-        </TouchableOpacity>
+        <SectionLabel muted>Cuenta</SectionLabel>
+        <ListCard>
+          <ListRow
+            icon="log-out-outline"
+            title="Cerrar sesión"
+            onPress={() => setShowLogoutConfirm(true)}
+            disabled={isLoading}
+            trailing={isLoading ? <ActivityIndicator size="small" color={palette.primary} /> : undefined}
+          />
+        </ListCard>
+        <ListCard>
+          <ListRow
+            icon="trash-outline"
+            title="Eliminar cuenta"
+            subtitle="Esta acción es permanente"
+            danger
+            onPress={handleDeleteAccount}
+            disabled={isLoading}
+          />
+        </ListCard>
+      </ScrollView>
 
-        {/* Cerrar sesión */}
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => setShowLogoutConfirm(true)}
-          disabled={isLoading}
-        >
-          <View style={styles.actionLeft}>
-            <View style={styles.iconContainer}>
-              <Ionicons name="log-out-outline" size={24} color={palette.text} />
-            </View>
-            <View>
-              <Text style={styles.actionTitle}>Cerrar sesión</Text>
-              <Text style={styles.actionSubtitle}>Salir de tu cuenta</Text>
-            </View>
-          </View>
-          {isLoading ? (
-            <ActivityIndicator size="small" color={palette.primary} />
-          ) : (
-            <Ionicons name="chevron-forward" size={20} color={palette.icon} />
-          )}
-        </TouchableOpacity>
-
-        {/* Eliminar cuenta */}
-        <TouchableOpacity
-          style={[styles.actionButton, styles.dangerButton]}
-          onPress={handleDeleteAccount}
-          disabled={isLoading}
-        >
-          <View style={styles.actionLeft}>
-            <View style={[styles.iconContainer, styles.dangerIconContainer]}>
-              <Ionicons name="trash-outline" size={24} color={palette.error} />
-            </View>
-            <View>
-              <Text style={[styles.actionTitle, styles.dangerText]}>
-                Eliminar cuenta
-              </Text>
-              <Text style={styles.actionSubtitle}>
-                Esta acción es permanente
-              </Text>
-            </View>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={palette.error} />
-        </TouchableOpacity>
-      </View>
 
       {/* Modales */}
       {/* Primera confirmación para eliminar cuenta */}
@@ -261,55 +221,6 @@ export default function ConfiguracionesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: palette.surface 
-  },
-  content: {
-    padding: 20,
-    gap: 12,
-  },
-  actionButton: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: palette.surface,
-    borderWidth: 2,
-    borderColor: palette.divider,
-    borderRadius: 20,
-    padding: 16,
-  },
-  actionLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-    gap: 12,
-  },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: palette.surfaceMuted,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  dangerButton: {
-    borderColor: palette.errorBorder,
-  },
-  dangerIconContainer: {
-    backgroundColor: palette.errorSoft,
-  },
-  actionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: palette.text,
-    marginBottom: 4,
-  },
-  dangerText: {
-    color: palette.error,
-  },
-  actionSubtitle: {
-    fontSize: 14,
-    color: palette.textSecondary,
-  },
+  container: { flex: 1, backgroundColor: palette.background },
+  content: { padding: 16, gap: 16, paddingBottom: 32 },
 });

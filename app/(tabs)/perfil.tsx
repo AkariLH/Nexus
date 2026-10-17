@@ -16,7 +16,8 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 import { processProfilePhoto } from '@/utils/imageProcessor';
-import { Header } from "../components/layout/Header";
+import { LinearGradient } from "expo-linear-gradient";
+import { Card, ListCard, ListRow, TabTitle } from "../../components/ui/Surface";
 import { GradientButton } from "../components/ui/GradientButton";
 import { ErrorModal } from "../components/ErrorModal";
 import { SuccessModal } from "../components/SuccessModal";
@@ -26,7 +27,7 @@ import { profileService } from "../../services/profile.service";
 import { useAuth } from "../../context/AuthContext";
 import type { UpdateProfileRequest } from "../../types/auth.types";
 import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
-import { palette } from "../../constants/colors";
+import { palette, gradients } from "../../constants/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function PerfilScreen() {
@@ -367,327 +368,184 @@ export default function PerfilScreen() {
     }
   };
 
-  return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-        <View />
+  type IconName = keyof typeof Ionicons.glyphMap;
 
-        {!isEditing ? (
-          <View style={styles.editActions}>
-            <TouchableOpacity
-              onPress={handleStartEdit}
-              style={styles.editButton}
-              disabled={isLoading}
-            >
-              <Text style={styles.editButtonText}>Editar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => router.push("/(tabs)/configuraciones")}
-              style={styles.settingsButton}
-              disabled={isLoading}
-              accessibilityRole="button"
-              accessibilityLabel="Configuraciones"
-            >
-              <Ionicons name="settings-outline" size={24} color={palette.text} />
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <View style={styles.editActions}>
-            <TouchableOpacity
-              onPress={handleCancelEdit}
-              style={styles.iconButton}
-              hitSlop={6}
-              accessibilityRole="button"
-              accessibilityLabel="Cancelar edición"
-              disabled={isLoading}
-            >
-              <Ionicons name="close" size={20} color={palette.textSecondary} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handleSaveEdit}
-              style={[styles.iconButton, styles.saveIconButton]}
-              hitSlop={6}
-              accessibilityRole="button"
-              accessibilityLabel="Guardar cambios"
-              disabled={isLoading}
-            >
-              <Ionicons name="checkmark" size={20} color={palette.primary} />
-            </TouchableOpacity>
-          </View>
-        )}
+  /** Fila de dato del perfil: en lectura muestra el valor; en edicion, el campo. */
+  const infoRow = (icon: IconName, label: string, value: string, editor: React.ReactNode) => (
+    <View style={styles.infoRow}>
+      <Ionicons name={icon} size={20} color={palette.icon} />
+      <View style={styles.infoText}>
+        <Text style={styles.infoLabel}>{label}</Text>
+        {isEditing ? editor : <Text style={styles.infoValue}>{value}</Text>}
       </View>
+    </View>
+  );
 
+  return (
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 20 }]}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.title}>Mi perfil</Text>
-
-        {/* Profile Image */}
-        <View style={styles.profileImageContainer}>
-          <View style={styles.profileImageWrapper}>
-            {avatarUri ? (
-              <Image
-                source={{ uri: avatarUri }}
-                style={styles.profileImage}
-                onError={() => setAvatarUri(null)}
-              />
-            ) : (
-              <Ionicons name="person" size={64} color={palette.primary} />
-            )}
-          </View>
-          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Cambiar foto de perfil" hitSlop={10} 
-            style={styles.cameraButton} 
-            onPress={() => {
-              if (avatarUri) {
-                setShowAvatarModal(true);
-              } else {
-                handlePickImage();
-              }
-            }}
-            disabled={isUploadingAvatar}
-          >
-            {isUploadingAvatar ? (
-              <ActivityIndicator size="small" color={palette.onPrimary} />
-            ) : (
-              <Ionicons name="camera" size={20} color={palette.onPrimary} />
-            )}
-          </TouchableOpacity>
-          <Text style={styles.imageHint}>
-            {isUploadingAvatar ? "Subiendo imagen..." : "Toca el ícono para cambiar tu foto"}
-          </Text>
-        </View>
-
-        {/* Form Fields */}
-        <View style={styles.formContainer}>
-          {/* Display Name */}
-          <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>Nombre completo</Text>
-            {isEditing ? (
-              <View
-                style={[
-                  styles.inputContainer,
-                  styles.inputContainerEditing,
-                ]}
-              >
-                <Ionicons
-                  name="person-outline"
-                  size={20}
-                  color={palette.icon}
-                  style={styles.inputIcon}
-                />
-                <TextInput
-                  value={editDisplayName}
-                  onChangeText={setEditDisplayName}
-                  style={styles.input}
-                  placeholder="Ingresa tu nombre"
-                  placeholderTextColor={palette.textMuted}
-                  editable={!isLoading}
-                />
-              </View>
-            ) : (
-              <View style={styles.inputContainer}>
-                <Ionicons
-                  name="person-outline"
-                  size={20}
-                  color={palette.icon}
-                  style={styles.inputIcon}
-                />
-                <Text style={styles.inputText}>{displayName}</Text>
-              </View>
-            )}
-          </View>
-
-          {/* Nickname */}
-          <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>Apodo</Text>
-            {isEditing ? (
-              <View
-                style={[
-                  styles.inputContainer,
-                  styles.inputContainerEditing,
-                ]}
-              >
-                <Ionicons
-                  name="at"
-                  size={20}
-                  color={palette.icon}
-                  style={styles.inputIcon}
-                />
-                <TextInput
-                  value={editNickname}
-                  onChangeText={setEditNickname}
-                  style={styles.input}
-                  placeholder="Ingresa tu apodo"
-                  placeholderTextColor={palette.textMuted}
-                  editable={!isLoading}
-                />
-              </View>
-            ) : (
-              <View style={styles.inputContainer}>
-                <Ionicons
-                  name="at"
-                  size={20}
-                  color={palette.icon}
-                  style={styles.inputIcon}
-                />
-                <Text style={styles.inputText}>{nickname || "Sin apodo"}</Text>
-              </View>
-            )}
-          </View>
-
-          {/* Email */}
-          <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>Correo electrónico</Text>
-            {isEditing ? (
-              <View
-                style={[
-                  styles.inputContainer,
-                  styles.inputContainerEditing,
-                ]}
-              >
-                <Ionicons
-                  name="mail-outline"
-                  size={20}
-                  color={palette.icon}
-                  style={styles.inputIcon}
-                />
-                <TextInput
-                  value={editEmail}
-                  onChangeText={setEditEmail}
-                  style={styles.input}
-                  placeholder="tu@email.com"
-                  placeholderTextColor={palette.textMuted}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  editable={!isLoading}
-                />
-              </View>
-            ) : (
-              <View style={styles.inputContainer}>
-                <Ionicons
-                  name="mail-outline"
-                  size={20}
-                  color={palette.icon}
-                  style={styles.inputIcon}
-                />
-                <Text style={styles.inputText}>{email}</Text>
-              </View>
-            )}
-          </View>
-
-          {/* Fecha de Nacimiento */}
-          <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>Fecha de nacimiento</Text>
-            {isEditing ? (
-              <>
+        <TabTitle
+          right={
+            isEditing ? (
+              <View style={styles.editActions}>
                 <TouchableOpacity
-                  style={[
-                    styles.inputContainer,
-                    styles.inputContainerEditing,
-                  ]}
-                  onPress={() => setShowDatePicker(true)}
+                  onPress={handleCancelEdit}
+                  style={styles.iconButton}
+                  accessibilityRole="button"
+                  accessibilityLabel="Cancelar edición"
                   disabled={isLoading}
                 >
-                  <Ionicons
-                    name="calendar-outline"
-                    size={20}
-                    color={palette.icon}
-                    style={styles.inputIcon}
-                  />
-                  <Text style={styles.inputText}>{editBirthDate}</Text>
-                  <Ionicons
-                    name="chevron-down"
-                    size={20}
-                    color={palette.icon}
-                  />
+                  <Ionicons name="close" size={20} color={palette.textSecondary} />
                 </TouchableOpacity>
-                <Text style={styles.fieldHint}>
-                  Toca para seleccionar la fecha. Debes ser mayor de 18 años.
-                </Text>
-                
-                {showDatePicker && (
-                  <DateTimePicker
-                    value={editBirthDate ? new Date(editBirthDate) : new Date(2000, 0, 1)}
-                    mode="date"
-                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                    onChange={handleDateChange}
-                    maximumDate={new Date()}
-                    minimumDate={new Date(1900, 0, 1)}
-                    accentColor={palette.primary}
-                    textColor={palette.text}
-                  />
-                )}
-              </>
-            ) : (
-              <View style={styles.inputContainer}>
-                <Ionicons
-                  name="calendar-outline"
-                  size={20}
-                  color={palette.icon}
-                  style={styles.inputIcon}
-                />
-                <Text style={styles.inputText}>{birthDate}</Text>
+                <TouchableOpacity
+                  onPress={handleSaveEdit}
+                  style={[styles.iconButton, styles.saveIconButton]}
+                  accessibilityRole="button"
+                  accessibilityLabel="Guardar cambios"
+                  disabled={isLoading}
+                >
+                  <Ionicons name="checkmark" size={20} color={palette.textAccent} />
+                </TouchableOpacity>
               </View>
-            )}
+            ) : (
+              <TouchableOpacity onPress={handleStartEdit} style={styles.editButton} disabled={isLoading} accessibilityRole="button">
+                <Ionicons name="pencil-outline" size={16} color={palette.textAccent} />
+                <Text style={styles.editButtonText}>Editar</Text>
+              </TouchableOpacity>
+            )
+          }
+        >
+          Mi perfil
+        </TabTitle>
+
+        <View style={styles.who}>
+          <View>
+            <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.avatar}>
+              {avatarUri ? (
+                <Image source={{ uri: avatarUri }} style={styles.avatarImage} onError={() => setAvatarUri(null)} />
+              ) : (
+                <Text style={styles.avatarInitial}>{(displayName || "U").charAt(0).toUpperCase()}</Text>
+              )}
+            </LinearGradient>
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="Cambiar foto de perfil"
+              hitSlop={10}
+              style={styles.cameraButton}
+              onPress={() => (avatarUri ? setShowAvatarModal(true) : handlePickImage())}
+              disabled={isUploadingAvatar}
+            >
+              {isUploadingAvatar ? (
+                <ActivityIndicator size="small" color={palette.textAccent} />
+              ) : (
+                <Ionicons name="camera-outline" size={18} color={palette.textAccent} />
+              )}
+            </TouchableOpacity>
           </View>
+          <Text style={styles.name}>{displayName}</Text>
+          {nickname ? <Text style={styles.nick}>{nickname}</Text> : null}
         </View>
 
-        {/* Save Button (visible cuando está editando) */}
-        {isEditing && (
-          <View style={styles.saveButtonContainer}>
-            <GradientButton
-              title={isLoading ? "Guardando..." : "Guardar cambios"}
-              onPress={handleSaveEdit}
-              disabled={isLoading}
+        <Card style={styles.infoCard}>
+          {infoRow(
+            "person-outline",
+            "Nombre completo",
+            displayName,
+            <TextInput
+              value={editDisplayName}
+              onChangeText={setEditDisplayName}
+              style={styles.input}
+              placeholder="Ingresa tu nombre"
+              placeholderTextColor={palette.textMuted}
+              editable={!isLoading}
+            />,
+          )}
+          <View style={styles.divider} />
+          {infoRow(
+            "pricetag-outline",
+            "Apodo",
+            nickname || "Sin apodo",
+            <TextInput
+              value={editNickname}
+              onChangeText={setEditNickname}
+              style={styles.input}
+              placeholder="Ingresa tu apodo"
+              placeholderTextColor={palette.textMuted}
+              editable={!isLoading}
+            />,
+          )}
+          <View style={styles.divider} />
+          {infoRow(
+            "mail-outline",
+            "Correo electrónico",
+            email,
+            <TextInput
+              value={editEmail}
+              onChangeText={setEditEmail}
+              style={styles.input}
+              placeholder="tu@email.com"
+              placeholderTextColor={palette.textMuted}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              editable={!isLoading}
+            />,
+          )}
+          <View style={styles.divider} />
+          {infoRow(
+            "calendar-outline",
+            "Fecha de nacimiento",
+            birthDate,
+            <TouchableOpacity style={styles.dateInput} onPress={() => setShowDatePicker(true)} disabled={isLoading}>
+              <Text style={styles.inputText}>{editBirthDate}</Text>
+              <Ionicons name="chevron-down" size={18} color={palette.icon} />
+            </TouchableOpacity>,
+          )}
+          {isEditing && <Text style={styles.fieldHint}>Debes ser mayor de 18 años.</Text>}
+          {isEditing && showDatePicker && (
+            <DateTimePicker
+              value={editBirthDate ? new Date(editBirthDate) : new Date(2000, 0, 1)}
+              mode="date"
+              display={Platform.OS === "ios" ? "spinner" : "default"}
+              onChange={handleDateChange}
+              maximumDate={new Date()}
+              minimumDate={new Date(1900, 0, 1)}
+              accentColor={palette.primary}
+              textColor={palette.text}
             />
-            {isLoading && (
-              <ActivityIndicator
-                size="small"
-                color={palette.primary}
-                style={styles.loader}
-              />
-            )}
-          </View>
-        )}
+          )}
+        </Card>
 
-        {/* Account Actions (solo visible cuando no está editando) */}
-        {!isEditing && (
-          <View style={styles.actionsContainer}>
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={() => router.push('/(tabs)/preferences')}
-              disabled={isLoading}
-            >
-              <View>
-                <Text style={styles.actionTitle}>Mis preferencias</Text>
-                <Text style={styles.actionSubtitle}>
-                  Edita tus preferencias de bienestar
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={palette.icon} />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.actionButton}
-              disabled={isLoading}
-            >
-              <View>
-                <Text style={styles.actionTitle}>Cambiar contraseña</Text>
-                <Text style={styles.actionSubtitle}>
-                  Actualiza tu contraseña
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={palette.icon} />
-            </TouchableOpacity>
-          </View>
+        {isEditing ? (
+          <GradientButton title="Guardar cambios" onPress={handleSaveEdit} loading={isLoading} />
+        ) : (
+          <ListCard>
+            <ListRow
+              icon="heart-outline"
+              title="Mis preferencias"
+              subtitle="Tus gustos en las 7 dimensiones"
+              onPress={() => router.push("/(tabs)/preferences")}
+            />
+            <ListRow
+              icon="happy-outline"
+              title="Mi ánimo"
+              subtitle="Cómo te has sentido estos días"
+              onPress={() => router.push("/(mood)/mood-history")}
+            />
+            <ListRow icon="key-outline" title="Cambiar contraseña" disabled />
+            <ListRow
+              icon="settings-outline"
+              title="Configuraciones"
+              subtitle="Horarios, calendarios y cuenta"
+              onPress={() => router.push("/(tabs)/configuraciones")}
+            />
+          </ListCard>
         )}
       </ScrollView>
+
 
       {/* Modales */}
       <ActionModal
@@ -754,178 +612,73 @@ export default function PerfilScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: palette.surface,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingBottom: 16,
-  },
+  container: { flex: 1, backgroundColor: palette.background },
+  scrollView: { flex: 1 },
+  scrollContent: { paddingHorizontal: 16, paddingBottom: 32, gap: 20 },
+  editActions: { flexDirection: "row", gap: 8 },
   editButton: {
-    paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 16,
+    backgroundColor: palette.secondarySoft,
   },
-  settingsButton: {
-    width: 48,
-    height: 48,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: -12,
-  },
-  editButtonText: {
-    color: palette.textAccent,
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  editActions: {
-    flexDirection: "row",
-    gap: 8,
-  },
+  editButtonText: { fontSize: 13, fontWeight: "500", color: palette.textAccent },
   iconButton: {
     width: 36,
     height: 36,
     borderRadius: 18,
     backgroundColor: palette.surfaceMuted,
-    alignItems: "center",
     justifyContent: "center",
-  },
-  saveIconButton: {
-    backgroundColor: palette.primarySoft,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 32,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "700",
-    color: palette.text,
-    marginBottom: 32,
-  },
-  profileImageContainer: {
     alignItems: "center",
-    marginBottom: 32,
   },
-  profileImageWrapper: {
-    width: 128,
-    height: 128,
-    borderRadius: 64,
-    backgroundColor: palette.primarySoft,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 12,
-    overflow: "hidden",
-  },
-  profileImage: {
-    width: "100%",
-    height: "100%",
-  },
+  saveIconButton: { backgroundColor: palette.secondarySoft },
+  who: { alignItems: "center", gap: 8 },
+  avatar: { width: 104, height: 104, borderRadius: 52, justifyContent: "center", alignItems: "center", overflow: "hidden" },
+  avatarImage: { width: 104, height: 104 },
+  avatarInitial: { fontSize: 36, fontWeight: "700", color: palette.onPrimary },
   cameraButton: {
     position: "absolute",
-    bottom: 44,
-    right: "50%",
-    marginRight: -76,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: palette.primary,
-    alignItems: "center",
+    right: -2,
+    bottom: -2,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: palette.border,
+    backgroundColor: palette.surface,
     justifyContent: "center",
-    shadowColor: palette.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  imageHint: {
-    fontSize: 14,
-    color: palette.textSecondary,
-    marginTop: 8,
-  },
-  formContainer: {
-    gap: 20,
-    marginBottom: 32,
-  },
-  fieldContainer: {
-    gap: 8,
-  },
-  fieldLabel: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: palette.text,
-  },
-  fieldHint: {
-    fontSize: 12,
-    color: palette.textSecondary,
-    marginTop: 6,
-    fontStyle: "italic",
-  },
-  inputContainer: {
-    flexDirection: "row",
     alignItems: "center",
-    backgroundColor: palette.surfaceMuted,
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderWidth: 2,
-    borderColor: "transparent",
   },
-  inputContainerEditing: {
-    borderColor: palette.primary,
-    backgroundColor: palette.surface,
-  },
-  inputIcon: {
-    marginRight: 12,
-  },
-  inputText: {
-    flex: 1,
-    fontSize: 16,
-    color: palette.text,
-  },
+  name: { fontSize: 20, fontWeight: "600", color: palette.text },
+  nick: { fontSize: 12, color: palette.textSecondary },
+  infoCard: { gap: 0 },
+  infoRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  infoText: { flex: 1, gap: 2 },
+  infoLabel: { fontSize: 12, color: palette.textMuted },
+  infoValue: { fontSize: 14, color: palette.text },
+  divider: { height: 1, backgroundColor: palette.divider, marginVertical: 12 },
   input: {
-    flex: 1,
-    fontSize: 16,
-    color: palette.text,
-    padding: 0,
-  },
-  saveButtonContainer: {
-    position: "relative",
-    marginBottom: 24,
-  },
-  loader: {
-    position: "absolute",
-    right: 20,
-    top: 18,
-  },
-  actionsContainer: {
-    gap: 12,
-  },
-  actionButton: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: palette.surface,
-    borderWidth: 2,
-    borderColor: palette.divider,
-    borderRadius: 20,
-    padding: 16,
-  },
-  actionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: palette.text,
-    marginBottom: 4,
-  },
-  actionSubtitle: {
     fontSize: 14,
-    color: palette.textSecondary,
+    color: palette.text,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: palette.secondaryBorder,
   },
+  dateInput: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: palette.secondaryBorder,
+  },
+  inputText: { fontSize: 14, color: palette.text },
+  fieldHint: { marginTop: 8, fontSize: 12, color: palette.textMuted },
 });

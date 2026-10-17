@@ -4,7 +4,8 @@ import { StyleSheet, Text, View, ActivityIndicator, TouchableOpacity, Image, Scr
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useRouter, useFocusEffect } from "expo-router";
-import { MotiView } from "moti";
+import eventService from "../../services/event.service";
+import { Card, ListCard, ListRow, TabTitle } from "../../components/ui/Surface";
 import linkService from "../../services/link.service";
 import { ActionModal } from "../components/ActionModal";
 import { ErrorModal } from "../components/ErrorModal";
@@ -12,7 +13,7 @@ import { SuccessModal } from "../components/SuccessModal";
 import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
 import { profileService } from "../../services/profile.service";
 import { palette, gradients } from "../../constants/colors";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface LinkStatusData {
   hasActiveLink: boolean;
@@ -38,6 +39,7 @@ export default function LinkScreen() {
   const [isUnlinking, setIsUnlinking] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [sharedEvents, setSharedEvents] = useState(0);
 
   const checkLinkStatus = useCallback(async () => {
     if (!user?.userId) return;
@@ -45,6 +47,11 @@ export default function LinkScreen() {
     try {
       const data: LinkStatusData = await linkService.getLinkStatus(user.userId);
       setLinkStatus(data);
+      if (data.hasActiveLink) {
+        eventService.getUserEvents(user.userId)
+          .then((events) => setSharedEvents(events.filter((e) => e.fullyApproved).length))
+          .catch(() => setSharedEvents(0));
+      }
       // Las fotos exigen sesion: se piden por apiClient (un <Image uri> recibia 401)
       profileService.fetchAvatar(user.userId).then(setUserPhoto);
       if (data.partner?.profilePhoto) {
@@ -145,423 +152,156 @@ export default function LinkScreen() {
   }
 
   const isLinked = linkStatus?.hasActiveLink && linkStatus?.partner;
-  
+
+  // Figma F2b - sin vinculo: dos caminos para conectarse.
   if (!isLinked) {
     return (
-      <SafeAreaView edges={["left", "right"]} style={styles.container}>
-        <View style={styles.emptyContainerWrapper}>
-          <View style={styles.emptyContainer}>
-          <Ionicons name="heart-dislike-outline" size={80} color={palette.primary} style={styles.emptyIcon} />
+      <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: insets.top + 20 }]}>
+        <TabTitle>Vínculo</TabTitle>
+        <View style={styles.emptyHero}>
+          <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.emptyIcon}>
+            <Ionicons name="link-outline" size={40} color={palette.onPrimary} />
+          </LinearGradient>
           <Text style={styles.emptyTitle}>Aún no estás vinculado</Text>
-          <Text style={styles.emptyText}>
-            Para conectar con tu pareja, pueden usar cualquiera de estas opciones:
-          </Text>
-
-          <TouchableOpacity 
-            style={styles.actionButton}
-            onPress={handleGenerateCode}
-            activeOpacity={0.8}
-          >
-            <LinearGradient
-              colors={gradients.primary}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.gradientButton}
-            >
-              <Ionicons name="qr-code-outline" size={20} color={palette.onPrimary} />
-              <Text style={styles.buttonText}>Generar mi código</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.actionButton}
-            onPress={handleEnterCode}
-            activeOpacity={0.8}
-          >
-            <View style={styles.outlineButton}>
-              <Ionicons name="keypad-outline" size={20} color={palette.primary} />
-              <Text style={styles.outlineButtonText}>Ingresar código</Text>
-            </View>
-          </TouchableOpacity>
+          <Text style={styles.emptyText}>Conecta con tu pareja con un código.</Text>
         </View>
-        </View>
-      </SafeAreaView>
+        <Card>
+          <ListRow icon="qr-code-outline" title="Generar mi código" subtitle="Compártelo con tu pareja" onPress={handleGenerateCode} />
+        </Card>
+        <Card>
+          <ListRow icon="keypad-outline" title="Ingresar código" subtitle="Escribe el código de tu pareja" onPress={handleEnterCode} />
+        </Card>
+      </ScrollView>
     );
   }
 
-  // Usuario tiene vínculo activo - mostrar detalles completos
+  // Figma F2 - con vinculo.
   const partnerName = linkStatus.partner?.displayName || linkStatus.partner?.nickname || "tu pareja";
-  const partnerInitial = partnerName.charAt(0).toUpperCase();
-  const daysTogether = getDaysTogether();
-  
-  const userName = user?.displayName || user?.nickname || user?.email?.split('@')[0] || "Usuario";
-  const userInitial = userName.charAt(0).toUpperCase();
+  const userName = user?.displayName || user?.nickname || user?.email?.split("@")[0] || "Usuario";
+
+  const avatar = (photo: string | null, name: string, onError: () => void) => (
+    <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.avatar}>
+      {photo ? (
+        <Image source={{ uri: photo }} style={styles.avatarImage} onError={onError} />
+      ) : (
+        <Text style={styles.avatarText}>{name.charAt(0).toUpperCase()}</Text>
+      )}
+    </LinearGradient>
+  );
 
   return (
-    <SafeAreaView edges={["left", "right"]} style={styles.container}>
-      <ScrollView style={styles.scrollContainer} contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 24 }]}>
-        <Text style={styles.title}>Estado del vínculo</Text>
+    <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: insets.top + 20 }]}>
+      <TabTitle>Vínculo</TabTitle>
 
-      {/* Connection visual */}
-      <MotiView
-        from={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ type: "spring", delay: 100 }}
-        style={styles.connectionContainer}
-      >
-        <View style={styles.connectionVisual}>
-          <MotiView
-            from={{ scale: 1 }}
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={{
-              type: "timing",
-              duration: 2000,
-              loop: true,
-            }}
-          >
-            <LinearGradient
-              colors={gradients.primary}
-              style={styles.avatar}
-            >
-              {userPhoto ? (
-                <Image 
-                  source={{ uri: userPhoto }} 
-                  style={styles.avatarImage}
-                  onError={() => setUserPhoto(null)}
-                />
-              ) : (
-                <Text style={styles.avatarText}>{userInitial}</Text>
-              )}
-            </LinearGradient>
-          </MotiView>
-
-          <MotiView
-            from={{ scale: 1, opacity: 0.5 }}
-            animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-            transition={{
-              type: "timing",
-              duration: 1500,
-              loop: true,
-            }}
-          >
-            <Ionicons name="heart" size={48} color={palette.primary} />
-          </MotiView>
-
-          <MotiView
-            from={{ scale: 1 }}
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={{
-              type: "timing",
-              duration: 2000,
-              loop: true,
-              delay: 500,
-            }}
-          >
-            <LinearGradient
-              colors={gradients.primaryReversed}
-              style={styles.avatar}
-            >
-              {partnerPhoto ? (
-                <Image 
-                  source={{ uri: partnerPhoto }} 
-                  style={styles.avatarImage}
-                  onError={() => setPartnerPhoto(null)}
-                />
-              ) : (
-                <Text style={styles.avatarText}>{partnerInitial}</Text>
-              )}
-            </LinearGradient>
-          </MotiView>
-        </View>
-      </MotiView>
-
-      {/* Partner info */}
-      <MotiView
-        from={{ opacity: 0, translateY: 20 }}
-        animate={{ opacity: 1, translateY: 0 }}
-        transition={{ type: "timing", delay: 300 }}
-      >
-        <LinearGradient
-          colors={gradients.soft}
-          style={styles.infoCard}
-        >
-          <Text style={styles.connectedTitle}>Conectado con {partnerName}</Text>
-          <View style={styles.dateContainer}>
-            <Ionicons name="calendar-outline" size={16} color={palette.textSecondary} />
-            <Text style={styles.dateText}>Desde {formatLinkDate()}</Text>
+      <Card style={styles.connection}>
+        <View style={styles.pair}>
+          {avatar(userPhoto, userName, () => setUserPhoto(null))}
+          <View style={styles.heart}>
+            <Ionicons name="heart-outline" size={20} color={palette.primary} />
           </View>
-        </LinearGradient>
-      </MotiView>
+          {avatar(partnerPhoto, partnerName, () => setPartnerPhoto(null))}
+        </View>
+        <Text style={styles.names}>
+          {userName} y {partnerName}
+        </Text>
+        <Text style={styles.since}>Juntos desde el {formatLinkDate()}</Text>
+      </Card>
 
-      {/* Stats */}
-      <MotiView
-        from={{ opacity: 0, translateY: 20 }}
-        animate={{ opacity: 1, translateY: 0 }}
-        transition={{ type: "timing", delay: 500 }}
-        style={styles.statsContainer}
-      >
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{daysTogether}</Text>
+      <View style={styles.stats}>
+        <Card style={styles.stat}>
+          <Text style={styles.statNumber}>{getDaysTogether()}</Text>
           <Text style={styles.statLabel}>Días juntos</Text>
-        </View>
-
-        <View style={styles.statCard}>
-          <Text style={[styles.statNumber, styles.statNumberSecondary]}>0</Text>
+        </Card>
+        <Card style={styles.stat}>
+          <Text style={styles.statNumber}>{sharedEvents}</Text>
           <Text style={styles.statLabel}>Eventos compartidos</Text>
-        </View>
-      </MotiView>
+        </Card>
+      </View>
 
-      {/* Actions */}
-      <MotiView
-        from={{ opacity: 0, translateY: 20 }}
-        animate={{ opacity: 1, translateY: 0 }}
-        transition={{ type: "timing", delay: 700 }}
-        style={styles.actionsContainer}
+      <ListCard>
+        <ListRow
+          icon="calendar-outline"
+          title="Horarios libres juntos"
+          subtitle="Cuándo tienen tiempo los dos"
+          onPress={() => router.push("/(tabs)/recommendations")}
+        />
+        <ListRow
+          icon="people-outline"
+          title="Planear en pareja"
+          subtitle="Elijan juntos su próxima cita"
+          onPress={() => router.push("/(recommend)/mode")}
+        />
+      </ListCard>
+
+      <TouchableOpacity
+        style={styles.unlink}
+        onPress={handleUnlink}
+        disabled={isUnlinking}
+        accessibilityRole="button"
       >
-        <TouchableOpacity
-          style={styles.unlinkButton}
-          onPress={handleUnlink}
-          activeOpacity={0.8}
-          disabled={isUnlinking}
-        >
-          <View style={styles.unlinkContent}>
-            <View>
-              <Text style={styles.unlinkTitle}>Desvincular</Text>
-              <Text style={styles.unlinkSubtitle}>
-                Terminar conexión con {partnerName}
-              </Text>
-            </View>
-            {isUnlinking ? (
-              <ActivityIndicator size="small" color={palette.error} />
-            ) : (
-              <Ionicons name="chevron-forward" size={20} color={palette.error} />
-            )}
-          </View>
-        </TouchableOpacity>
-      </MotiView>
+        {isUnlinking ? (
+          <ActivityIndicator size="small" color={palette.error} />
+        ) : (
+          <Text style={styles.unlinkText}>Desvincular</Text>
+        )}
+      </TouchableOpacity>
 
-      {/* Unlink Confirmation Modal */}
       <ActionModal
         visible={showUnlinkModal}
         onClose={() => setShowUnlinkModal(false)}
         title={`¿Desvincular de ${partnerName}?`}
         actions={[
           {
-            label: 'Desvincular',
-            icon: 'unlink-outline',
+            label: "Desvincular",
+            icon: "unlink-outline",
             onPress: confirmUnlink,
             destructive: true,
           },
         ]}
       />
 
-      {/* Error Modal */}
-      <ErrorModal
-        visible={!!errorMessage}
-        message={errorMessage || ''}
-        onClose={() => setErrorMessage(null)}
-      />
+      <ErrorModal visible={!!errorMessage} message={errorMessage || ""} onClose={() => setErrorMessage(null)} />
 
-      {/* Success Modal */}
-      <SuccessModal
-        visible={!!successMessage}
-        message={successMessage || ''}
-        onClose={() => setSuccessMessage(null)}
-      />
+      <SuccessModal visible={!!successMessage} message={successMessage || ""} onClose={() => setSuccessMessage(null)} />
     </ScrollView>
-    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: palette.surface,
-  },
-  scrollContainer: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 20,
-  },
-  title: { 
-    fontSize: 30, 
-    fontWeight: "700", 
-    color: palette.text, 
-    marginBottom: 24,
-  },
-  emptyContainerWrapper: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 20,
-    paddingBottom: 100,
-  },
-  emptyIcon: {
-    marginBottom: 24,
-  },
-  emptyTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: palette.text,
-    marginBottom: 12,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: palette.textSecondary,
-    textAlign: 'center',
-    marginBottom: 32,
-    paddingHorizontal: 20,
-    lineHeight: 20,
-  },
-  actionButton: {
-    width: '100%',
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginBottom: 12,
-  },
-  gradientButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-  },
-  buttonText: {
-    color: palette.onPrimary,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  outlineButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderWidth: 2,
-    borderColor: palette.primary,
-    borderRadius: 16,
-    backgroundColor: palette.surface,
-  },
-  outlineButtonText: {
-    color: palette.textAccent,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  connectionContainer: {
-    marginBottom: 48,
-  },
-  connectionVisual: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 32,
-  },
-  avatar: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
+  container: { flex: 1, backgroundColor: palette.background },
+  content: { paddingHorizontal: 16, paddingBottom: 32, gap: 20 },
+  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+  emptyHero: { alignItems: "center", gap: 12, paddingTop: 24, paddingBottom: 8 },
+  emptyIcon: { width: 96, height: 96, borderRadius: 48, justifyContent: "center", alignItems: "center" },
+  emptyTitle: { fontSize: 20, fontWeight: "600", color: palette.text, textAlign: "center" },
+  emptyText: { fontSize: 14, color: palette.textSecondary, textAlign: "center" },
+  connection: { alignItems: "center", gap: 12, paddingVertical: 24 },
+  pair: { flexDirection: "row", alignItems: "center", gap: 16 },
+  avatar: { width: 72, height: 72, borderRadius: 36, justifyContent: "center", alignItems: "center", overflow: "hidden" },
+  avatarImage: { width: 72, height: 72 },
+  avatarText: { fontSize: 24, fontWeight: "700", color: palette.onPrimary },
+  heart: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: palette.primarySoft,
     justifyContent: "center",
     alignItems: "center",
-    elevation: 8,
-    shadowColor: palette.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
   },
-  avatarText: {
-    fontSize: 32,
-    fontWeight: "600",
-    color: palette.onPrimary,
-  },
-  avatarImage: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-  },
-  infoCard: {
+  names: { fontSize: 20, fontWeight: "600", color: palette.text },
+  since: { fontSize: 12, color: palette.textSecondary },
+  stats: { flexDirection: "row", gap: 12 },
+  stat: { flex: 1, alignItems: "center", gap: 4 },
+  statNumber: { fontSize: 24, fontWeight: "700", color: palette.textAccent },
+  statLabel: { fontSize: 12, color: palette.textSecondary },
+  unlink: {
+    height: 48,
     borderRadius: 24,
-    padding: 24,
-    marginBottom: 24,
-    alignItems: "center",
-  },
-  connectedTitle: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: palette.text,
-    marginBottom: 12,
-    textAlign: "center",
-  },
-  dateContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  dateText: {
-    fontSize: 14,
-    color: palette.textSecondary,
-  },
-  statsContainer: {
-    flexDirection: "row",
-    gap: 16,
-    marginBottom: 32,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: palette.surface,
-    borderWidth: 2,
-    borderColor: palette.divider,
-    borderRadius: 20,
-    padding: 20,
-    alignItems: "center",
-  },
-  statNumber: {
-    fontSize: 32,
-    fontWeight: "700",
-    color: palette.textAccent,
-    marginBottom: 4,
-  },
-  statNumberSecondary: {
-    color: palette.textAccent,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: palette.textSecondary,
-    textAlign: "center",
-  },
-  actionsContainer: {
-    gap: 12,
-  },
-  unlinkButton: {
-    backgroundColor: palette.surface,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: palette.errorBorder,
-    borderRadius: 20,
-    padding: 16,
-  },
-  unlinkContent: {
-    flexDirection: "row",
+    backgroundColor: palette.surface,
+    justifyContent: "center",
     alignItems: "center",
-    justifyContent: "space-between",
   },
-  unlinkTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: palette.error,
-    marginBottom: 4,
-  },
-  unlinkSubtitle: {
-    fontSize: 13,
-    color: palette.textSecondary,
-  },
+  unlinkText: { fontSize: 16, fontWeight: "700", color: palette.error },
 });
