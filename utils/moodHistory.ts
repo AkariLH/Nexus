@@ -54,14 +54,16 @@ export interface WeekDay {
   initial: string;
   isToday: boolean;
   emoji: string | null;
+  /** Etiqueta del animo (para la carita SVG); null si ese dia no hay registro. */
+  label: string | null;
 }
 
 /** Los ultimos 7 dias (del mas antiguo a hoy) con la carita del registro mas reciente de cada uno. */
 export function lastSevenDays(entries: EmotionLogResponse[], now: Date = new Date()): WeekDay[] {
-  const latestByDay = new Map<string, string>();
+  const latestByDay = new Map<string, string | null>();
   for (const entry of newestFirst(entries)) {
     const key = dayKey(new Date(entry.loggedAt));
-    if (!latestByDay.has(key)) latestByDay.set(key, moodEmoji(entry.label));
+    if (!latestByDay.has(key)) latestByDay.set(key, entry.label ?? null);
   }
 
   return Array.from({ length: 7 }, (_, i) => {
@@ -71,7 +73,8 @@ export function lastSevenDays(entries: EmotionLogResponse[], now: Date = new Dat
       key,
       initial: WEEKDAY_INITIALS[date.getDay()],
       isToday: i === 6,
-      emoji: latestByDay.get(key) ?? null,
+      emoji: latestByDay.has(key) ? moodEmoji(latestByDay.get(key)) : null,
+      label: latestByDay.get(key) ?? null,
     };
   });
 }

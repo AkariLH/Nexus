@@ -10,13 +10,14 @@ import {
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { emotionService, EmotionLogResponse } from '../../services/emotion.service';
-import { moodEmoji } from '../../constants/moods';
+import { MoodFace } from '../../components/MoodFace';
+import { Card } from '../../components/ui/Surface';
 import { groupByDay, lastSevenDays } from '../../utils/moodHistory';
-import { palette, gradients } from '../../constants/colors';
+import { palette } from '../../constants/colors';
+import { GradientButton } from '../components/ui/GradientButton';
 import { ScreenHeader } from '../components/layout/ScreenHeader';
 
 /** RF-32 - Historial emocional. Privado (RN-28): solo lo ve el propio usuario. */
@@ -89,7 +90,6 @@ export default function MoodHistoryScreen() {
               <Text style={styles.stateTitle}>No pudimos cargar tu historial</Text>
               <Text style={styles.stateSubtitle}>Revisa tu conexión e inténtalo de nuevo.</Text>
               <TouchableOpacity style={styles.secondaryButton} onPress={retry}>
-                <Ionicons name="refresh" size={18} color={palette.secondary} />
                 <Text style={styles.secondaryButtonText}>Reintentar</Text>
               </TouchableOpacity>
             </>
@@ -121,16 +121,10 @@ export default function MoodHistoryScreen() {
                     style={styles.weekDay}
                     accessible
                     accessibilityLabel={`${day.isToday ? 'Hoy' : day.initial}: ${
-                      day.emoji ? 'con registro' : 'sin registro'
+                      day.label ?? 'sin registro'
                     }`}
                   >
-                    <View style={[styles.weekBubble, day.isToday && styles.weekBubbleToday]}>
-                      {day.emoji ? (
-                        <Text style={styles.weekEmoji}>{day.emoji}</Text>
-                      ) : (
-                        <View style={styles.weekEmpty} />
-                      )}
-                    </View>
+                    {day.label ? <MoodFace label={day.label} size={36} /> : <View style={styles.weekEmpty} />}
                     <Text style={[styles.weekInitial, day.isToday && styles.weekInitialToday]}>
                       {day.initial}
                     </Text>
@@ -143,38 +137,27 @@ export default function MoodHistoryScreen() {
         renderSectionHeader={({ section }) => (
           <Text style={styles.sectionTitle}>{section.title}</Text>
         )}
-        renderItem={({ item, index, section }) => (
-          <View
-            style={[
-              styles.entryRow,
-              index === 0 && styles.entryRowFirst,
-              index === section.data.length - 1 && styles.entryRowLast,
-            ]}
-          >
-            <Text style={styles.entryEmoji}>{moodEmoji(item.label)}</Text>
-            <Text style={styles.entryLabel} numberOfLines={1}>
-              {item.label || 'Estado de ánimo'}
-            </Text>
-            <Text style={styles.entryTime}>{formatTime(item.loggedAt)}</Text>
-          </View>
+        renderItem={({ item }) => (
+          <Card style={styles.entryRow}>
+            <MoodFace label={item.label || 'En calma'} size={40} />
+            <View style={styles.entryText}>
+              <Text style={styles.entryLabel} numberOfLines={1}>
+                {item.label || 'Estado de ánimo'}
+              </Text>
+              <Text style={styles.entryTime}>{formatTime(item.loggedAt)}</Text>
+            </View>
+          </Card>
         )}
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Text style={styles.emptyEmoji}>🙂</Text>
+            <View style={styles.emptyFace}>
+              <MoodFace label="En calma" size={72} />
+            </View>
             <Text style={styles.stateTitle}>Aún no hay registros</Text>
             <Text style={styles.stateSubtitle}>
               Cuéntanos cómo estuvo tu día y aquí verás cómo te has sentido.
             </Text>
-            <TouchableOpacity style={styles.primaryButton} onPress={goToLog}>
-              <LinearGradient
-                colors={gradients.primary}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.primaryButtonGradient}
-              >
-                <Text style={styles.primaryButtonText}>Registrar mi día</Text>
-              </LinearGradient>
-            </TouchableOpacity>
+            <GradientButton title="Registrar mi día" onPress={goToLog} style={styles.emptyButton} />
           </View>
         }
       />
@@ -220,16 +203,14 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   secondaryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 12,
+    height: 40,
     paddingHorizontal: 20,
-    backgroundColor: palette.surface,
-    borderRadius: 12,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: palette.border,
+    borderColor: palette.secondaryBorder,
+    backgroundColor: palette.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   secondaryButtonText: {
     fontSize: 14,
@@ -261,28 +242,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
   },
-  weekBubble: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: palette.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  weekBubbleToday: {
-    borderColor: palette.primary,
-    backgroundColor: palette.primarySoft,
-  },
-  weekEmoji: {
-    fontSize: 22,
-  },
   weekEmpty: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: palette.border,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: palette.iconDisabled,
   },
   weekInitial: {
     fontSize: 12,
@@ -302,35 +268,28 @@ const styles = StyleSheet.create({
   entryRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-    backgroundColor: palette.surface,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderTopWidth: 1,
-    borderTopColor: palette.divider,
+    gap: 12,
+    paddingVertical: 12,
+    marginBottom: 12,
   },
-  entryRowFirst: {
-    borderTopWidth: 0,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-  },
-  entryRowLast: {
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16,
-  },
-  entryEmoji: {
-    fontSize: 30,
+  entryText: {
+    flex: 1,
+    gap: 2,
   },
   entryLabel: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '500',
     color: palette.text,
   },
   entryTime: {
-    fontSize: 14,
-    color: palette.textSecondary,
-    fontVariant: ['tabular-nums'],
+    fontSize: 12,
+    color: palette.textMuted,
+  },
+  emptyFace: {
+    marginBottom: 16,
+  },
+  emptyButton: {
+    alignSelf: 'stretch',
   },
   emptyState: {
     flex: 1,
@@ -338,24 +297,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 12,
     paddingVertical: 80,
-  },
-  emptyEmoji: {
-    fontSize: 72,
-    marginBottom: 16,
-  },
-  primaryButton: {
-    borderRadius: 24,
-    overflow: 'hidden',
-  },
-  primaryButtonGradient: {
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primaryButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: palette.onPrimary,
   },
 });

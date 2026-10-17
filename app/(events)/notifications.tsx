@@ -18,6 +18,7 @@ import { ConfirmModal } from "../components/ConfirmModal";
 import { externalCalendarIntegration } from "../../services/externalCalendar.integration.service";
 import { palette, gradients } from "../../constants/colors";
 import { ScreenHeader } from "../components/layout/ScreenHeader";
+import { MetaLine } from "../../components/ui/Surface";
 import { ResultModal } from "../components/ResultModal";
 import { PlanSummaryCard } from "../components/PlanSummaryCard";
 import { slotLabel } from "../../utils/recommendationFormat";
@@ -207,18 +208,19 @@ export default function NotificationsScreen() {
 
   const formatDate = (dateStr: string): string => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('es', {
-      weekday: 'long',
+    return date.toLocaleDateString('es-MX', {
+      weekday: 'short',
       day: 'numeric',
-      month: 'long',
-    });
+      month: 'short',
+    }).replace(/\./g, '');
   };
 
   const formatTime = (dateStr: string): string => {
     const date = new Date(dateStr);
-    return date.toLocaleTimeString('es', {
+    return date.toLocaleTimeString('es-MX', {
       hour: '2-digit',
       minute: '2-digit',
+      hour12: false,
     });
   };
 
@@ -291,119 +293,59 @@ export default function NotificationsScreen() {
           </View>
         ) : (
           <>
-            {pendingEvents.length > 0 && <Text style={styles.sectionTitle}>Eventos Pendientes</Text>}
-            {pendingEvents.map((event) => (
-              <View key={event.id} style={styles.notificationCard}>
-                {/* Header de la notificación */}
-                <View style={styles.notificationHeader}>
-                  <View style={styles.avatarContainer}>
-                    <LinearGradient
-                      colors={gradients.primary}
-                      style={styles.avatar}
-                    >
-                      <Ionicons name="calendar" size={24} color={palette.onPrimary} />
+            {pendingEvents.length > 0 && <Text style={styles.sectionTitle}>Eventos pendientes</Text>}
+            {pendingEvents.map((event) => {
+              const inviter = event.creatorName || event.creatorNickname || "Tu pareja";
+              const busy = processingEventId === event.id;
+              return (
+                <View key={event.id} style={styles.notificationCard}>
+                  <View style={styles.notificationHeader}>
+                    <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.avatar}>
+                      <Text style={styles.avatarText}>{inviter.charAt(0).toUpperCase()}</Text>
                     </LinearGradient>
-                  </View>
-                  <View style={styles.notificationInfo}>
-                    <Text style={styles.notificationName}>
-                      {event.creatorName || event.creatorNickname}
-                    </Text>
-                    <Text style={styles.notificationTime}>
-                      {getTimeAgo(event.createdAt)}
-                    </Text>
-                  </View>
-                </View>
-
-                {/* Mensaje */}
-                <Text style={styles.notificationMessage}>
-                  Te invita a una cita
-                </Text>
-
-                {/* Detalles del evento */}
-                <View style={styles.eventDetails}>
-                  <View style={styles.eventTitleContainer}>
-                    <Ionicons name="calendar-outline" size={20} color={palette.primary} />
-                    <Text style={styles.eventTitle}>{event.title}</Text>
-                  </View>
-
-                  <View style={styles.eventRow}>
-                    <Ionicons name="time-outline" size={16} color={palette.textSecondary} />
-                    <Text style={styles.eventDetailText}>
-                      {formatDate(event.startDateTime)}
-                    </Text>
-                  </View>
-
-                  <View style={styles.eventRow}>
-                    <Ionicons name="alarm-outline" size={16} color={palette.textSecondary} />
-                    <Text style={styles.eventDetailText}>
-                      {formatTime(event.startDateTime)} - {formatTime(event.endDateTime)}
-                    </Text>
-                  </View>
-
-                  {event.location && (
-                    <View style={styles.eventRow}>
-                      <Ionicons name="location-outline" size={16} color={palette.textSecondary} />
-                      <Text style={styles.eventDetailText}>{event.location}</Text>
+                    <View style={styles.notificationInfo}>
+                      <Text style={styles.notificationName}>{inviter} te invita a una cita</Text>
+                      <Text style={styles.notificationTime}>{getTimeAgo(event.createdAt)}</Text>
                     </View>
-                  )}
+                  </View>
 
-                  {event.description && (
-                    <View style={styles.descriptionContainer}>
-                      <Text style={styles.descriptionText}>{event.description}</Text>
-                    </View>
-                  )}
-                </View>
+                  <Text style={styles.eventTitle}>{event.title}</Text>
+                  <MetaLine
+                    icon="calendar-outline"
+                    text={`${formatDate(event.startDateTime)} · ${formatTime(event.startDateTime)} – ${formatTime(event.endDateTime)}`}
+                  />
+                  {event.location ? <MetaLine icon="location-outline" text={event.location} /> : null}
+                  {event.description ? <Text style={styles.descriptionText}>{event.description}</Text> : null}
 
-                {/* Botones de acción */}
-                <View style={styles.actionButtons}>
-                  <TouchableOpacity
-                    style={[
-                      styles.actionButton,
-                      styles.rejectButton,
-                      processingEventId === event.id && styles.actionButtonDisabled,
-                    ]}
-                    onPress={() => handleReject(event)}
-                    disabled={processingEventId === event.id}
-                  >
-                    {processingEventId === event.id ? (
-                      <ActivityIndicator size="small" color={palette.error} />
-                    ) : (
-                      <>
-                        <Ionicons name="close-circle" size={20} color={palette.error} />
-                        <Text style={styles.rejectButtonText}>Rechazar</Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[
-                      styles.actionButton,
-                      styles.approveButton,
-                      processingEventId === event.id && styles.actionButtonDisabled,
-                    ]}
-                    onPress={() => handleApprove(event)}
-                    disabled={processingEventId === event.id}
-                  >
-                    <LinearGradient
-                      colors={gradients.primary}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={styles.approveButtonGradient}
+                  <View style={styles.actionButtons}>
+                    <TouchableOpacity
+                      style={[styles.rejectButton, busy && styles.actionButtonDisabled]}
+                      onPress={() => handleReject(event)}
+                      disabled={busy}
+                      accessibilityRole="button"
                     >
-                      {processingEventId === event.id ? (
-                        <ActivityIndicator size="small" color={palette.onPrimary} />
-                      ) : (
-                        <>
-                          <Ionicons name="checkmark-circle" size={20} color={palette.onPrimary} />
+                      <Text style={styles.rejectButtonText}>Rechazar</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.approveButton, busy && styles.actionButtonDisabled]}
+                      onPress={() => handleApprove(event)}
+                      disabled={busy}
+                      accessibilityRole="button"
+                    >
+                      <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.approveButtonGradient}>
+                        {busy ? (
+                          <ActivityIndicator size="small" color={palette.onPrimary} />
+                        ) : (
                           <Text style={styles.approveButtonText}>Aceptar</Text>
-                        </>
-                      )}
-                    </LinearGradient>
-                  </TouchableOpacity>
+                        )}
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
-            ))}
+              );
+            })}
 
+            {notices.length > 0 && <Text style={styles.sectionTitle}>Avisos</Text>}
             {notices.length > 0 && (
               <View style={styles.noticeList}>
                 {notices.map((n) => (
@@ -527,6 +469,42 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
+  notificationCard: {
+    backgroundColor: palette.surface,
+    borderRadius: 16,
+    padding: 16,
+    gap: 10,
+    marginBottom: 16,
+    shadowColor: palette.shadow,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  notificationHeader: { flexDirection: "row", alignItems: "center", gap: 10 },
+  avatar: { width: 36, height: 36, borderRadius: 18, justifyContent: "center", alignItems: "center" },
+  avatarText: { fontSize: 15, fontWeight: "600", color: palette.onPrimary },
+  notificationInfo: { flex: 1 },
+  notificationName: { fontSize: 14, fontWeight: "500", color: palette.text },
+  notificationTime: { fontSize: 12, color: palette.textMuted },
+  eventTitle: { fontSize: 16, fontWeight: "600", color: palette.text },
+  descriptionText: { fontSize: 14, lineHeight: 20, color: palette.textSecondary },
+  actionButtons: { flexDirection: "row", gap: 12, marginTop: 4 },
+  rejectButton: {
+    flex: 1,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: palette.secondaryBorder,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  rejectButtonText: { fontSize: 14, fontWeight: "600", color: palette.textAccent },
+  approveButton: { flex: 1, borderRadius: 20, overflow: "hidden" },
+  approveButtonGradient: { height: 40, justifyContent: "center", alignItems: "center" },
+  approveButtonText: { fontSize: 14, fontWeight: "600", color: palette.onPrimary },
+  actionButtonDisabled: { opacity: 0.5 },
+
   noticeList: {
     gap: 12,
     marginTop: 8,
@@ -636,131 +614,5 @@ const styles = StyleSheet.create({
     color: palette.textSecondary,
     textAlign: "center",
     maxWidth: 250,
-  },
-  notificationCard: {
-    backgroundColor: palette.surface,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: palette.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  notificationHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  avatarContainer: {
-    marginRight: 12,
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  notificationInfo: {
-    flex: 1,
-  },
-  notificationName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: palette.text,
-    marginBottom: 2,
-  },
-  notificationTime: {
-    fontSize: 13,
-    color: palette.textMuted,
-  },
-  notificationMessage: {
-    fontSize: 14,
-    color: palette.textSecondary,
-    marginBottom: 16,
-  },
-  eventDetails: {
-    backgroundColor: palette.background,
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 16,
-  },
-  eventTitleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 12,
-  },
-  eventTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: palette.text,
-    flex: 1,
-  },
-  eventRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 6,
-  },
-  eventDetailText: {
-    fontSize: 14,
-    color: palette.textSecondary,
-    flex: 1,
-  },
-  descriptionContainer: {
-    marginTop: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: palette.border,
-  },
-  descriptionText: {
-    fontSize: 14,
-    color: palette.textSecondary,
-    lineHeight: 20,
-  },
-  actionButtons: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  actionButton: {
-    flex: 1,
-    height: 48,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  actionButtonDisabled: {
-    opacity: 0.6,
-  },
-  rejectButton: {
-    backgroundColor: palette.surface,
-    borderWidth: 2,
-    borderColor: palette.error,
-    flexDirection: "row",
-    gap: 6,
-  },
-  rejectButtonText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: palette.error,
-  },
-  approveButton: {
-    overflow: "hidden",
-  },
-  approveButtonGradient: {
-    flex: 1,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 6,
-    width: "100%",
-  },
-  approveButtonText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: palette.onPrimary,
   },
 });

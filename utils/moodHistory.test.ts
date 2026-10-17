@@ -66,6 +66,10 @@ describe('lastSevenDays (RF-32)', () => {
     expect(days[6].emoji).toBe(moodEmoji('Feliz'));
     expect(days[4].emoji).toBe(moodEmoji('Cansado/a'));
     expect(days[5].emoji).toBeNull();
+    // La etiqueta alimenta la carita SVG del resumen semanal.
+    expect(days[6].label).toBe('Feliz');
+    expect(days[4].label).toBe('Cansado/a');
+    expect(days[5].label).toBeNull();
   });
 
   it('ignora registros de hace mas de 7 dias', () => {

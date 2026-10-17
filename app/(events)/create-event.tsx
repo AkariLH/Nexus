@@ -343,21 +343,6 @@ export default function CreateEventScreen() {
         title="Nuevo evento"
         onBack={() => router.back()}
         backDisabled={loading}
-        right={
-          <TouchableOpacity
-            onPress={handleCreateEvent}
-            disabled={!title || !startDateSelected || !endDateSelected || (!isAllDay && (!startTimeSelected || !endTimeSelected)) || loading}
-            style={styles.headerAction}
-            accessibilityRole="button"
-          >
-            <Text style={[
-              styles.headerActionText,
-              (!title || !startDateSelected || !endDateSelected || (!isAllDay && (!startTimeSelected || !endTimeSelected)) || loading) && styles.headerActionDisabled
-            ]}>
-              Crear
-            </Text>
-          </TouchableOpacity>
-        }
       />
 
       <KeyboardAvoidingView style={styles.keyboardAvoider} behavior={Platform.OS === "ios" ? "padding" : "height"}>
@@ -370,7 +355,6 @@ export default function CreateEventScreen() {
         {/* Título */}
         <View style={styles.inputGroup}>
           <View style={styles.labelContainer}>
-            <Ionicons name="text" size={20} color={palette.primary} />
             <Text style={styles.label}>Título del evento</Text>
           </View>
           <TextInput
@@ -390,7 +374,6 @@ export default function CreateEventScreen() {
         {/* Todo el día */}
         <View style={styles.allDayContainer}>
           <View style={styles.labelContainer}>
-            <Ionicons name="time-outline" size={20} color={palette.primary} />
             <Text style={styles.label}>Todo el día</Text>
           </View>
           <TouchableOpacity accessibilityRole="switch" accessibilityLabel="Todo el día" accessibilityState={{ checked: isAllDay }}
@@ -405,7 +388,6 @@ export default function CreateEventScreen() {
         {/* Fecha y hora de inicio */}
         <View style={styles.inputGroup}>
           <View style={styles.labelContainer}>
-            <Ionicons name="calendar-outline" size={20} color={palette.primary} />
             <Text style={styles.label}>Inicio</Text>
           </View>
           <View style={styles.dateTimeRow}>
@@ -438,7 +420,6 @@ export default function CreateEventScreen() {
         {/* Fecha y hora de fin */}
         <View style={styles.inputGroup}>
           <View style={styles.labelContainer}>
-            <Ionicons name="calendar-outline" size={20} color={palette.primary} />
             <Text style={styles.label}>Fin</Text>
           </View>
           <View style={styles.dateTimeRow}>
@@ -471,7 +452,6 @@ export default function CreateEventScreen() {
         {/* Ubicación */}
         <View style={styles.inputGroup}>
           <View style={styles.labelContainer}>
-            <Ionicons name="location" size={20} color={palette.primary} />
             <Text style={styles.label}>Ubicación (opcional)</Text>
           </View>
           <TextInput
@@ -488,7 +468,6 @@ export default function CreateEventScreen() {
         {/* Evento recurrente */}
         <View style={styles.allDayContainer}>
           <View style={styles.labelContainer}>
-            <Ionicons name="repeat" size={20} color={palette.primary} />
             <Text style={styles.label}>Evento recurrente</Text>
           </View>
           <TouchableOpacity accessibilityRole="switch" accessibilityLabel="Evento recurrente" accessibilityState={{ checked: isRecurring }}
@@ -549,7 +528,6 @@ export default function CreateEventScreen() {
         {/* Categoría */}
         <View style={styles.inputGroup}>
           <View style={styles.labelContainer}>
-            <Ionicons name="pricetag" size={20} color={palette.primary} />
             <Text style={styles.label}>Categoría (opcional)</Text>
           </View>
           <View style={styles.categoryContainer}>
@@ -579,7 +557,6 @@ export default function CreateEventScreen() {
         {/* Descripción */}
         <View style={styles.inputGroup}>
           <View style={styles.labelContainer}>
-            <Ionicons name="document-text" size={20} color={palette.primary} />
             <Text style={styles.label}>Descripción (opcional)</Text>
           </View>
           <TextInput
@@ -599,7 +576,6 @@ export default function CreateEventScreen() {
         {/* Recordatorios */}
         <View style={styles.inputGroup}>
           <View style={styles.labelContainer}>
-            <Ionicons name="notifications" size={20} color={palette.primary} />
             <Text style={styles.label}>Recordatorios (opcional)</Text>
           </View>
           <TouchableOpacity
@@ -770,27 +746,17 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: palette.surface,
-  },
-  headerAction: {
-    padding: 8,
-  },
-  headerActionText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: palette.textAccent,
-  },
-  headerActionDisabled: {
-    opacity: 0.5,
+    backgroundColor: palette.background,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    padding: 24,
+    padding: 16,
+    paddingBottom: 32,
   },
   inputGroup: {
-    marginBottom: 24,
+    marginBottom: 20,
   },
   labelContainer: {
     flexDirection: "row",
@@ -799,30 +765,25 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   label: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "500",
     color: palette.text,
   },
   input: {
-    height: 56,
-    paddingHorizontal: 16,
-    backgroundColor: palette.surfaceMuted,
-    borderWidth: 2,
-    borderColor: "transparent",
-    borderRadius: 20,
-    fontSize: 16,
+    backgroundColor: palette.surface,
+    borderWidth: 1,
+    borderColor: palette.border,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 14,
     color: palette.text,
-    justifyContent: "center",
   },
   inputWrapper: {
-    height: 56,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    backgroundColor: palette.surfaceMuted,
-    borderWidth: 2,
-    borderColor: "transparent",
-    borderRadius: 20,
-    justifyContent: "center",
+    backgroundColor: palette.surface,
+    borderWidth: 1,
+    borderColor: palette.border,
+    borderRadius: 12,
   },
   dateText: {
     fontSize: 16,
@@ -837,32 +798,35 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 16,
+    backgroundColor: palette.surface,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+    shadowColor: palette.shadow,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
   switch: {
-    width: 50,
-    height: 28,
-    borderRadius: 14,
+    width: 44,
+    height: 26,
+    borderRadius: 13,
+    padding: 3,
     backgroundColor: palette.border,
-    padding: 2,
     justifyContent: "center",
   },
   switchActive: {
     backgroundColor: palette.primary,
   },
   switchThumb: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     backgroundColor: palette.surface,
-    shadowColor: palette.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 3,
   },
   switchThumbActive: {
-    transform: [{ translateX: 22 }],
+    transform: [{ translateX: 18 }],
   },
   dateTimeRow: {
     flexDirection: "row",
@@ -875,15 +839,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   textArea: {
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: palette.surfaceMuted,
-    borderWidth: 2,
-    borderColor: "transparent",
-    borderRadius: 20,
-    fontSize: 16,
+    backgroundColor: palette.surface,
+    borderWidth: 1,
+    borderColor: palette.border,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 14,
     color: palette.text,
-    minHeight: 120,
+    minHeight: 96,
   },
   inputError: {
     borderColor: palette.primary,
@@ -896,18 +860,17 @@ const styles = StyleSheet.create({
   },
   colorGrid: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: 12,
   },
   colorButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    borderWidth: 0,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
   },
   colorButtonActive: {
-    borderWidth: 4,
-    borderColor: palette.primaryBorder,
-    transform: [{ scale: 1.1 }],
+    borderWidth: 3,
+    borderColor: palette.text,
   },
   categoryContainer: {
     flexDirection: "row",
@@ -915,21 +878,21 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   categoryChip: {
+    paddingHorizontal: 14,
     paddingVertical: 10,
-    paddingHorizontal: 18,
-    borderRadius: 20,
-    backgroundColor: palette.divider,
-    borderWidth: 2,
-    borderColor: palette.divider,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: palette.border,
+    backgroundColor: palette.surface,
   },
   categoryChipActive: {
-    backgroundColor: palette.primarySoft,
     borderColor: palette.primary,
+    backgroundColor: palette.primarySoft,
   },
   categoryChipText: {
     fontSize: 14,
-    fontWeight: "600",
-    color: palette.textSecondary,
+    fontWeight: "500",
+    color: palette.text,
   },
   categoryChipTextActive: {
     color: palette.textAccent,
@@ -938,14 +901,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    backgroundColor: palette.surfaceMuted,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 12,
+    backgroundColor: palette.surface,
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: palette.shadow,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
   remindersButtonText: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 14,
     color: palette.text,
   },
   remindersPreview: {
@@ -955,15 +922,14 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   reminderTag: {
-    backgroundColor: palette.primarySoft,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: palette.primaryBorder,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    backgroundColor: palette.secondarySoft,
   },
   reminderTagText: {
     fontSize: 12,
+    fontWeight: "600",
     color: palette.textAccent,
   },
   remindersMore: {
@@ -972,15 +938,18 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   recurrenceSummary: {
-    marginBottom: 24,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: palette.surface,
+    borderRadius: 16,
     padding: 16,
-    backgroundColor: palette.surfaceMuted,
-    borderRadius: 20,
-    borderWidth: 2,
-    borderColor: palette.secondary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    marginBottom: 20,
+    shadowColor: palette.shadow,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
   recurrenceSummaryContent: {
     flexDirection: 'row',
@@ -995,15 +964,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   createButton: {
-    height: 56,
-    borderRadius: 24,
+    borderRadius: 23,
     overflow: "hidden",
     marginTop: 8,
-    shadowColor: palette.primary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 8,
   },
   createButtonDisabled: {
     opacity: 0.5,
@@ -1011,16 +974,14 @@ const styles = StyleSheet.create({
     elevation: 0,
   },
   createButtonGradient: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
+    height: 46,
     justifyContent: "center",
-    gap: 10,
+    alignItems: "center",
   },
   createButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
     color: palette.onPrimary,
-    fontSize: 17,
-    fontWeight: "700",
   },
   bottomSpacer: {
     height: 20,

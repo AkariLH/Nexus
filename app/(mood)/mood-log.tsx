@@ -14,6 +14,7 @@ import { todayEntry } from '../../utils/moodHistory';
 import { MOOD_ROW_GAP, moodRows, moodSizing } from '../../utils/moodLayout';
 import { palette } from '../../constants/colors';
 import { ScreenHeader } from '../components/layout/ScreenHeader';
+import { MoodFace } from '../../components/MoodFace';
 
 /**
  * RF-31 - Registro de estado emocional del dia. Las opciones y su mapeo interno viven en
@@ -92,7 +93,9 @@ export default function MoodLogScreen() {
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', damping: 12 }}
         >
-          <Text style={styles.savedEmoji}>{selected.emoji}</Text>
+          <View style={styles.savedFace}>
+            <MoodFace label={selected.label} size={96} />
+          </View>
         </MotiView>
         <MotiView
           from={{ opacity: 0, translateY: 8 }}
@@ -108,28 +111,15 @@ export default function MoodLogScreen() {
 
   return (
     <View style={styles.container}>
-      <ScreenHeader
-        title="Mi ánimo"
-        onBack={() => router.back()}
-        right={
-          <TouchableOpacity
-            style={styles.headerButton}
-            onPress={() => router.push('/(mood)/mood-history')}
-            accessibilityRole="button"
-            accessibilityLabel="Ver mi historial"
-          >
-            <Ionicons name="time-outline" size={24} color={palette.primary} />
-          </TouchableOpacity>
-        }
-      />
+      <ScreenHeader title="Mi ánimo" onBack={() => router.back()} />
 
       <View style={styles.content}>
         <Text style={styles.question}>
           ¿Cómo estuvo tu día?
         </Text>
         <View style={styles.privacyRow}>
-          <Ionicons name="lock-closed" size={13} color={palette.textSecondary} />
-          <Text style={styles.privacyText}>Solo tú puedes verlo</Text>
+          <Ionicons name="lock-closed-outline" size={20} color={palette.textAccent} />
+          <Text style={styles.privacyText}>Solo tú puedes verlo.</Text>
         </View>
         {registeredToday && (
           <View style={styles.todayNote}>
@@ -168,12 +158,9 @@ export default function MoodLogScreen() {
                       animate={{ scale: isSelected ? 1.12 : 1 }}
                       transition={{ type: 'spring', damping: 10, stiffness: 220 }}
                     >
-                      <Text
-                        allowFontScaling={false}
-                        style={[styles.moodEmoji, { fontSize: emojiSize }]}
-                      >
-                        {mood.emoji}
-                      </Text>
+                      <View style={styles.moodFace}>
+                        <MoodFace label={mood.label} size={Math.round(emojiSize * 1.1)} />
+                      </View>
                     </MotiView>
                     <Text
                       numberOfLines={1}
@@ -196,6 +183,13 @@ export default function MoodLogScreen() {
 
       {/* El espacio del boton esta siempre reservado: la cuadricula no salta al elegir. */}
       <View style={[styles.footer, { paddingBottom: 16 + insets.bottom }]}>
+        <TouchableOpacity
+          onPress={() => router.push('/(mood)/mood-history')}
+          accessibilityRole="button"
+          style={styles.historyLink}
+        >
+          <Text style={styles.historyLinkText}>Ver mi historial</Text>
+        </TouchableOpacity>
         <AnimatePresence>
           {selected && !unchanged && (
             <MotiView
@@ -233,22 +227,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: palette.background,
   },
-  headerButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   content: {
     flex: 1,
     padding: 16,
   },
   question: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: 24,
+    fontWeight: '700',
     color: palette.text,
-    textAlign: 'center',
   },
   todayNote: {
     flexDirection: 'row',
@@ -270,10 +256,12 @@ const styles = StyleSheet.create({
   privacyRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    marginTop: 8,
+    gap: 10,
+    padding: 12,
+    marginTop: 16,
     marginBottom: 16,
+    borderRadius: 12,
+    backgroundColor: palette.secondarySoft,
   },
   privacyText: {
     fontSize: 14,
@@ -292,18 +280,14 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 8,
+    paddingHorizontal: 4,
     backgroundColor: palette.surface,
     borderRadius: 16,
-    borderWidth: 2,
-    borderColor: 'transparent',
-    shadowColor: palette.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: palette.border,
   },
   moodCardSelected: {
+    borderWidth: 2,
     borderColor: palette.primary,
     backgroundColor: palette.primarySoft,
   },
@@ -313,8 +297,8 @@ const styles = StyleSheet.create({
   moodCardPressed: {
     transform: [{ scale: 0.97 }],
   },
-  moodEmoji: {
-    marginBottom: 4,
+  moodFace: {
+    marginBottom: 6,
   },
   moodLabel: {
     fontWeight: '500',
@@ -327,17 +311,25 @@ const styles = StyleSheet.create({
   footer: {
     minHeight: 88,
     justifyContent: 'flex-end',
+    gap: 12,
     paddingHorizontal: 16,
     paddingTop: 16,
+  },
+  historyLink: {
+    alignSelf: 'center',
+  },
+  historyLinkText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: palette.textAccent,
   },
   savedContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 32,
   },
-  savedEmoji: {
-    fontSize: 96,
-    textAlign: 'center',
+  savedFace: {
+    alignItems: 'center',
     marginBottom: 16,
   },
   savedTitle: {
