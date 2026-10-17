@@ -21,7 +21,7 @@ export interface UserPreference {
   preferenceId: number;
   preferenceName: string;
   categoryName: string;
-  level: number; // 0-100
+  level: number | null; // 0-100
   notes?: string;
 }
 
@@ -49,7 +49,8 @@ export interface QuestionnaireStatus {
 
 export interface UserPreferenceRequest {
   preferenceId: number;
-  level: number; // 0-100
+  /** 0-100; el cuestionario paso a paso ya no pregunta el nivel y manda null. */
+  level: number | null;
   notes?: string;
 }
 

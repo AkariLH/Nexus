@@ -6,21 +6,23 @@ interface OptionChipProps {
   selected: boolean;
   onPress: () => void;
   disabled?: boolean;
+  /** `checkbox` cuando se pueden elegir varias (cuestionario). */
+  role?: "radio" | "checkbox";
 }
 
 /**
  * Chip de opcion unica de los formularios de recomendacion (Figma "Chip"): blanco con borde; el
  * elegido va en rosa claro con borde rosa y texto morado.
  */
-export function OptionChip({ label, selected, onPress, disabled }: OptionChipProps) {
+export function OptionChip({ label, selected, onPress, disabled, role = "radio" }: OptionChipProps) {
   return (
     <TouchableOpacity
       style={[styles.chip, selected && styles.selected, disabled && styles.disabled]}
       onPress={onPress}
       disabled={disabled}
       activeOpacity={0.7}
-      accessibilityRole="radio"
-      accessibilityState={{ selected, disabled }}
+      accessibilityRole={role}
+      accessibilityState={role === "checkbox" ? { checked: selected, disabled } : { selected, disabled }}
     >
       <Text style={[styles.label, selected && styles.labelSelected]}>{label}</Text>
     </TouchableOpacity>

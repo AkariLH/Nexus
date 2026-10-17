@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { ReactNode } from "react";
-import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ReactNode, useEffect, useRef } from "react";
+import { Animated, Easing, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { palette, gradients } from "../../constants/colors";
 import { GradientButton } from "./ui/GradientButton";
 
@@ -21,6 +21,8 @@ interface ResultModalProps {
    * (vencimientos); `soft`: morado claro (preguntas).
    */
   tone?: "brand" | "danger" | "warning" | "soft";
+  /** El icono entra creciendo con rebote (p. ej. la palomita de "¡Listo!", Figma D5). */
+  animateIcon?: boolean;
   subtitle?: string;
   /** Pastilla con reloj bajo el subtitulo (p. ej. "La invitación vence en 23 h 41 min"). */
   badge?: string;
@@ -50,6 +52,7 @@ export function ResultModal({
   title,
   icon,
   tone = "brand",
+  animateIcon,
   subtitle,
   badge,
   children,
@@ -59,13 +62,32 @@ export function ResultModal({
   secondary,
   onRequestClose,
 }: ResultModalProps) {
+  const pop = useRef(new Animated.Value(animateIcon ? 0 : 1)).current;
+  useEffect(() => {
+    if (!animateIcon || !visible) return;
+    pop.setValue(0);
+    Animated.sequence([
+      Animated.delay(150),
+      Animated.spring(pop, { toValue: 1, friction: 4, tension: 80, useNativeDriver: true }),
+    ]).start();
+  }, [animateIcon, visible, pop]);
+  const popStyle = {
+    opacity: pop.interpolate({ inputRange: [0, 0.3, 1], outputRange: [0, 1, 1], extrapolate: "clamp" as const }),
+    transform: [
+      { scale: pop.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] }) },
+      { rotate: pop.interpolate({ inputRange: [0, 1], outputRange: ["-30deg", "0deg"] }) },
+    ],
+  };
+
   return (
     <Modal animationType="fade" transparent visible={visible} onRequestClose={onRequestClose}>
       <View style={styles.overlay}>
         <View style={styles.card} accessibilityViewIsModal>
           {icon && tone === "brand" && (
             <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.icon}>
-              <Ionicons name={icon} size={40} color={palette.onPrimary} />
+              <Animated.View style={popStyle}>
+                <Ionicons name={icon} size={40} color={palette.onPrimary} />
+              </Animated.View>
             </LinearGradient>
           )}
           {icon && tone !== "brand" && (

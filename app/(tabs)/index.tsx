@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { Href, useRouter, useFocusEffect } from "expo-router";
+import { Href, useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { useState, useCallback } from "react";
 import { StyleSheet, Text, TouchableOpacity, View, ScrollView, ActivityIndicator } from "react-native";
 import { Card, GradientIcon, ListRow, MetaLine, SectionLabel } from "../../components/ui/Surface";
@@ -45,6 +45,8 @@ export default function HomeScreen() {
   useQuestionnaireGuard();
   const router = useRouter();
   const { user } = useAuth();
+  // Figma D5: al terminar el cuestionario se llega aqui con ?questionnaire=done.
+  const { questionnaire } = useLocalSearchParams<{ questionnaire?: string }>();
   const [linkStatus, setLinkStatus] = useState<LinkStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [pendingCount, setPendingCount] = useState(0);
@@ -432,6 +434,17 @@ export default function HomeScreen() {
           />
         )}
       </ResultModal>
+
+      {/* D5: cuestionario completado */}
+      <ResultModal
+        visible={questionnaire === 'done'}
+        icon="checkmark-circle-outline"
+        animateIcon
+        title="¡Listo!"
+        subtitle="Ya conocemos tus gustos."
+        primary={{ label: 'Continuar', onPress: () => router.setParams({ questionnaire: undefined }) }}
+        onRequestClose={() => router.setParams({ questionnaire: undefined })}
+      />
 
       {/* B8a: la invitacion vencio */}
       <ResultModal
