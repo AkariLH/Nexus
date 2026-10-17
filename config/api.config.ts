@@ -229,6 +229,13 @@ export const API_CONFIG = {
       GET_CATEGORIES: '/ideas/categories',
       GET_IDEAS: '/ideas/:userId',
     },
+    RECOMMENDATIONS: {
+      BOROUGHS: '/recommendations/boroughs',
+      REQUEST: '/recommendations/:userId',
+      MORE: '/recommendations/:userId/requests/:requestId/more',
+      DISCARD: '/recommendations/:userId/items/:recommendationId/discard',
+      INVITE: '/recommendations/:userId/items/:recommendationId/invite',
+    },
   },
   
   TIMEOUT: 30000, // 30 segundos para dar tiempo al envío de email
