@@ -1,10 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { palette } from "../../constants/colors";
+import { useAuth } from "../../context/AuthContext";
+import planningService from "../../services/planning.service";
 import { ScreenHeader } from "../components/layout/ScreenHeader";
 import { GradientButton } from "../components/ui/GradientButton";
+import { ResultModal } from "../components/ResultModal";
 
 interface ModeOptionProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -38,11 +42,32 @@ const ModeOption = ({ icon, title, subtitle, selected, disabled, onPress }: Mode
 );
 
 /**
- * Figma A1 - RF-37: elegir modalidad. "En pareja" (RF-38/39) llega con la ola 7'; mientras, se ve
- * desactivada.
+ * Figma A1 - RF-37 / RF-38: elegir modalidad. "En pareja" invita a planear juntos; si ya hay una
+ * planeacion abierta, vuelve a ella.
  */
 export default function RecommendationModeScreen() {
   const router = useRouter();
+  const { user } = useAuth();
+  const [mode, setMode] = useState<"INDIVIDUAL" | "JOINT">("INDIVIDUAL");
+  const [starting, setStarting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const startJoint = async () => {
+    if (!user?.userId) return;
+    setStarting(true);
+    try {
+      const current = await planningService.current(user.userId);
+      const open = current && ["INVITED", "FILTERS", "OPTIONS", "PROPOSAL"].includes(current.phase);
+      if (!open) await planningService.invite(user.userId);
+      router.replace("/(planning)/session");
+    } catch (e: any) {
+      setError(e?.message || "No se pudo enviar la invitación.");
+    } finally {
+      setStarting(false);
+    }
+  };
+
+  const proceed = () => (mode === "INDIVIDUAL" ? router.push("/(recommend)/request") : startJoint());
 
   return (
     <SafeAreaView style={styles.container} edges={["left", "right", "bottom"]}>
@@ -53,21 +78,30 @@ export default function RecommendationModeScreen() {
           icon="person-outline"
           title="Individual"
           subtitle="Tú eliges y le envías la invitación."
-          selected
-          onPress={() => {}}
+          selected={mode === "INDIVIDUAL"}
+          onPress={() => setMode("INDIVIDUAL")}
         />
         <ModeOption
           icon="people-outline"
           title="En pareja"
           subtitle="Eligen juntos y pueden mandarse mensajes."
-          selected={false}
-          disabled
-          onPress={() => {}}
+          selected={mode === "JOINT"}
+          onPress={() => setMode("JOINT")}
         />
       </View>
       <View style={styles.footer}>
-        <GradientButton title="Continuar" onPress={() => router.push("/(recommend)/request")} />
+        <GradientButton title="Continuar" onPress={proceed} loading={starting} />
       </View>
+
+      <ResultModal
+        visible={error !== null}
+        icon="alert-circle-outline"
+        tone="warning"
+        title="No se pudo completar"
+        subtitle={error ?? undefined}
+        primary={{ label: "Entendido", onPress: () => setError(null) }}
+        onRequestClose={() => setError(null)}
+      />
     </SafeAreaView>
   );
 }

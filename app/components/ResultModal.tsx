@@ -16,9 +16,14 @@ interface ResultModalProps {
   title: string;
   /** Icono en el circulo superior; sin icono el modal empieza por el titulo. */
   icon?: keyof typeof Ionicons.glyphMap;
-  /** `danger`: circulo rojo claro con icono rojo (rechazos). */
-  tone?: "brand" | "danger";
+  /**
+   * `brand`: circulo con degradado; `danger`: rojo claro (rechazos); `warning`: ambar claro
+   * (vencimientos); `soft`: morado claro (preguntas).
+   */
+  tone?: "brand" | "danger" | "warning" | "soft";
   subtitle?: string;
+  /** Pastilla con reloj bajo el subtitulo (p. ej. "La invitación vence en 23 h 41 min"). */
+  badge?: string;
   /** Tarjeta del plan u otro contenido entre el subtitulo y los botones. */
   children?: ReactNode;
   /** Texto bajo la tarjeta (p. ej. "Tu pareja podrá aceptarla o rechazarla."). */
@@ -30,6 +35,12 @@ interface ResultModalProps {
   onRequestClose: () => void;
 }
 
+const SOFT_TONES = {
+  danger: { background: palette.errorSoft, color: palette.error },
+  warning: { background: palette.warningSoft, color: palette.warning },
+  soft: { background: palette.secondarySoft, color: palette.textAccent },
+} as const;
+
 /**
  * Modal centrado de resultados y confirmaciones de las recomendaciones (Figma A6-A9): icono en
  * circulo, titulo, subtitulo, contenido y uno o dos botones.
@@ -40,6 +51,7 @@ export function ResultModal({
   icon,
   tone = "brand",
   subtitle,
+  badge,
   children,
   footnote,
   note,
@@ -56,9 +68,9 @@ export function ResultModal({
               <Ionicons name={icon} size={40} color={palette.onPrimary} />
             </LinearGradient>
           )}
-          {icon && tone === "danger" && (
-            <View style={[styles.icon, styles.iconDanger]}>
-              <Ionicons name={icon} size={40} color={palette.error} />
+          {icon && tone !== "brand" && (
+            <View style={[styles.icon, { backgroundColor: SOFT_TONES[tone].background }]}>
+              <Ionicons name={icon} size={40} color={SOFT_TONES[tone].color} />
             </View>
           )}
 
@@ -66,6 +78,12 @@ export function ResultModal({
             {title}
           </Text>
           {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+          {badge && (
+            <View style={styles.badge}>
+              <Ionicons name="time-outline" size={16} color={palette.textAccent} />
+              <Text style={styles.badgeText}>{badge}</Text>
+            </View>
+          )}
 
           {children && <View style={styles.content}>{children}</View>}
           {footnote && <Text style={styles.footnote}>{footnote}</Text>}
@@ -128,8 +146,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 16,
   },
-  iconDanger: {
-    backgroundColor: palette.errorSoft,
+  badge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 14,
+    backgroundColor: palette.secondarySoft,
+  },
+  badgeText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: palette.textAccent,
   },
   title: {
     fontSize: 22,

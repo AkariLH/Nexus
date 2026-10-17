@@ -21,6 +21,8 @@ import { ScreenHeader } from "../components/layout/ScreenHeader";
 import { ResultModal } from "../components/ResultModal";
 import { PlanSummaryCard } from "../components/PlanSummaryCard";
 import { slotLabel } from "../../utils/recommendationFormat";
+import appNotificationService, { AppNotification } from "../../services/appNotification.service";
+import planningService from "../../services/planning.service";
 
 /** A8 / A9 (vista de la pareja): resultado de aceptar o rechazar una invitacion. */
 interface Outcome {
@@ -49,6 +51,7 @@ export default function NotificationsScreen() {
   const [showSyncModal, setShowSyncModal] = useState(false);
   const [externalCalendars, setExternalCalendars] = useState<any[]>([]);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
+  const [notices, setNotices] = useState<AppNotification[]>([]);
   const inviterName = outcome?.event?.creatorName || outcome?.event?.creatorNickname || "tu pareja";
 
   useFocusEffect(
@@ -64,6 +67,14 @@ export default function NotificationsScreen() {
       setLoading(true);
       const events = await eventService.getPendingApprovalEvents(user.userId);
       setPendingEvents(events);
+      // B9: avisos de la planeacion en pareja; al verlos quedan leidos.
+      try {
+        const list = await appNotificationService.list(user.userId);
+        setNotices(list.items);
+        if (list.unread > 0) await appNotificationService.markAllRead(user.userId);
+      } catch {
+        setNotices([]);
+      }
     } catch (error: any) {
       console.error('Error cargando eventos pendientes:', error);
       setModalMessage({
@@ -268,7 +279,7 @@ export default function NotificationsScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        {pendingEvents.length === 0 ? (
+        {pendingEvents.length === 0 && notices.length === 0 ? (
           <View style={styles.emptyContainer}>
             <View style={styles.emptyIconContainer}>
               <Ionicons name="notifications-off-outline" size={64} color={palette.iconDisabled} />
@@ -280,7 +291,7 @@ export default function NotificationsScreen() {
           </View>
         ) : (
           <>
-            <Text style={styles.sectionTitle}>Eventos Pendientes</Text>
+            {pendingEvents.length > 0 && <Text style={styles.sectionTitle}>Eventos Pendientes</Text>}
             {pendingEvents.map((event) => (
               <View key={event.id} style={styles.notificationCard}>
                 {/* Header de la notificación */}
@@ -392,6 +403,25 @@ export default function NotificationsScreen() {
                 </View>
               </View>
             ))}
+
+            {notices.length > 0 && (
+              <View style={styles.noticeList}>
+                {notices.map((n) => (
+                  <View key={n.id} style={styles.noticeCard}>
+                    <LinearGradient colors={gradients.primary} style={styles.noticeIcon}>
+                      <Ionicons name="heart-outline" size={20} color={palette.onPrimary} />
+                    </LinearGradient>
+                    <View style={styles.noticeText}>
+                      <View style={styles.noticeHeader}>
+                        <Text style={styles.noticeTitle}>{n.title}</Text>
+                        <Text style={styles.noticeTime}>{formatTime(n.createdAt)}</Text>
+                      </View>
+                      <Text style={styles.noticeBody}>{n.body}</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
           </>
         )}
       </ScrollView>
@@ -469,7 +499,15 @@ export default function NotificationsScreen() {
         tone="danger"
         title="Rechazaste la invitación"
         subtitle={`Le avisamos a ${inviterName}.`}
-        primary={{ label: "Cerrar", onPress: () => setOutcome(null) }}
+        primary={{
+          label: "Planear juntos",
+          onPress: async () => {
+            setOutcome(null);
+            if (user?.userId) await planningService.invite(user.userId).catch(() => null);
+            router.push("/(planning)/session");
+          },
+        }}
+        secondary={{ label: "Cerrar", onPress: () => setOutcome(null) }}
         onRequestClose={() => setOutcome(null)}
       />
 
@@ -489,6 +527,53 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
+  noticeList: {
+    gap: 12,
+    marginTop: 8,
+  },
+  noticeCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 12,
+    borderRadius: 16,
+    backgroundColor: palette.surface,
+    shadowColor: palette.shadow,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  noticeIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  noticeText: {
+    flex: 1,
+    gap: 2,
+  },
+  noticeHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  noticeTitle: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: "600",
+    color: palette.text,
+  },
+  noticeTime: {
+    fontSize: 12,
+    color: palette.textMuted,
+  },
+  noticeBody: {
+    fontSize: 13,
+    color: palette.textSecondary,
+  },
   container: {
     flex: 1,
     backgroundColor: palette.background,

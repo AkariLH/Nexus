@@ -14,6 +14,22 @@ import { loadTracked, nextNotice, Notice, settle } from "../../utils/inviteTrack
 import { costLabel, dayPhrase, slotLabel } from "../../utils/recommendationFormat";
 import { ResultModal } from "../components/ResultModal";
 import { PlanSummaryCard } from "../components/PlanSummaryCard";
+import planningService, { PlanningView } from "../../services/planning.service";
+import appNotificationService from "../../services/appNotification.service";
+import { markSeen, PlanningNotice, wasSeen } from "../../utils/planningSeen";
+import { remainingLabel } from "../../utils/planningFormat";
+import { placeLabel } from "../../utils/recommendationFormat";
+
+const OPEN_PHASES = ["INVITED", "FILTERS", "OPTIONS", "PROPOSAL"];
+
+/** Aviso de la planeacion en pareja que Inicio debe mostrar (B1 de la pareja, B5, B8a, B8b). */
+function planningNoticeOf(view: PlanningView): PlanningNotice | null {
+  if (view.phase === "INVITED" && view.role === "PARTNER") return "INVITE";
+  if (view.phase === "AGREED") return "AGREED";
+  if (view.phase === "EXPIRED") return "EXPIRED";
+  if (view.phase === "CLOSED") return "CLOSED";
+  return null;
+}
 
 interface LinkStatus {
   hasActiveLink: boolean;
@@ -90,6 +106,43 @@ export default function HomeScreen() {
     }
   }, [user?.userId, linkStatus?.hasActiveLink]);
 
+  // RF-38: planeacion en pareja abierta o recien terminada, y el aviso que toca mostrar.
+  const [planning, setPlanning] = useState<PlanningView | null>(null);
+  const [planningNotice, setPlanningNotice] = useState<PlanningNotice | null>(null);
+  const [unreadNotices, setUnreadNotices] = useState(0);
+
+  const checkPlanning = useCallback(async () => {
+    if (!user?.userId) return;
+    try {
+      const [view, notices] = await Promise.all([
+        planningService.current(user.userId),
+        appNotificationService.list(user.userId),
+      ]);
+      setPlanning(view);
+      setUnreadNotices(notices.unread);
+      const notice = view ? planningNoticeOf(view) : null;
+      setPlanningNotice(notice && view && !(await wasSeen(user.userId, view.id, notice)) ? notice : null);
+    } catch {
+      // Sin red o sin las tablas nuevas, Inicio sigue igual.
+    }
+  }, [user?.userId]);
+
+  const closePlanningNotice = async (then?: () => void) => {
+    if (planning && planningNotice && user?.userId) await markSeen(user.userId, planning.id, planningNotice);
+    setPlanningNotice(null);
+    then?.();
+  };
+
+  const planTogether = async () => {
+    if (!user?.userId) return;
+    try {
+      await planningService.invite(user.userId);
+    } catch {
+      // Si ya hay una abierta, se abre esa.
+    }
+    router.push("/(planning)/session");
+  };
+
   // A7-A9: aviso de una invitacion enviada desde una recomendacion (enviada, aceptada o rechazada).
   const [inviteNotice, setInviteNotice] = useState<Notice | null>(null);
 
@@ -128,7 +181,8 @@ export default function HomeScreen() {
       loadPendingCount();
       loadUpcomingEvents();
       checkInviteNotice();
-    }, [fetchLinkStatus, loadPendingCount, loadUpcomingEvents, checkInviteNotice])
+      checkPlanning();
+    }, [fetchLinkStatus, loadPendingCount, loadUpcomingEvents, checkInviteNotice, checkPlanning])
   );
 
   const isLinked = linkStatus?.hasActiveLink || false;
@@ -167,10 +221,10 @@ export default function HomeScreen() {
             onPress={() => router.push('/(events)/notifications')}
           >
             <Ionicons name="notifications-outline" size={26} color={palette.text} />
-            {pendingCount > 0 && (
+            {pendingCount + unreadNotices > 0 && (
               <View style={styles.notificationBadge}>
                 <Text style={styles.notificationBadgeText}>
-                  {pendingCount > 9 ? '9+' : pendingCount}
+                  {pendingCount + unreadNotices > 9 ? '9+' : pendingCount + unreadNotices}
                 </Text>
               </View>
             )}
@@ -295,6 +349,28 @@ export default function HomeScreen() {
             </MotiView>
           )}
 
+          {/* Volver a una planeacion en pareja abierta (se puede salir y volver sin perder nada) */}
+          {planning && OPEN_PHASES.includes(planning.phase) && planningNotice !== 'INVITE' && (
+            <TouchableOpacity
+              style={styles.planningBanner}
+              onPress={() => router.push('/(planning)/session')}
+              accessibilityRole="button"
+            >
+              <LinearGradient colors={gradients.primary} style={styles.planningIcon}>
+                <Ionicons name="people-outline" size={22} color={palette.onPrimary} />
+              </LinearGradient>
+              <View style={styles.planningText}>
+                <Text style={styles.planningTitle}>Planeación con {planning.partner.name}</Text>
+                <Text style={styles.planningSubtitle}>
+                  {planning.phase === 'INVITED'
+                    ? `Esperando a que ${planning.partner.name} se una`
+                    : `Quedan ${remainingLabel(planning.sessionExpiresAt, now)} para decidir`}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={palette.icon} />
+            </TouchableOpacity>
+          )}
+
           {/* Próximos eventos (próximos 7 días) */}
           {isLinked && upcomingEvents.length > 0 && (
             <MotiView
@@ -378,19 +454,119 @@ export default function HomeScreen() {
         icon="close"
         tone="danger"
         title={`${partnerLabel} rechazó la invitación`}
-        subtitle="Pueden buscar otra opción."
+        subtitle="Pueden buscar otra opción o planearla juntos."
         primary={{
           label: 'Buscar otra recomendación',
           onPress: () => closeInviteNotice(() => router.push('/(recommend)/request')),
         }}
-        secondary={{ label: 'Cerrar', onPress: () => closeInviteNotice() }}
+        secondary={{ label: 'Planear juntos', onPress: () => closeInviteNotice(planTogether) }}
         onRequestClose={() => closeInviteNotice()}
+      />
+
+      {/* B1 (vista de la pareja): invitacion a planear juntos */}
+      <ResultModal
+        visible={planningNotice === 'INVITE'}
+        icon="people-outline"
+        title={`${planning?.partner.name ?? partnerLabel} te invita a planear una cita`}
+        subtitle="Elijan juntos los detalles y Nexus les sugerirá planes."
+        badge={planning ? `La invitación vence en ${remainingLabel(planning.inviteExpiresAt, now)}` : undefined}
+        primary={{
+          label: 'Unirme',
+          onPress: () =>
+            closePlanningNotice(async () => {
+              if (user?.userId && planning) await planningService.accept(user.userId, planning.id).catch(() => null);
+              router.push('/(planning)/session');
+            }),
+        }}
+        secondary={{ label: 'Ahora no', onPress: () => closePlanningNotice() }}
+        onRequestClose={() => closePlanningNotice()}
+      />
+
+      {/* B5: cita confirmada, si no se vio dentro de la planeacion */}
+      <ResultModal
+        visible={planningNotice === 'AGREED'}
+        icon="heart-outline"
+        title="¡Cita confirmada!"
+        subtitle={planning?.agreed ? `Ya tienen cita ${dayPhrase(planning.agreed.item.startsAt, now)}.` : undefined}
+        note="La cita ya está en el calendario de los dos."
+        primary={{ label: 'Ver en el calendario', onPress: () => closePlanningNotice(() => router.push('/(tabs)/calendario')) }}
+        secondary={{ label: 'Cerrar', onPress: () => closePlanningNotice() }}
+        onRequestClose={() => closePlanningNotice()}
+      >
+        {planning?.agreed && (
+          <PlanSummaryCard
+            title={planning.agreed.item.title}
+            when={slotLabel(planning.agreed.item.startsAt, planning.agreed.item.endsAt, now)}
+            place={placeLabel(planning.agreed.item)}
+            cost={costLabel(planning.agreed.item.costPerPersonMxn)}
+          />
+        )}
+      </ResultModal>
+
+      {/* B8a: la invitacion vencio */}
+      <ResultModal
+        visible={planningNotice === 'EXPIRED'}
+        icon="hourglass-outline"
+        tone="warning"
+        title={planning?.role === 'INVITER'
+          ? `${planning.partner.name} no aceptó a tiempo`
+          : `La invitación de ${planning?.partner.name ?? partnerLabel} venció`}
+        subtitle={planning?.role === 'INVITER' ? 'La invitación venció.' : undefined}
+        primary={planning?.role === 'INVITER'
+          ? { label: 'Planear de forma individual', onPress: () => closePlanningNotice(() => router.push('/(recommend)/request')) }
+          : { label: 'Cerrar', onPress: () => closePlanningNotice() }}
+        secondary={planning?.role === 'INVITER'
+          ? { label: 'Invitar de nuevo', onPress: () => closePlanningNotice(planTogether) }
+          : undefined}
+        onRequestClose={() => closePlanningNotice()}
+      />
+
+      {/* B8b: se acabaron las 12 horas */}
+      <ResultModal
+        visible={planningNotice === 'CLOSED'}
+        icon="hourglass-outline"
+        tone="warning"
+        title="Se acabó el tiempo"
+        subtitle="No llegaron a un acuerdo a tiempo."
+        primary={{ label: 'Cerrar', onPress: () => closePlanningNotice() }}
+        onRequestClose={() => closePlanningNotice()}
       />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  planningBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 14,
+    marginBottom: 20,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: palette.primaryBorder,
+    backgroundColor: palette.primarySoft,
+  },
+  planningIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  planningText: {
+    flex: 1,
+    gap: 2,
+  },
+  planningTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: palette.text,
+  },
+  planningSubtitle: {
+    fontSize: 13,
+    color: palette.textSecondary,
+  },
   container: {
     flex: 1,
     backgroundColor: palette.surfaceMuted,
