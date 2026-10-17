@@ -18,6 +18,15 @@ import { ConfirmModal } from "../components/ConfirmModal";
 import { externalCalendarIntegration } from "../../services/externalCalendar.integration.service";
 import { palette, gradients } from "../../constants/colors";
 import { ScreenHeader } from "../components/layout/ScreenHeader";
+import { ResultModal } from "../components/ResultModal";
+import { PlanSummaryCard } from "../components/PlanSummaryCard";
+import { slotLabel } from "../../utils/recommendationFormat";
+
+/** A8 / A9 (vista de la pareja): resultado de aceptar o rechazar una invitacion. */
+interface Outcome {
+  kind: "accepted" | "rejected";
+  event: EventResponse | null;
+}
 
 export default function NotificationsScreen() {
   const router = useRouter();
@@ -39,6 +48,8 @@ export default function NotificationsScreen() {
   // Estados para sincronización con calendario externo
   const [showSyncModal, setShowSyncModal] = useState(false);
   const [externalCalendars, setExternalCalendars] = useState<any[]>([]);
+  const [outcome, setOutcome] = useState<Outcome | null>(null);
+  const inviterName = outcome?.event?.creatorName || outcome?.event?.creatorNickname || "tu pareja";
 
   useFocusEffect(
     useCallback(() => {
@@ -91,21 +102,13 @@ export default function NotificationsScreen() {
           setShowSyncModal(true);
         } else {
           // No tiene calendarios, solo mostrar éxito
-          setModalMessage({
-            title: "✅ Evento Aprobado",
-            message: "El evento se ha añadido a tu calendario de Nexus"
-          });
-          setShowSuccessModal(true);
+          setOutcome({ kind: "accepted", event: selectedEvent });
           loadPendingEvents();
         }
       } catch (calError) {
         console.error('Error cargando calendarios:', calError);
         // Continuar aunque falle la carga de calendarios
-        setModalMessage({
-          title: "✅ Evento Aprobado",
-          message: "El evento se ha añadido a tu calendario de Nexus"
-        });
-        setShowSuccessModal(true);
+        setOutcome({ kind: "accepted", event: selectedEvent });
         loadPendingEvents();
       }
     } catch (error: any) {
@@ -148,11 +151,7 @@ export default function NotificationsScreen() {
         }
       );
       
-      setModalMessage({
-        title: "✅ Evento Sincronizado",
-        message: `Evento agregado a tu calendario de Nexus y a ${calendar.name}`
-      });
-      setShowSuccessModal(true);
+      setOutcome({ kind: "accepted", event: selectedEvent });
       loadPendingEvents();
     } catch (error: any) {
       console.error('Error sincronizando con calendario externo:', error);
@@ -169,11 +168,7 @@ export default function NotificationsScreen() {
   
   const handleSkipSync = () => {
     setShowSyncModal(false);
-    setModalMessage({
-      title: "✅ Evento Aprobado",
-      message: "El evento se ha añadido a tu calendario de Nexus"
-    });
-    setShowSuccessModal(true);
+    setOutcome({ kind: "accepted", event: selectedEvent });
     loadPendingEvents();
   };
   
@@ -185,11 +180,7 @@ export default function NotificationsScreen() {
     
     try {
       await eventService.rejectEvent(selectedEvent.id, user.userId);
-      setModalMessage({
-        title: "Evento Rechazado",
-        message: "El evento no se añadirá a tu calendario"
-      });
-      setShowSuccessModal(true);
+      setOutcome({ kind: "rejected", event: selectedEvent });
       loadPendingEvents();
     } catch (error: any) {
       console.error('Error rechazando evento:', error);
@@ -314,7 +305,7 @@ export default function NotificationsScreen() {
 
                 {/* Mensaje */}
                 <Text style={styles.notificationMessage}>
-                  Te ha invitado a un evento
+                  Te invita a una cita
                 </Text>
 
                 {/* Detalles del evento */}
@@ -448,6 +439,40 @@ export default function NotificationsScreen() {
         onConfirm={() => setShowErrorModal(false)}
       />
       
+      <ResultModal
+        visible={outcome?.kind === "accepted"}
+        icon="checkmark-circle-outline"
+        title="Aceptaste la cita"
+        subtitle={`Le avisamos a ${inviterName}.`}
+        note="La cita ya está en el calendario de los dos."
+        primary={{
+          label: "Ver en el calendario",
+          onPress: () => {
+            setOutcome(null);
+            router.push("/(tabs)/calendario");
+          },
+        }}
+        onRequestClose={() => setOutcome(null)}
+      >
+        {outcome?.event && (
+          <PlanSummaryCard
+            title={outcome.event.title}
+            when={slotLabel(outcome.event.startDateTime, outcome.event.endDateTime, new Date())}
+            place={outcome.event.location}
+          />
+        )}
+      </ResultModal>
+
+      <ResultModal
+        visible={outcome?.kind === "rejected"}
+        icon="close"
+        tone="danger"
+        title="Rechazaste la invitación"
+        subtitle={`Le avisamos a ${inviterName}.`}
+        primary={{ label: "Cerrar", onPress: () => setOutcome(null) }}
+        onRequestClose={() => setOutcome(null)}
+      />
+
       {/* Modal de sincronización con calendario externo */}
       <ConfirmModal
         visible={showSyncModal}

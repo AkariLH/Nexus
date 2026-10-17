@@ -17,6 +17,7 @@ import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
 import { findMutualAvailability, MutualAvailabilityResponse } from "../../services/availabilityService";
 import linkService from "../../services/link.service";
 import { palette, gradients } from "../../constants/colors";
+import { GradientButton } from "../components/ui/GradientButton";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface LinkStatusData {
@@ -191,6 +192,15 @@ export default function RecommendationsScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[palette.primary]} />
         }
       >
+        {/* RF-37: pedir una recomendacion de cita */}
+        {hasActiveLink && (
+          <GradientButton
+            title="Pedir recomendación"
+            onPress={() => router.push('/(recommend)/mode')}
+            style={styles.requestButton}
+          />
+        )}
+
         {/* Solo mostrar disponibilidad mutua */}
         {!hasActiveLink ? (
           <View style={styles.emptyCard}>
@@ -366,6 +376,9 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 14,
     color: palette.textSecondary,
+  },
+  requestButton: {
+    marginBottom: 16,
   },
   scrollView: {
     flex: 1,

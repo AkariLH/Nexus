@@ -10,6 +10,10 @@ import eventService, { EventResponse } from "../../services/event.service";
 import linkService from "../../services/link.service";
 import { palette, gradients } from "../../constants/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { loadTracked, nextNotice, Notice, settle } from "../../utils/inviteTracker";
+import { costLabel, dayPhrase, slotLabel } from "../../utils/recommendationFormat";
+import { ResultModal } from "../components/ResultModal";
+import { PlanSummaryCard } from "../components/PlanSummaryCard";
 
 interface LinkStatus {
   hasActiveLink: boolean;
@@ -86,6 +90,36 @@ export default function HomeScreen() {
     }
   }, [user?.userId, linkStatus?.hasActiveLink]);
 
+  // A7-A9: aviso de una invitacion enviada desde una recomendacion (enviada, aceptada o rechazada).
+  const [inviteNotice, setInviteNotice] = useState<Notice | null>(null);
+
+  const checkInviteNotice = useCallback(async () => {
+    if (!user?.userId) return;
+    try {
+      const tracked = await loadTracked(user.userId);
+      if (tracked.length === 0) return;
+      const needsEvents = tracked.some((t) => t.stage === 'waiting');
+      const events = needsEvents ? await eventService.getUserEvents(user.userId) : [];
+      const notice = nextNotice(tracked, events);
+      if (notice?.kind === 'gone') {
+        await settle(user.userId, notice.invite.eventId, 'gone');
+        return;
+      }
+      setInviteNotice(notice);
+    } catch {
+      // Sin red el aviso espera a la siguiente vez que se abra Inicio.
+    }
+  }, [user?.userId]);
+
+  const closeInviteNotice = async (then?: () => void) => {
+    const notice = inviteNotice;
+    setInviteNotice(null);
+    if (notice && user?.userId) {
+      await settle(user.userId, notice.invite.eventId, notice.kind);
+    }
+    then?.();
+  };
+
   // Verificar cada vez que el tab obtiene foco
   useFocusEffect(
     useCallback(() => {
@@ -93,11 +127,24 @@ export default function HomeScreen() {
       fetchLinkStatus();
       loadPendingCount();
       loadUpcomingEvents();
-    }, [fetchLinkStatus, loadPendingCount, loadUpcomingEvents])
+      checkInviteNotice();
+    }, [fetchLinkStatus, loadPendingCount, loadUpcomingEvents, checkInviteNotice])
   );
 
   const isLinked = linkStatus?.hasActiveLink || false;
   const partnerName = linkStatus?.partner?.displayName || linkStatus?.partner?.nickname || "";
+  const partnerLabel = partnerName || "Tu pareja";
+  const invite = inviteNotice?.invite;
+  const now = new Date();
+  const inviteCard = invite && (
+    <PlanSummaryCard
+      title={invite.title}
+      when={slotLabel(invite.startsAt, invite.endsAt, now)}
+      place={invite.place}
+      cost={costLabel(invite.costPerPersonMxn)}
+      pendingLabel={inviteNotice?.kind === 'sent' ? `Pendiente de ${partnerLabel}` : undefined}
+    />
+  );
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: insets.top + 24 }]}>
@@ -301,6 +348,44 @@ export default function HomeScreen() {
           )}
         </>
       )}
+
+      <ResultModal
+        visible={inviteNotice?.kind === 'sent'}
+        icon="send-outline"
+        title="Invitación enviada"
+        subtitle={`Te avisaremos cuando ${partnerLabel} responda.`}
+        primary={{ label: 'Ver mis eventos', onPress: () => closeInviteNotice(() => router.push('/(events)/my-events')) }}
+        secondary={{ label: 'Cerrar', onPress: () => closeInviteNotice() }}
+        onRequestClose={() => closeInviteNotice()}
+      >
+        {inviteCard}
+      </ResultModal>
+
+      <ResultModal
+        visible={inviteNotice?.kind === 'accepted'}
+        icon="heart-outline"
+        title={`¡${partnerLabel} aceptó!`}
+        subtitle={invite ? `Ya tienen cita ${dayPhrase(invite.startsAt, now)}.` : undefined}
+        note="La cita ya está en el calendario de los dos."
+        primary={{ label: 'Ver en el calendario', onPress: () => closeInviteNotice(() => router.push('/(tabs)/calendario')) }}
+        onRequestClose={() => closeInviteNotice()}
+      >
+        {inviteCard}
+      </ResultModal>
+
+      <ResultModal
+        visible={inviteNotice?.kind === 'rejected'}
+        icon="close"
+        tone="danger"
+        title={`${partnerLabel} rechazó la invitación`}
+        subtitle="Pueden buscar otra opción."
+        primary={{
+          label: 'Buscar otra recomendación',
+          onPress: () => closeInviteNotice(() => router.push('/(recommend)/request')),
+        }}
+        secondary={{ label: 'Cerrar', onPress: () => closeInviteNotice() }}
+        onRequestClose={() => closeInviteNotice()}
+      />
     </ScrollView>
   );
 }
