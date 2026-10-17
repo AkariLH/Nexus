@@ -236,6 +236,15 @@ export const API_CONFIG = {
       DISCARD: '/recommendations/:userId/items/:recommendationId/discard',
       INVITE: '/recommendations/:userId/items/:recommendationId/invite',
     },
+    PLANNING: {
+      INVITE: '/planning/:userId/invite',
+      CURRENT: '/planning/:userId/current',
+      SESSION: '/planning/:userId/:sessionId',
+    },
+    APP_NOTIFICATIONS: {
+      LIST: '/notifications/:userId',
+      READ: '/notifications/:userId/read',
+    },
   },
   
   TIMEOUT: 30000, // 30 segundos para dar tiempo al envío de email
