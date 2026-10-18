@@ -64,6 +64,16 @@ export const switchColors = {
   ...(Platform.OS === 'web' ? { activeThumbColor: palette.surface } : {}),
 };
 
+/** Colores que se pueden elegir para un evento (Crear / Editar evento); se guardan tal cual. */
+export const eventColors = [
+  { name: 'Rosa', value: '#FF4F81' },
+  { name: 'Violeta', value: '#8A2BE2' },
+  { name: 'Azul', value: '#3B82F6' },
+  { name: 'Verde', value: '#10B981' },
+  { name: 'Naranja', value: '#F59E0B' },
+  { name: 'Rojo', value: '#EF4444' },
+] as const;
+
 export const gradients = {
   primary: [palette.primary, palette.secondary],
   primaryReversed: [palette.secondary, palette.primary],

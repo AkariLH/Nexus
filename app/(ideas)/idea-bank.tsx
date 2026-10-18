@@ -92,7 +92,7 @@ export default function IdeaBankScreen() {
           </View>
           <Text style={styles.stateTitle}>Primero vincúlate con tu pareja</Text>
           <Text style={styles.stateSubtitle}>El banco de ideas es para planear juntos, así que necesita un vínculo activo.</Text>
-          <TouchableOpacity style={styles.secondaryButton} onPress={() => router.replace('/(tabs)/link')}>
+          <TouchableOpacity accessibilityRole="button" style={styles.secondaryButton} onPress={() => router.replace('/(tabs)/link')}>
             <Text style={styles.secondaryButtonText}>Ir a Vínculo</Text>
           </TouchableOpacity>
         </View>
@@ -121,7 +121,7 @@ export default function IdeaBankScreen() {
               </View>
               <Text style={styles.stateTitle}>No pudimos cargar las ideas</Text>
               <Text style={styles.stateSubtitle}>Revisa tu conexión e inténtalo de nuevo.</Text>
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 style={styles.secondaryButton}
                 onPress={() => {
                   setState('loading');

@@ -105,7 +105,7 @@ export default function EnterLinkCodeScreen() {
         </View>
 
         {/* Connect button */}
-        <TouchableOpacity
+        <TouchableOpacity accessibilityRole="button"
           style={[styles.connectButtonWrapper, (!code || code.length < 6 || loading) && styles.buttonDisabled]}
           onPress={handleConnect}
           disabled={!code || code.length < 6 || loading}
@@ -128,7 +128,7 @@ export default function EnterLinkCodeScreen() {
         {/* Alternative option */}
         <View style={styles.alternativeContainer}>
           <Text style={styles.alternativeLabel}>¿No tienes el código aún?</Text>
-          <TouchableOpacity onPress={() => router.push("/(link)/my-link-code")}>
+          <TouchableOpacity accessibilityRole="button" onPress={() => router.push("/(link)/my-link-code")}>
             <Text style={styles.alternativeLink}>Comparte el tuyo primero</Text>
           </TouchableOpacity>
         </View>

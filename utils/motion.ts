@@ -26,3 +26,11 @@ export function decorativeLoop(
     start: (callback?: Animated.EndCallback) => callback?.({ finished: true }),
   };
 }
+
+/**
+ * Duracion de una animacion de entrada (aparecer, deslizarse). Con "reducir movimiento" activo
+ * vale 0: el elemento aparece de inmediato, ya en su lugar.
+ */
+export function motionMs(ms: number): number {
+  return reduceMotion ? 0 : ms;
+}

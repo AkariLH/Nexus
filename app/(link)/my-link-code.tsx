@@ -202,7 +202,7 @@ export default function MyLinkCodeScreen() {
 
           {/* Timer / Regenerate link */}
           {isExpired ? (
-            <TouchableOpacity 
+            <TouchableOpacity accessibilityRole="button" 
               style={styles.regenerateContainer}
               onPress={() => {
                 console.log("Botón presionado - generando nuevo código");
@@ -222,7 +222,7 @@ export default function MyLinkCodeScreen() {
 
           {/* Action buttons */}
           <View style={styles.actions}>
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={styles.primaryButtonWrapper}
               onPress={copyToClipboard}
               activeOpacity={0.9}
@@ -238,7 +238,7 @@ export default function MyLinkCodeScreen() {
               </LinearGradient>
             </TouchableOpacity>
 
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={styles.secondaryButton}
               onPress={shareCode}
               activeOpacity={0.8}
@@ -251,7 +251,7 @@ export default function MyLinkCodeScreen() {
           {/* Alternative option */}
           <View style={styles.alternativeContainer}>
             <Text style={styles.alternativeLabel}>¿Tu pareja ya tiene código?</Text>
-            <TouchableOpacity onPress={() => router.push("/(link)/enter-link-code")}>
+            <TouchableOpacity accessibilityRole="button" onPress={() => router.push("/(link)/enter-link-code")}>
               <Text style={styles.alternativeLink}>Ingresar código de pareja</Text>
             </TouchableOpacity>
           </View>

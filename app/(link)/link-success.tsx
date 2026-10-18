@@ -298,7 +298,7 @@ function ContinueButton({ onPress }: { onPress: () => void }) {
 
   return (
     <Animated.View style={[styles.buttonContainer, animatedStyle]}>
-      <TouchableOpacity onPress={onPress}>
+      <TouchableOpacity accessibilityRole="button" onPress={onPress}>
         <Text style={styles.buttonText}>Continuar</Text>
       </TouchableOpacity>
     </Animated.View>

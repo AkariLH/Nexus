@@ -118,7 +118,7 @@ export default function MyEventsScreen() {
           onPress={() => router.push('/(events)/create-event')}
           accessibilityRole="button"
           accessibilityLabel="Crear evento"
-          hitSlop={8}
+          hitSlop={12}
         >
           <Ionicons name="add" size={26} color={palette.text} />
         </TouchableOpacity>
@@ -188,7 +188,7 @@ export default function MyEventsScreen() {
                           disabled={isProcessing}
                           accessibilityRole="button"
                           accessibilityLabel={`Eliminar ${event.title}`}
-                          hitSlop={8}
+                          hitSlop={14}
                         >
                           {isProcessing ? (
                             <ActivityIndicator size="small" color={palette.error} />

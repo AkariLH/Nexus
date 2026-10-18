@@ -89,7 +89,7 @@ export default function MoodHistoryScreen() {
               </View>
               <Text style={styles.stateTitle}>No pudimos cargar tu historial</Text>
               <Text style={styles.stateSubtitle}>Revisa tu conexión e inténtalo de nuevo.</Text>
-              <TouchableOpacity style={styles.secondaryButton} onPress={retry}>
+              <TouchableOpacity accessibilityRole="button" style={styles.secondaryButton} onPress={retry}>
                 <Text style={styles.secondaryButtonText}>Reintentar</Text>
               </TouchableOpacity>
             </>

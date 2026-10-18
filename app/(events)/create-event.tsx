@@ -23,7 +23,7 @@ import { RemindersModal, Reminder } from "../components/RemindersModal";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { endFromDuration } from "../../utils/ideaFormat";
 import { EVENT_CATEGORIES, missingForEvent } from "../../utils/eventForm";
-import { palette, gradients } from "../../constants/colors";
+import { palette, gradients, eventColors } from "../../constants/colors";
 import { ScreenHeader } from "../components/layout/ScreenHeader";
 
 export default function CreateEventScreen() {
@@ -78,14 +78,7 @@ export default function CreateEventScreen() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
-  const colors = [
-    { name: 'Rosa', value: '#FF4F81' },
-    { name: 'Violeta', value: '#8A2BE2' },
-    { name: 'Azul', value: '#3B82F6' },
-    { name: 'Verde', value: '#10B981' },
-    { name: 'Naranja', value: '#F59E0B' },
-    { name: 'Rojo', value: '#EF4444' },
-  ];
+  const colors = eventColors;
 
   const missing = missingForEvent({ title, startDateSelected, endDateSelected, startTimeSelected, endTimeSelected, isAllDay });
 
@@ -402,7 +395,7 @@ export default function CreateEventScreen() {
             <Text style={styles.label}>Inicio</Text>
           </View>
           <View style={styles.dateTimeRow}>
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={[styles.dateInput, styles.inputWrapper, errors.startDate && styles.inputError]}
               onPress={() => setShowStartDatePicker(true)}
               activeOpacity={0.7}
@@ -412,7 +405,7 @@ export default function CreateEventScreen() {
               </Text>
             </TouchableOpacity>
             {!isAllDay && (
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 style={[styles.timeInput, styles.inputWrapper, errors.startTime && styles.inputError]}
                 onPress={() => setShowStartTimePicker(true)}
                 activeOpacity={0.7}
@@ -434,7 +427,7 @@ export default function CreateEventScreen() {
             <Text style={styles.label}>Fin</Text>
           </View>
           <View style={styles.dateTimeRow}>
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={[styles.dateInput, styles.inputWrapper, errors.endDate && styles.inputError]}
               onPress={() => setShowEndDatePicker(true)}
               activeOpacity={0.7}
@@ -444,7 +437,7 @@ export default function CreateEventScreen() {
               </Text>
             </TouchableOpacity>
             {!isAllDay && (
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 style={[styles.timeInput, styles.inputWrapper, errors.endTime && styles.inputError]}
                 onPress={() => setShowEndTimePicker(true)}
                 activeOpacity={0.7}
@@ -499,7 +492,7 @@ export default function CreateEventScreen() {
 
         {/* Configuración de recurrencia */}
         {isRecurring && recurrenceConfig && (
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button"
             style={styles.recurrenceSummary}
             onPress={() => setShowRecurrenceModal(true)}
             activeOpacity={0.7}
@@ -545,6 +538,7 @@ export default function CreateEventScreen() {
                 disabled={loading}
                 accessibilityRole="radio"
                 accessibilityLabel={color.name}
+                hitSlop={6}
                 accessibilityState={{ checked: selectedColor === color.value }}
               />
             ))}
@@ -606,7 +600,7 @@ export default function CreateEventScreen() {
           <View style={styles.labelContainer}>
             <Text style={styles.label}>Recordatorios (opcional)</Text>
           </View>
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button"
             style={styles.remindersButton}
             onPress={() => setShowRemindersModal(true)}
             disabled={loading}

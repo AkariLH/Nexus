@@ -20,7 +20,7 @@ import eventService, { EventResponse } from "../../services/event.service";
 import { RecurrenceModal } from "../components/RecurrenceModal";
 import { RemindersModal, Reminder } from "../components/RemindersModal";
 import { ConfirmModal } from "../components/ConfirmModal";
-import { palette, gradients } from "../../constants/colors";
+import { palette, gradients, eventColors } from "../../constants/colors";
 import { ScreenHeader } from "../components/layout/ScreenHeader";
 import { EVENT_CATEGORIES } from "../../utils/eventForm";
 
@@ -68,14 +68,7 @@ export default function EditEventScreen() {
   const [successMessage, setSuccessMessage] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const colors = [
-    { name: 'Rosa', value: '#FF4F81' },
-    { name: 'Violeta', value: '#8A2BE2' },
-    { name: 'Azul', value: '#3B82F6' },
-    { name: 'Verde', value: '#10B981' },
-    { name: 'Naranja', value: '#F59E0B' },
-    { name: 'Rojo', value: '#EF4444' },
-  ];
+  const colors = eventColors;
 
   useEffect(() => {
     loadEvent();
@@ -564,7 +557,7 @@ export default function EditEventScreen() {
               <Text style={styles.label}>Inicio</Text>
             </View>
             <View style={styles.dateTimeRow}>
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 style={[styles.dateInput, styles.inputWrapper]}
                 onPress={() => setShowStartDatePicker(true)}
                 activeOpacity={0.7}
@@ -575,7 +568,7 @@ export default function EditEventScreen() {
                 </Text>
               </TouchableOpacity>
               {!isAllDay && (
-                <TouchableOpacity
+                <TouchableOpacity accessibilityRole="button"
                   style={[styles.timeInput, styles.inputWrapper]}
                   onPress={() => setShowStartTimePicker(true)}
                   activeOpacity={0.7}
@@ -595,7 +588,7 @@ export default function EditEventScreen() {
               <Text style={styles.label}>Fin</Text>
             </View>
             <View style={styles.dateTimeRow}>
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 style={[styles.dateInput, styles.inputWrapper]}
                 onPress={() => setShowEndDatePicker(true)}
                 activeOpacity={0.7}
@@ -606,7 +599,7 @@ export default function EditEventScreen() {
                 </Text>
               </TouchableOpacity>
               {!isAllDay && (
-                <TouchableOpacity
+                <TouchableOpacity accessibilityRole="button"
                   style={[styles.timeInput, styles.inputWrapper]}
                   onPress={() => setShowEndTimePicker(true)}
                   activeOpacity={0.7}
@@ -660,7 +653,7 @@ export default function EditEventScreen() {
 
           {/* Configuración de recurrencia */}
           {isRecurring && recurrenceConfig && (
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={styles.recurrenceSummary}
               onPress={() => setShowRecurrenceModal(true)}
               activeOpacity={0.7}
@@ -695,6 +688,7 @@ export default function EditEventScreen() {
                   disabled={saving}
                   accessibilityRole="radio"
                   accessibilityLabel={color.name}
+                  hitSlop={6}
                   accessibilityState={{ checked: selectedColor === color.value }}
                 />
               ))}
@@ -756,7 +750,7 @@ export default function EditEventScreen() {
             <View style={styles.labelContainer}>
               <Text style={styles.label}>Recordatorios (opcional)</Text>
             </View>
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={styles.remindersButton}
               onPress={() => setShowRemindersModal(true)}
               disabled={saving}
@@ -786,7 +780,7 @@ export default function EditEventScreen() {
 
           {/* Botones de acción */}
           <View style={styles.actionButtons}>
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={[styles.saveButton, saving && styles.saveButtonDisabled]}
               onPress={handleSaveEvent}
               disabled={saving}

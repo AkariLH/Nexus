@@ -274,7 +274,7 @@ export default function HomeScreen() {
               accessibilityRole="button"
               style={styles.heroWrap}
             >
-              <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.hero}>
+              <LinearGradient colors={gradients.primaryReversed} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.hero}>
                 <View style={styles.heroIcon}>
                   <Ionicons name="sparkles-outline" size={24} color={palette.onPrimary} />
                 </View>
@@ -530,9 +530,9 @@ const styles = StyleSheet.create({
   greeting: { fontSize: 24, fontWeight: "700", color: palette.text },
   subtitle: { fontSize: 14, color: palette.textSecondary },
   bell: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: palette.surface,
     justifyContent: "center",
     alignItems: "center",

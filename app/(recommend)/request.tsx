@@ -262,8 +262,8 @@ export default function RecommendationRequestScreen() {
       </ResultModal>
 
       <Modal visible={showBoroughs} transparent animationType="slide" onRequestClose={() => setShowBoroughs(false)}>
-        <Pressable style={styles.sheetOverlay} onPress={() => setShowBoroughs(false)}>
-          <Pressable style={styles.sheet} onPress={() => {}}>
+        <Pressable accessible={false} style={styles.sheetOverlay} onPress={() => setShowBoroughs(false)}>
+          <Pressable accessible={false} style={styles.sheet} onPress={() => {}}>
             <View style={styles.sheetHandle} />
             <Text style={styles.sheetTitle}>Elige la alcaldía</Text>
             <ScrollView>

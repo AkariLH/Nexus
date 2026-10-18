@@ -500,7 +500,7 @@ export default function PerfilScreen() {
             "calendar-outline",
             "Fecha de nacimiento",
             birthDateLabel(birthDate),
-            <TouchableOpacity style={styles.dateInput} onPress={() => setShowDatePicker(true)} disabled={isLoading}>
+            <TouchableOpacity accessibilityRole="button" style={styles.dateInput} onPress={() => setShowDatePicker(true)} disabled={isLoading}>
               <Text style={styles.inputText}>{birthDateLabel(editBirthDate)}</Text>
               <Ionicons name="chevron-down" size={18} color={palette.icon} />
             </TouchableOpacity>,
