@@ -38,7 +38,7 @@ export function ActionModal({ visible, onClose, title, actions }: ActionModalPro
               
               <View style={styles.actionsContainer}>
                 {actions.map((action, index) => (
-                  <TouchableOpacity
+                  <TouchableOpacity accessibilityRole="button"
                     key={index}
                     style={[
                       styles.actionButton,

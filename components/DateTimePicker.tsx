@@ -206,14 +206,14 @@ export default function DateTimePicker({
 
           {/* Botones */}
           <View style={styles.buttonContainer}>
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={styles.cancelButton}
               onPress={onCancel}
             >
               <Text style={styles.cancelButtonText}>Cancelar</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={styles.confirmButton}
               onPress={handleConfirm}
             >

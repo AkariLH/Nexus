@@ -44,7 +44,7 @@ export function ErrorModal({ visible, onClose, title = "Error", message, actionB
 
           {/* Botón de acción (si existe) */}
           {actionButton && (
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               activeOpacity={0.9}
               style={[styles.buttonWrapper, styles.actionButtonWrapper]}
               onPress={actionButton.onPress}
@@ -61,7 +61,7 @@ export function ErrorModal({ visible, onClose, title = "Error", message, actionB
           )}
 
           {/* Botón Cerrar */}
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button"
             activeOpacity={0.9}
             style={[styles.buttonWrapper, actionButton && styles.secondaryButtonWrapper]}
             onPress={onClose}

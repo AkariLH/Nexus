@@ -128,7 +128,7 @@ export function PasswordConfirmModal({
           ) : null}
 
           <View style={styles.modalButtons}>
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={styles.cancelButton}
               onPress={handleCancel}
               activeOpacity={0.7}
@@ -137,7 +137,7 @@ export function PasswordConfirmModal({
               <Text style={styles.cancelButtonText}>{cancelText}</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={styles.confirmButtonWrapper}
               onPress={handleConfirm}
               activeOpacity={0.9}

@@ -40,7 +40,7 @@ export function SuccessModal({
 
           <Text style={styles.modalMessage}>{message}</Text>
 
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button"
             style={styles.modalButtonWrapper}
             onPress={onClose}
             activeOpacity={0.9}

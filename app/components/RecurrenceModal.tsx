@@ -14,6 +14,9 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { palette, gradients } from "../../constants/colors";
 
+/** Nombre completo de cada inicial: el lector de pantalla no distingue "M" de "M". */
+const DAY_NAMES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+
 interface RecurrenceConfig {
   type: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'CUSTOM';
   customFrequency?: 'WEEKLY' | 'MONTHLY' | 'YEARLY';
@@ -139,7 +142,8 @@ export function RecurrenceModal({
                   { label: 'Mensual', value: 'MONTHLY' as const },
                   { label: 'Personalizada', value: 'CUSTOM' as const },
                 ].map((item) => (
-                  <TouchableOpacity
+                  <TouchableOpacity accessibilityRole="radio"
+                    accessibilityState={{ checked: type === item.value }}
                     key={item.value}
                     style={[styles.chip, type === item.value && styles.chipActive]}
                     onPress={() => setType(item.value)}
@@ -164,7 +168,8 @@ export function RecurrenceModal({
                       { label: 'Mensual', value: 'MONTHLY' as const },
                       { label: 'Anual', value: 'YEARLY' as const },
                     ].map((item) => (
-                      <TouchableOpacity
+                      <TouchableOpacity accessibilityRole="radio"
+                        accessibilityState={{ checked: customFrequency === item.value }}
                         key={item.value}
                         style={[styles.chip, customFrequency === item.value && styles.chipActive]}
                         onPress={() => setCustomFrequency(item.value)}
@@ -204,7 +209,9 @@ export function RecurrenceModal({
                     <Text style={styles.sectionTitle}>Días de la semana</Text>
                     <View style={styles.weekDaysContainer}>
                       {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map((day, index) => (
-                        <TouchableOpacity
+                        <TouchableOpacity accessibilityRole="checkbox"
+                          accessibilityLabel={DAY_NAMES[index]}
+                          accessibilityState={{ checked: weekDays.includes(index) }}
                           key={index}
                           style={[
                             styles.weekDayButton,
@@ -230,7 +237,7 @@ export function RecurrenceModal({
                 {customFrequency === 'MONTHLY' && (
                   <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Día del mes</Text>
-                    <TouchableOpacity
+                    <TouchableOpacity accessibilityRole="button"
                       style={styles.dateButton}
                       onPress={() => setShowMonthDayPicker(true)}
                     >
@@ -246,7 +253,7 @@ export function RecurrenceModal({
                 {customFrequency === 'YEARLY' && (
                   <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Fecha del año (día y mes)</Text>
-                    <TouchableOpacity
+                    <TouchableOpacity accessibilityRole="button"
                       style={styles.dateButton}
                       onPress={() => setShowYearDayPicker(true)}
                     >
@@ -262,7 +269,7 @@ export function RecurrenceModal({
                 <View style={styles.section}>
                   <Text style={styles.sectionTitle}>Finaliza el</Text>
                   <View style={styles.dateRow}>
-                    <TouchableOpacity
+                    <TouchableOpacity accessibilityRole="button"
                       style={[styles.dateButton, styles.dateButtonFlex]}
                       onPress={() => setShowEndDatePicker(true)}
                     >
@@ -308,7 +315,9 @@ export function RecurrenceModal({
                 <Text style={styles.sectionTitle}>Días de la semana</Text>
                 <View style={styles.weekDaysContainer}>
                   {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map((day, index) => (
-                    <TouchableOpacity
+                    <TouchableOpacity accessibilityRole="checkbox"
+                      accessibilityLabel={DAY_NAMES[index]}
+                      accessibilityState={{ checked: weekDays.includes(index) }}
                       key={index}
                       style={[
                         styles.weekDayButton,
@@ -335,7 +344,7 @@ export function RecurrenceModal({
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Termina el (opcional)</Text>
                 <View style={styles.dateRow}>
-                  <TouchableOpacity
+                  <TouchableOpacity accessibilityRole="button"
                     style={[styles.dateButton, styles.dateButtonFlex]}
                     onPress={() => setShowEndDatePicker(true)}
                   >
@@ -359,10 +368,10 @@ export function RecurrenceModal({
 
           {/* Botones */}
           <View style={styles.footer}>
-            <TouchableOpacity style={styles.cancelButton} onPress={onCancel}>
+            <TouchableOpacity accessibilityRole="button" style={styles.cancelButton} onPress={onCancel}>
               <Text style={styles.cancelButtonText}>Cancelar</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.saveButtonWrapper} onPress={handleSave}>
+            <TouchableOpacity accessibilityRole="button" style={styles.saveButtonWrapper} onPress={handleSave}>
               <LinearGradient
                 colors={gradients.primary}
                 start={{ x: 0, y: 0 }}

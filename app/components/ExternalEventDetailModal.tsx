@@ -119,12 +119,14 @@ export function ExternalEventDetailModal({
       onRequestClose={onClose}
     >
       <BlurView intensity={20} style={styles.backdrop} tint="dark">
-        <TouchableOpacity
+        {/* El fondo y la tarjeta no son botones: si lo fueran, el lector de pantalla agruparia todo
+            el contenido en un solo elemento. Se cierra con "Cerrar" o con Atras. */}
+        <TouchableOpacity accessible={false}
           style={styles.backdropTouchable}
           activeOpacity={1}
           onPress={onClose}
         >
-          <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()}>
+          <TouchableOpacity accessible={false} activeOpacity={1} onPress={(e) => e.stopPropagation()}>
             <View style={styles.modalContent}>
               {/* Header */}
               <View style={styles.header}>

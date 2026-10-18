@@ -175,7 +175,8 @@ export function RemindersModal({
             <Text style={styles.sectionTitle}>Opciones rápidas</Text>
             <View style={styles.presetsContainer}>
               {PRESET_REMINDERS.map((preset) => (
-                <TouchableOpacity
+                <TouchableOpacity accessibilityRole="checkbox"
+                  accessibilityState={{ checked: isSelected(preset.minutesBefore) }}
                   key={preset.minutesBefore}
                   style={[
                     styles.presetChip,
@@ -201,7 +202,7 @@ export function RemindersModal({
             {/* Recordatorio personalizado */}
             <Text style={styles.sectionTitle}>Personalizado</Text>
             {!showCustomInput ? (
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 style={styles.addCustomButton}
                 onPress={() => setShowCustomInput(true)}
               >
@@ -261,13 +262,13 @@ export function RemindersModal({
 
           {/* Footer */}
           <View style={styles.footer}>
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={styles.cancelFooterButton}
               onPress={onClose}
             >
               <Text style={styles.cancelFooterButtonText}>Cancelar</Text>
             </TouchableOpacity>
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={styles.saveButton}
               onPress={handleSave}
             >

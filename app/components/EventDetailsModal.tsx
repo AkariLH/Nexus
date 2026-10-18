@@ -352,7 +352,7 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, o
             {/* Botones de acción */}
             <View style={styles.footer}>
               <View style={styles.actionButtons}>
-                <TouchableOpacity
+                <TouchableOpacity accessibilityRole="button"
                   style={styles.editButton}
                   onPress={() => {
                     onClose();
@@ -378,7 +378,7 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, o
                 </TouchableOpacity>
                 
                 {onDelete && (
-                  <TouchableOpacity
+                  <TouchableOpacity accessibilityRole="button"
                     style={styles.deleteButton}
                     onPress={handleDeletePress}
                     activeOpacity={0.8}
@@ -429,7 +429,7 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, o
 
             {/* Opciones */}
             <View style={styles.choiceButtonsContainer}>
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 style={styles.choiceButton}
                 onPress={() => handleDeleteRecurringChoice('single')}
               >
@@ -440,7 +440,7 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, o
                 </View>
               </TouchableOpacity>
 
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 style={styles.choiceButton}
                 onPress={() => handleDeleteRecurringChoice('all')}
               >
@@ -451,7 +451,7 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, o
                 </View>
               </TouchableOpacity>
 
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 style={[styles.choiceButton, styles.cancelChoiceButton]}
                 onPress={() => setShowDeleteRecurringModal(false)}
               >

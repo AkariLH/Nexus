@@ -21,8 +21,11 @@ export function OptionChip({ label, selected, onPress, disabled, role = "radio" 
       onPress={onPress}
       disabled={disabled}
       activeOpacity={0.7}
+      // El chip mide ~40 dp de alto; el area de toque llega a 48 dp (minimo de Android).
+      hitSlop={{ top: 4, bottom: 4 }}
       accessibilityRole={role}
-      accessibilityState={role === "checkbox" ? { checked: selected, disabled } : { selected, disabled }}
+      // Radio y casilla se anuncian como "marcado"; "seleccionado" no se lee en un radio.
+      accessibilityState={{ checked: selected, disabled }}
     >
       <Text style={[styles.label, selected && styles.labelSelected]}>{label}</Text>
     </TouchableOpacity>

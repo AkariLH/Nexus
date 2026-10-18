@@ -82,7 +82,7 @@ export function ConfirmModal({
             {/* Botones */}
             <View style={styles.buttonContainer}>
               {showCancel && onCancel && (
-                <TouchableOpacity
+                <TouchableOpacity accessibilityRole="button"
                   style={[styles.button, styles.cancelButton]}
                   onPress={onCancel}
                   disabled={loading}
@@ -93,7 +93,7 @@ export function ConfirmModal({
               )}
 
               {onConfirm && (
-                <TouchableOpacity
+                <TouchableOpacity accessibilityRole="button"
                   style={[
                     styles.button,
                     styles.confirmButton,

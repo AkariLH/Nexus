@@ -19,7 +19,8 @@ export const Chip: React.FC<ChipProps> = ({
   style 
 }) => {
   return (
-    <TouchableOpacity
+    <TouchableOpacity accessibilityRole="button"
+      accessibilityState={{ selected: !!selected }}
       style={[
         styles.chip,
         selected && [styles.chipSelected, { backgroundColor: color }],
