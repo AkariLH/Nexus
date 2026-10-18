@@ -1,5 +1,7 @@
 import {
+  belowBusy,
   buildCalendarItems,
+  collapseAllDay,
   freeSlotsOn,
   freeTogetherDays,
   itemsOnDay,
@@ -75,6 +77,26 @@ describe('calendarLayout', () => {
 
     expect(item.allDay).toBe(true);
     expect(item.start.getDate()).toBe(14);
+  });
+
+  it('cada repeticion conserva la hora real del evento (la API manda UTC)', () => {
+    const items = buildCalendarItems({
+      events: [
+        event({
+          startDateTime: '2026-10-05T13:00:00.000Z',
+          endDateTime: '2026-10-05T15:00:00.000Z',
+          isRecurring: true,
+          recurrencePattern: 'FREQ=WEEKLY',
+        }),
+      ],
+      external: [],
+      userId: 4,
+      partnerName: 'Sam',
+      range: { start: new Date(2026, 9, 1), end: new Date(2026, 9, 15) },
+    });
+
+    expect(items.map((i) => i.start.toISOString())).toEqual(['2026-10-05T13:00:00.000Z', '2026-10-12T13:00:00.000Z']);
+    expect(items[0].end.toISOString()).toBe('2026-10-05T15:00:00.000Z');
   });
 
   it('expande los eventos repetidos y salta las excepciones', () => {
@@ -181,5 +203,28 @@ describe('calendarLayout', () => {
     expect(parseSuggestion('2026-10-17')?.start).toBeNull();
     expect(parseSuggestion(undefined)).toBeNull();
     expect(parseSuggestion('ayer')).toBeNull();
+  });
+});
+
+describe('collapseAllDay', () => {
+  const list = ['a', 'b', 'c', 'd'];
+
+  it('muestra dos y cuenta el resto mientras no se expande', () => {
+    expect(collapseAllDay(list, false)).toEqual({ visible: ['a', 'b'], hidden: 2 });
+  });
+
+  it('expandido o con pocos, muestra todos', () => {
+    expect(collapseAllDay(list, true)).toEqual({ visible: list, hidden: 0 });
+    expect(collapseAllDay(['a'], false)).toEqual({ visible: ['a'], hidden: 0 });
+  });
+});
+
+describe('belowBusy', () => {
+  it('el hueco libre empieza debajo del bloque ocupado que lo tapa', () => {
+    expect(belowBusy({ top: 100, height: 200 }, [{ top: 80, height: 28 }])).toEqual({ top: 108, height: 192 });
+  });
+
+  it('sin bloques encima, no se mueve', () => {
+    expect(belowBusy({ top: 100, height: 200 }, [{ top: 400, height: 28 }])).toEqual({ top: 100, height: 200 });
   });
 });

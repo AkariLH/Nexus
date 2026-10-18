@@ -8,6 +8,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
 import eventService, { EventResponse } from "../../services/event.service";
 import linkService from "../../services/link.service";
+import { syncEventReminders } from "../../services/localReminders";
 import { palette, gradients } from "../../constants/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { loadTracked, nextNotice, Notice, settle } from "../../utils/inviteTracker";
@@ -17,7 +18,7 @@ import { PlanSummaryCard } from "../components/PlanSummaryCard";
 import planningService, { PlanningView } from "../../services/planning.service";
 import appNotificationService from "../../services/appNotification.service";
 import { markSeen, PlanningNotice, wasSeen } from "../../utils/planningSeen";
-import { remainingLabel } from "../../utils/planningFormat";
+import { closedNotice, remainingLabel } from "../../utils/planningFormat";
 
 const OPEN_PHASES = ["INVITED", "FILTERS", "OPTIONS", "PROPOSAL"];
 
@@ -86,7 +87,8 @@ export default function HomeScreen() {
     try {
       console.log('📅 Cargando próximos eventos...');
       const allEvents = await eventService.getUserEvents(user.userId);
-      
+      syncEventReminders(allEvents);
+
       const now = new Date();
       const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
       
@@ -200,6 +202,32 @@ export default function HomeScreen() {
       pendingLabel={inviteNotice?.kind === 'sent' ? `Pendiente de ${partnerLabel}` : undefined}
     />
   );
+
+  // B8b: la opcion que quedo al vencer la planeacion (propuesta sin responder o coincidencia).
+  const leftover = planningNotice === "CLOSED" ? planning?.leftover?.option ?? null : null;
+  const closed = planning && planningNotice === "CLOSED"
+    ? closedNotice(
+        planning.leftover ? { kind: planning.leftover.kind, startsAt: planning.leftover.option.item.startsAt } : null,
+        planning.partner.name,
+        now,
+      )
+    : null;
+  const [sendingLeftover, setSendingLeftover] = useState(false);
+  const [leftoverError, setLeftoverError] = useState<string | null>(null);
+
+  const sendLeftover = async () => {
+    if (!user?.userId || !planning) return;
+    setSendingLeftover(true);
+    setLeftoverError(null);
+    try {
+      await planningService.inviteLeftover(user.userId, planning.id);
+      closePlanningNotice(() => router.push("/(events)/my-events"));
+    } catch (error: any) {
+      setLeftoverError(error?.response?.data?.message ?? "No se pudo enviar. Inténtalo de nuevo.");
+    } finally {
+      setSendingLeftover(false);
+    }
+  };
 
   const displayName = user?.displayName || user?.nickname || "Usuario";
   const badgeCount = pendingCount + unreadNotices;
@@ -464,16 +492,32 @@ export default function HomeScreen() {
         onRequestClose={() => closePlanningNotice()}
       />
 
-      {/* B8b: se acabaron las 12 horas */}
+      {/* B8b: se acabaron las 12 horas. Si quedo una propuesta o una coincidencia, no se pierde:
+          se puede mandar como invitacion o volver a planear. */}
       <ResultModal
         visible={planningNotice === 'CLOSED'}
         icon="hourglass-outline"
         tone="warning"
         title="Se acabó el tiempo"
-        subtitle="No llegaron a un acuerdo a tiempo."
-        primary={{ label: 'Cerrar', onPress: () => closePlanningNotice() }}
+        subtitle={closed?.subtitle}
+        note={leftoverError ?? closed?.note}
+        primary={closed?.canInvite
+          ? { label: 'Enviar como invitación', onPress: sendLeftover, loading: sendingLeftover }
+          : { label: 'Planear de nuevo', onPress: () => closePlanningNotice(planTogether) }}
+        secondary={closed?.canInvite
+          ? { label: 'Planear de nuevo', onPress: () => closePlanningNotice(planTogether) }
+          : { label: 'Cerrar', onPress: () => closePlanningNotice() }}
         onRequestClose={() => closePlanningNotice()}
-      />
+      >
+        {leftover && (
+          <PlanSummaryCard
+            title={leftover.item.title}
+            when={slotLabel(leftover.item.startsAt, leftover.item.endsAt, now)}
+            place={placeLabel(leftover.item)}
+            cost={costLabel(leftover.item.costPerPersonMxn)}
+          />
+        )}
+      </ResultModal>
     </ScrollView>
   );
 }

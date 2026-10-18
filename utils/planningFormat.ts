@@ -1,5 +1,5 @@
 /** RF-38 / RF-39 - Textos de la planeacion en pareja (Figma B1-B9). */
-import type { VoteValue } from '../services/planning.service';
+import type { LeftoverKind, VoteValue } from '../services/planning.service';
 import type { SlotOption } from './recommendationParams';
 
 const CDMX_OFFSET_MS = -6 * 60 * 60_000;
@@ -35,6 +35,37 @@ export function agreementOf(myVote: VoteValue | null, partnerVote: VoteValue | n
   if (myVote === 'LIKE' && partnerVote === 'LIKE') return 'match';
   if (myVote && partnerVote && myVote !== partnerVote) return 'mismatch';
   return null;
+}
+
+export interface ClosedNotice {
+  subtitle: string;
+  /** La opcion que quedo aun se puede mandar como invitacion (su horario no ha pasado). */
+  canInvite: boolean;
+  note: string | undefined;
+}
+
+/**
+ * B8b: por que se acabo el tiempo, dicho a quien lo lee, y si la opcion que quedo (propuesta sin
+ * responder o coincidencia) todavia se puede mandar. Sin opcion queda el texto de siempre.
+ */
+export function closedNotice(
+  leftover: { kind: LeftoverKind; startsAt: string } | null,
+  partnerName: string,
+  now: Date,
+): ClosedNotice {
+  if (!leftover) return { subtitle: 'No llegaron a un acuerdo a tiempo.', canInvite: false, note: undefined };
+  const subtitle = {
+    MY_PROPOSAL: `${partnerName} no alcanzó a responder tu propuesta.`,
+    THEIR_PROPOSAL: `No alcanzaste a responder la propuesta de ${partnerName}.`,
+    MATCH: 'Coincidieron en una opción, pero nadie la propuso.',
+  }[leftover.kind];
+  // El aviso de "ya paso" va en el subtitulo: la nota del modal se pinta como confirmacion (palomita).
+  const upcoming = new Date(leftover.startsAt).getTime() > now.getTime();
+  return {
+    subtitle: upcoming ? subtitle : `${subtitle} El horario de esa opción ya pasó.`,
+    canInvite: upcoming,
+    note: undefined,
+  };
 }
 
 /** El hueco elegido en los filtros, en el formato de los chips de horario. */

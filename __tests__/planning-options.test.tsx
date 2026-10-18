@@ -55,6 +55,7 @@ const view = (hasMore: boolean): PlanningView => ({
   agreed: null,
   eventId: null,
   unreadMessages: 3,
+  leftover: null,
 });
 
 function setup(hasMore: boolean) {

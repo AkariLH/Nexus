@@ -11,9 +11,11 @@ import { findMutualAvailability, MutualAvailabilityResponse } from "../../servic
 import eventService, { EventResponse } from "../../services/event.service";
 import { externalCalendarIntegration, ExternalEventDTO } from "../../services/externalCalendar.integration.service";
 import linkService from "../../services/link.service";
+import { syncEventReminders } from "../../services/localReminders";
 import {
   buildCalendarItems,
   CalendarItem,
+  collapseAllDay,
   dayTitle,
   FreeSlot,
   freeSlotsOn,
@@ -60,6 +62,9 @@ export default function CalendarioScreen() {
   const [showFree, setShowFree] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<EventResponse | null>(null);
   const [externalDetail, setExternalDetail] = useState<ExternalEventDetail | null>(null);
+  // Dia: los de todo el dia se muestran de dos en dos; se vuelven a juntar al cambiar de dia.
+  const [allDayOpen, setAllDayOpen] = useState(false);
+  useEffect(() => setAllDayOpen(false), [selected, mode]);
 
   const now = new Date();
   const range = useMemo(() => {
@@ -91,6 +96,7 @@ export default function CalendarioScreen() {
         partnerId ? findMutualAvailability(user.userId, partnerId, 7).catch(() => null) : Promise.resolve(null),
       ]);
       setEvents(mine);
+      syncEventReminders(mine);
       setExternal(ext);
       setMutual(free);
     } catch (error) {
@@ -270,19 +276,52 @@ export default function CalendarioScreen() {
             }}
           />
           {mode === "day" && <Text style={styles.dayTitle}>{dayTitle(selected)}</Text>}
-          {allDay.map(({ day, item }) => (
-            <TouchableOpacity
-              key={`${isoDate(day)}-${item.id}`}
-              style={styles.allDay}
-              onPress={() => openItem(item)}
-              accessibilityRole="button"
-            >
-              <View style={[styles.legendDot, { backgroundColor: barColor(item) }]} />
-              <Text style={styles.allDayText} numberOfLines={1}>
-                {mode === "week" ? `${shortDay(day)} · ` : ""}Todo el día · {item.title}
+          {mode === "week" && allDay.length > 0 && (
+            // Semana: una sola fila alineada con las columnas; cada dia dice cuantos eventos de todo
+            // el dia tiene y al tocarlo abre ese dia (antes era una fila por evento y empujaba el horario).
+            <View style={styles.allDayWeek}>
+              <Text style={styles.allDayWeekLabel}>Todo el día</Text>
+              {week.map((day) => {
+                const count = allDay.filter((a) => sameDay(a.day, day)).length;
+                return (
+                  <TouchableOpacity
+                    key={isoDate(day)}
+                    style={styles.allDayCell}
+                    disabled={count === 0}
+                    onPress={() => {
+                      setSelected(day);
+                      setMode("day");
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${shortDay(day)}: ${count} ${count === 1 ? "evento" : "eventos"} de todo el día`}
+                  >
+                    {count > 0 && <Text style={styles.allDayCount}>{count}</Text>}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+          {mode === "day" &&
+            collapseAllDay(allDay, allDayOpen).visible.map(({ day, item }) => (
+              <TouchableOpacity
+                key={`${isoDate(day)}-${item.id}`}
+                style={styles.allDay}
+                onPress={() => openItem(item)}
+                accessibilityRole="button"
+              >
+                <View style={[styles.legendDot, { backgroundColor: barColor(item) }]} />
+                <Text style={styles.allDayText} numberOfLines={1}>
+                  Todo el día · {item.title}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          {mode === "day" && collapseAllDay(allDay, allDayOpen).hidden > 0 && (
+            <TouchableOpacity onPress={() => setAllDayOpen(true)} accessibilityRole="button" style={styles.allDayMore}>
+              <Text style={styles.allDayMoreText}>
+                Ver {collapseAllDay(allDay, allDayOpen).hidden} más de todo el día
               </Text>
             </TouchableOpacity>
-          ))}
+          )}
           <TimeGrid
             key={mode}
             days={shownDays}
@@ -399,6 +438,47 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 13,
     color: palette.text,
+  },
+  allDayWeek: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 6,
+    borderRadius: 10,
+    backgroundColor: palette.secondarySoft,
+  },
+  allDayWeekLabel: {
+    width: 48,
+    paddingLeft: 6,
+    fontSize: 10,
+    lineHeight: 12,
+    color: palette.textSecondary,
+  },
+  allDayCell: {
+    flex: 1,
+    alignItems: "center",
+    minHeight: 24,
+    justifyContent: "center",
+  },
+  allDayCount: {
+    minWidth: 22,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 11,
+    overflow: "hidden",
+    textAlign: "center",
+    fontSize: 12,
+    fontWeight: "600",
+    color: palette.textAccent,
+    backgroundColor: palette.surface,
+  },
+  allDayMore: {
+    alignSelf: "flex-start",
+    paddingVertical: 2,
+  },
+  allDayMoreText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: palette.textAccent,
   },
   floating: {
     position: "absolute",

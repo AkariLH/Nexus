@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useRef } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { palette } from '../../constants/colors';
-import { CalendarItem, FreeSlot, hm, itemsOnDay, layoutLanes } from '../../utils/calendarLayout';
+import { belowBusy, CalendarItem, FreeSlot, hm, itemsOnDay, layoutLanes } from '../../utils/calendarLayout';
 import { barColor, tint } from './calendarColors';
 
 const HOURS = Array.from({ length: 24 }, (_, h) => h);
@@ -57,12 +57,13 @@ export function TimeGrid({ days, items, freeSlots = [], compact, firstHour = 8, 
           ))}
           {days.map((day) => {
             const timed = itemsOnDay(items, day).filter((i) => !i.allDay);
+            const busy = timed.map((i) => position(i.start, i.end, day));
             return (
               <View key={day.toISOString()} style={[styles.column, days.length > 1 && styles.columnDivider]}>
                 {freeSlots.map((slot) => (
                   <TouchableOpacity
                     key={slot.label}
-                    style={[styles.free, position(slot.start, slot.end, day)]}
+                    style={[styles.free, belowBusy(position(slot.start, slot.end, day), busy)]}
                     onPress={() => onPressFree?.(slot)}
                     accessibilityRole="button"
                     accessibilityLabel={`Libres los dos de ${slot.label}. Toca para planear`}
@@ -91,7 +92,8 @@ export function TimeGrid({ days, items, freeSlots = [], compact, firstHour = 8, 
                       accessibilityLabel={`${item.title}, ${hm(item.start)} a ${hm(item.end)}`}
                     >
                       <View style={styles.blockHeader}>
-                        <Text style={[styles.title, compact && styles.titleCompact]} numberOfLines={compact ? 2 : 1}>
+                        {/* Una linea con "…": en Semana la columna es angosta y partia palabras ("Ocup/ado"). */}
+                        <Text style={[styles.title, compact && styles.titleCompact]} numberOfLines={1} ellipsizeMode="tail">
                           {item.title}
                         </Text>
                         {!compact && item.source === 'partner' && (

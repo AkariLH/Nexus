@@ -127,8 +127,10 @@ export function buildCalendarItems({ events, external, userId, partnerName, rang
     const duration = end.getTime() - start.getTime();
     expandRecurringEvent(
       {
-        startDateTime: e.startDateTime,
-        endDateTime: e.endDateTime,
+        // expandRecurringEvent lee la hora como local; la API manda UTC (los de todo el dia ya
+        // vienen como fecha local a medianoche y se dejan tal cual).
+        startDateTime: allDay ? e.startDateTime : asLocalIso(new Date(e.startDateTime)),
+        endDateTime: allDay ? e.endDateTime : asLocalIso(new Date(e.endDateTime)),
         isRecurring: true,
         recurrencePattern: e.recurrencePattern,
         rruleDtstartUtc: e.rruleDtstartUtc,
@@ -262,6 +264,27 @@ export function layoutLanes<T extends { start: Date; end: Date }>(items: T[]): L
   });
   if (cluster.length) close();
   return result;
+}
+
+/** Vista Dia: los eventos de todo el dia se muestran de dos en dos para no empujar el horario. */
+export function collapseAllDay<T>(list: T[], expanded: boolean, max = 2): { visible: T[]; hidden: number } {
+  if (expanded || list.length <= max) return { visible: list, hidden: 0 };
+  return { visible: list.slice(0, max), hidden: list.length - max };
+}
+
+/**
+ * Un evento corto se dibuja con altura minima y tapa el inicio del hueco libre que sigue; el hueco
+ * empieza debajo del bloque para que "Libres los dos" no se encime (posiciones en pixeles).
+ */
+export function belowBusy(
+  free: { top: number; height: number },
+  busy: { top: number; height: number }[],
+): { top: number; height: number } {
+  const bottom = free.top + free.height;
+  const top = busy
+    .filter((b) => b.top <= free.top && b.top + b.height > free.top)
+    .reduce((t, b) => Math.max(t, b.top + b.height), free.top);
+  return { top, height: Math.max(0, bottom - top) };
 }
 
 export interface FreeSlot {

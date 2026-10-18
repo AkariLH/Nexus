@@ -16,8 +16,14 @@ export function EventRow({ item, onPress }: { item: CalendarItem; onPress?: () =
       accessibilityLabel={`${item.title}, ${item.allDay ? 'todo el día' : `${hm(item.start)} a ${hm(item.end)}`}`}
     >
       <View style={styles.times}>
-        <Text style={styles.start}>{item.allDay ? 'Todo' : hm(item.start)}</Text>
-        <Text style={styles.end}>{item.allDay ? 'el día' : hm(item.end)}</Text>
+        {item.allDay ? (
+          <Text style={styles.allDay}>Todo el día</Text>
+        ) : (
+          <>
+            <Text style={styles.start}>{hm(item.start)}</Text>
+            <Text style={styles.end}>{hm(item.end)}</Text>
+          </>
+        )}
       </View>
       <View style={styles.text}>
         <Text style={styles.title} numberOfLines={1}>
@@ -52,7 +58,12 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   times: {
-    width: 44,
+    width: 64,
+  },
+  allDay: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: palette.text,
   },
   start: {
     fontSize: 14,

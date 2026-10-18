@@ -57,7 +57,11 @@ export interface PlanningView {
   agreed: PlanningOption | null;
   eventId: number | null;
   unreadMessages: number;
+  /** Con CLOSED: la propuesta sin responder o la opcion en la que coincidieron. */
+  leftover: { option: PlanningOption; kind: LeftoverKind } | null;
 }
+
+export type LeftoverKind = 'MY_PROPOSAL' | 'THEIR_PROPOSAL' | 'MATCH';
 
 export interface PlanningMessage {
   id: number;
@@ -122,6 +126,10 @@ const planningService = {
 
   rejectProposal: async (userId: number, sessionId: number): Promise<PlanningView> =>
     (await apiClient.post(session(userId, sessionId, 'proposal/reject'))).data,
+
+  /** Al terminar sin acuerdo: manda la opcion que quedo como invitacion a la pareja. */
+  inviteLeftover: async (userId: number, sessionId: number): Promise<PlanningView> =>
+    (await apiClient.post(session(userId, sessionId, 'leftover/invite'))).data,
 
   messages: async (userId: number, sessionId: number): Promise<PlanningMessage[]> =>
     (await apiClient.get(session(userId, sessionId, 'messages'))).data,

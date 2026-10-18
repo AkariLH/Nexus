@@ -1,4 +1,4 @@
-import { agreementOf, filtersToSlot, remainingLabel, timeLeftToDecide, voteLine } from './planningFormat';
+import { agreementOf, closedNotice, filtersToSlot, remainingLabel, timeLeftToDecide, voteLine } from './planningFormat';
 
 const NOW = new Date('2026-10-17T18:00:00.000Z');
 
@@ -37,6 +37,42 @@ describe('agreementOf', () => {
     expect(agreementOf('DISLIKE', 'LIKE')).toBe('mismatch');
     expect(agreementOf('LIKE', null)).toBeNull();
     expect(agreementOf('DISLIKE', 'DISLIKE')).toBeNull();
+  });
+});
+
+describe('closedNotice', () => {
+  const later = '2026-10-18T02:00:00.000Z';
+  const earlier = '2026-10-17T17:00:00.000Z';
+
+  it('sin opcion que conservar: el texto de siempre y solo planear de nuevo', () => {
+    expect(closedNotice(null, 'Suzu', NOW)).toEqual({
+      subtitle: 'No llegaron a un acuerdo a tiempo.',
+      canInvite: false,
+      note: undefined,
+    });
+  });
+
+  it('mi propuesta sin respuesta, aun a tiempo: se puede mandar como invitacion', () => {
+    expect(closedNotice({ kind: 'MY_PROPOSAL', startsAt: later }, 'Suzu', NOW)).toEqual({
+      subtitle: 'Suzu no alcanzó a responder tu propuesta.',
+      canInvite: true,
+      note: undefined,
+    });
+  });
+
+  it('propuesta de la pareja y coincidencia sin proponer', () => {
+    expect(closedNotice({ kind: 'THEIR_PROPOSAL', startsAt: later }, 'Suzu', NOW).subtitle)
+      .toBe('No alcanzaste a responder la propuesta de Suzu.');
+    expect(closedNotice({ kind: 'MATCH', startsAt: later }, 'Suzu', NOW).subtitle)
+      .toBe('Coincidieron en una opción, pero nadie la propuso.');
+  });
+
+  it('si el horario ya paso, no se ofrece mandarla y se dice por que', () => {
+    expect(closedNotice({ kind: 'MY_PROPOSAL', startsAt: earlier }, 'Suzu', NOW)).toEqual({
+      subtitle: 'Suzu no alcanzó a responder tu propuesta. El horario de esa opción ya pasó.',
+      canInvite: false,
+      note: undefined,
+    });
   });
 });
 
