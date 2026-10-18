@@ -250,7 +250,7 @@ export default function VerifyEmailScreen() {
         {/* Reenviar código */}
         <View style={styles.resendWrapper}>
           <Text style={styles.resendText}>¿No recibiste el código? </Text>
-          <TouchableOpacity 
+          <TouchableOpacity accessibilityRole="button" 
             onPress={handleResendCode} 
             disabled={isLoading || isResending}
           >

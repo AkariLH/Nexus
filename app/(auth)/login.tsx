@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { motionMs } from "../../utils/motion";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -44,12 +45,12 @@ export default function LoginScreen() {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 500,
+        duration: motionMs(500),
         useNativeDriver: true,
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 500,
+        duration: motionMs(500),
         useNativeDriver: true,
       }),
     ]).start();
@@ -228,7 +229,7 @@ export default function LoginScreen() {
           />
 
           {/* Forgot password */}
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button"
             onPress={() => router.push("/(auth)/forgot-password")}
             style={styles.forgotWrapper}
             disabled={isLoading}
@@ -255,7 +256,7 @@ export default function LoginScreen() {
           {/* Register link */}
           <View style={styles.registerWrapper}>
             <Text style={styles.registerText}>¿No tienes cuenta? </Text>
-            <TouchableOpacity 
+            <TouchableOpacity accessibilityRole="button" 
               onPress={() => router.push("/(auth)/register")}
               disabled={isLoading}
             >

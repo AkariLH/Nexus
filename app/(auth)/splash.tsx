@@ -5,7 +5,7 @@ import { useRouter } from "expo-router";
 import { useEffect, useRef } from "react";
 import { Animated, Easing, StyleSheet, View } from "react-native";
 import { palette, gradients } from "../../constants/colors";
-import { decorativeLoop } from "../../utils/motion";
+import { decorativeLoop, motionMs } from "../../utils/motion";
 import { useAuth } from "../../context/AuthContext";
 
 export default function SplashScreen() {
@@ -33,13 +33,13 @@ export default function SplashScreen() {
     Animated.parallel([
       Animated.timing(scaleAnim, {
         toValue: 1,
-        duration: 800,
+        duration: motionMs(800),
         easing: Easing.out(Easing.exp),
         useNativeDriver: true,
       }),
       Animated.timing(rotateAnim, {
         toValue: 1,
-        duration: 800,
+        duration: motionMs(800),
         easing: Easing.out(Easing.exp),
         useNativeDriver: true,
       }),
@@ -49,7 +49,7 @@ export default function SplashScreen() {
     Animated.timing(fadeAnim, {
       toValue: 1,
       delay: 500,
-      duration: 600,
+      duration: motionMs(600),
       useNativeDriver: true,
     }).start();
 
@@ -60,13 +60,13 @@ export default function SplashScreen() {
           Animated.delay(delay),
           Animated.timing(animValue, {
             toValue: 1,
-            duration: 400,
+            duration: motionMs(400),
             easing: Easing.inOut(Easing.ease),
             useNativeDriver: true,
           }),
           Animated.timing(animValue, {
             toValue: 0,
-            duration: 400,
+            duration: motionMs(400),
             easing: Easing.inOut(Easing.ease),
             useNativeDriver: true,
           }),
@@ -84,13 +84,13 @@ export default function SplashScreen() {
         Animated.sequence([
           Animated.timing(animValue, {
             toValue: 1,
-            duration: 2000,
+            duration: motionMs(2000),
             easing: Easing.inOut(Easing.ease),
             useNativeDriver: true,
           }),
           Animated.timing(animValue, {
             toValue: 0,
-            duration: 2000,
+            duration: motionMs(2000),
             easing: Easing.inOut(Easing.ease),
             useNativeDriver: true,
           }),

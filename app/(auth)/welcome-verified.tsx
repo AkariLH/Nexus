@@ -306,7 +306,7 @@ export default function WelcomeVerifiedScreen() {
 
         {/* Botón Continuar */}
         <Animated.View style={[styles.buttonContainer, { opacity: buttonOpacity }]}>
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button"
             onPress={handleContinue}
             activeOpacity={0.8}
           >

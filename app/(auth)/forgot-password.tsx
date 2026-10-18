@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { motionMs } from "../../utils/motion";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -38,12 +39,12 @@ export default function ForgotPasswordScreen() {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 500,
+        duration: motionMs(500),
         useNativeDriver: true,
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 500,
+        duration: motionMs(500),
         useNativeDriver: true,
       }),
     ]).start();
@@ -173,7 +174,7 @@ export default function ForgotPasswordScreen() {
 
             {/* Back to login (con sesion no aplica: se regresa con la flecha) */}
             {!fromProfile && (
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 onPress={() => router.push("/(auth)/login")}
                 style={styles.backLogin}
               >

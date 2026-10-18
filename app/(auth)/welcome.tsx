@@ -146,7 +146,7 @@ export default function WelcomeScreen() {
           { opacity: fadeIn, transform: [{ translateY: slideUp }] },
         ]}
       >
-        <TouchableOpacity
+        <TouchableOpacity accessibilityRole="button"
           activeOpacity={0.85}
           style={styles.primaryButton}
           onPress={() => router.push("/(auth)/login")}
@@ -161,7 +161,7 @@ export default function WelcomeScreen() {
           </LinearGradient>
         </TouchableOpacity>
 
-        <TouchableOpacity
+        <TouchableOpacity accessibilityRole="button"
           activeOpacity={0.85}
           style={styles.secondaryButton}
           onPress={() => router.push("/(auth)/register")}

@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { motionMs } from "../../utils/motion";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -55,12 +56,12 @@ export default function RegisterScreen() {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 500,
+        duration: motionMs(500),
         useNativeDriver: true,
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 500,
+        duration: motionMs(500),
         useNativeDriver: true,
       }),
     ]).start();
@@ -544,7 +545,7 @@ export default function RegisterScreen() {
           {/* Fecha de Nacimiento */}
           <View style={styles.field}>
             <Text style={styles.label}>Fecha de nacimiento</Text>
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={[styles.inputWrapper, birthDateError ? styles.inputError : null]}
               onPress={() => setShowDatePicker(true)}
               activeOpacity={0.7}
@@ -582,7 +583,8 @@ export default function RegisterScreen() {
 
           {/* Términos y Condiciones */}
           <View style={styles.termsContainer}>
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="checkbox"
+              accessibilityState={{ checked: termsAccepted }}
               style={styles.checkboxWrapper}
               onPress={() => setTermsAccepted(!termsAccepted)}
               activeOpacity={0.7}
@@ -604,7 +606,7 @@ export default function RegisterScreen() {
           </View>
 
           {/* Botón de crear cuenta */}
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button"
             activeOpacity={0.9}
             style={styles.buttonWrapper}
             onPress={handleRegister}
@@ -629,7 +631,7 @@ export default function RegisterScreen() {
           {/* Enlace para login */}
           <View style={styles.loginWrapper}>
             <Text style={styles.loginText}>¿Ya tienes cuenta? </Text>
-            <TouchableOpacity onPress={() => router.push("/(auth)/login")}>
+            <TouchableOpacity accessibilityRole="button" onPress={() => router.push("/(auth)/login")}>
               <Text style={styles.loginLink}>Inicia sesión</Text>
             </TouchableOpacity>
           </View>
