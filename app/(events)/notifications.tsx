@@ -24,6 +24,7 @@ import { PlanSummaryCard } from "../components/PlanSummaryCard";
 import { slotLabel } from "../../utils/recommendationFormat";
 import appNotificationService, { AppNotification } from "../../services/appNotification.service";
 import planningService from "../../services/planning.service";
+import { noticeTime } from "../../utils/eventFormat";
 
 /** A8 / A9 (vista de la pareja): resultado de aceptar o rechazar una invitacion. */
 interface Outcome {
@@ -356,7 +357,7 @@ export default function NotificationsScreen() {
                     <View style={styles.noticeText}>
                       <View style={styles.noticeHeader}>
                         <Text style={styles.noticeTitle}>{n.title}</Text>
-                        <Text style={styles.noticeTime}>{formatTime(n.createdAt)}</Text>
+                        <Text style={styles.noticeTime}>{noticeTime(n.createdAt, new Date())}</Text>
                       </View>
                       <Text style={styles.noticeBody}>{n.body}</Text>
                     </View>

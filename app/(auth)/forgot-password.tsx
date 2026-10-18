@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -23,7 +23,10 @@ import { palette } from "../../constants/colors";
 export default function ForgotPasswordScreen() {
   const router = useRouter();
   
-  const [email, setEmail] = useState("");
+  // Desde Perfil ("Cambiar contraseña") llega con el correo de la cuenta ya escrito.
+  const { email: accountEmail } = useLocalSearchParams<{ email?: string }>();
+  const [email, setEmail] = useState(accountEmail ?? "");
+  const fromProfile = !!accountEmail;
   const [isLoading, setIsLoading] = useState(false);
   const [errorModal, setErrorModal] = useState({ visible: false, message: "" });
   const [successModal, setSuccessModal] = useState({ visible: false, message: "" });
@@ -129,9 +132,12 @@ export default function ForgotPasswordScreen() {
             <Ionicons name="lock-closed-outline" size={48} color={palette.primary} />
           </View>
 
-          <Text style={styles.title}>¿Olvidaste tu contraseña?</Text>
+          {/* Desde Perfil ("Cambiar contraseña") es el mismo flujo, dicho como cambio y no como olvido. */}
+          <Text style={styles.title}>{fromProfile ? "Cambiar contraseña" : "¿Olvidaste tu contraseña?"}</Text>
           <Text style={styles.subtitle}>
-            Ingresa tu correo electrónico y te enviaremos un código para recuperar tu contraseña
+            {fromProfile
+              ? "Te enviaremos un código a tu correo para que elijas una contraseña nueva."
+              : "Ingresa tu correo electrónico y te enviaremos un código para recuperar tu contraseña"}
           </Text>
 
           <View style={styles.formContainer}>
@@ -165,13 +171,15 @@ export default function ForgotPasswordScreen() {
               )}
             </View>
 
-            {/* Back to login */}
-            <TouchableOpacity
-              onPress={() => router.push("/(auth)/login")}
-              style={styles.backLogin}
-            >
-              <Text style={styles.backLoginText}>Volver a iniciar sesión</Text>
-            </TouchableOpacity>
+            {/* Back to login (con sesion no aplica: se regresa con la flecha) */}
+            {!fromProfile && (
+              <TouchableOpacity
+                onPress={() => router.push("/(auth)/login")}
+                style={styles.backLogin}
+              >
+                <Text style={styles.backLoginText}>Volver a iniciar sesión</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </Animated.View>
       </ScrollView>

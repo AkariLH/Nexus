@@ -1,27 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-  Switch,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Switch, Platform } from 'react-native';
 import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { calendarService, ExternalCalendar } from '../../services/calendar.service';
 import { externalCalendarIntegration, LinkedCalendar } from '../../services/externalCalendar.integration.service';
 import { useAuth } from '../../context/AuthContext';
-import { Header } from '../components/layout/Header';
+import { ScreenHeader } from '../components/layout/ScreenHeader';
 import { ErrorModal } from '../components/ErrorModal';
 import { SuccessModal } from '../components/SuccessModal';
 import { ConfirmModal } from '../components/ConfirmModal';
-import { API_CONFIG } from '../../config/api.config';
-import { palette, gradients, switchColors } from '../../constants/colors';
+import { GradientButton } from '../components/ui/GradientButton';
+import { Card, ListRow, Pill, SectionLabel, SoftIcon } from '../../components/ui/Surface';
+import { palette, switchColors } from '../../constants/colors';
 
+/** En web no hay calendario del dispositivo: se explica en vez de mostrar un error. */
+const ON_WEB = Platform.OS === 'web';
+
+/**
+ * RF-19..24 - Calendarios del teléfono que se comparten con la pareja. Con el estilo de F/G
+ * (encabezado, tarjetas y textos cortos); la lógica de vincular, sincronizar y privacidad no cambia.
+ */
 export default function LinkExternalCalendarsScreen() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -41,16 +38,16 @@ export default function LinkExternalCalendarsScreen() {
 
     setLoading(true);
     try {
-      // Cargar calendarios del dispositivo
-      const deviceCals = await calendarService.getAvailableCalendars();
-      setDeviceCalendars(deviceCals);
-
-      // Cargar calendarios ya vinculados
-      const linkedCals = await externalCalendarIntegration.getUserLinkedCalendars(user.userId);
-      setLinkedCalendars(linkedCals);
+      if (!ON_WEB) {
+        setDeviceCalendars(await calendarService.getAvailableCalendars());
+      }
+      setLinkedCalendars(await externalCalendarIntegration.getUserLinkedCalendars(user.userId));
     } catch (error) {
       console.error('Error loading calendars:', error);
-      setErrorModal({ visible: true, message: 'No se pudieron cargar los calendarios' });
+      setErrorModal({
+        visible: true,
+        message: 'No pudimos leer los calendarios del teléfono. Revisa que Nexus tenga permiso de calendario en los ajustes.',
+      });
     } finally {
       setLoading(false);
     }
@@ -61,7 +58,6 @@ export default function LinkExternalCalendarsScreen() {
 
     try {
       setLoading(true);
-
       await externalCalendarIntegration.linkCalendar(
         user.userId,
         calendar.id,
@@ -71,12 +67,11 @@ export default function LinkExternalCalendarsScreen() {
         true,
         'BUSY_ONLY'
       );
-
-      setSuccessModal({ visible: true, message: `Calendario "${calendar.title}" vinculado correctamente` });
+      setSuccessModal({ visible: true, message: `"${calendar.title}" ya se comparte con tu pareja` });
       await loadCalendars();
     } catch (error) {
       console.error('Error vinculando calendario:', error);
-      setErrorModal({ visible: true, message: 'No se pudo vincular el calendario' });
+      setErrorModal({ visible: true, message: 'No se pudo vincular el calendario. Inténtalo de nuevo.' });
     } finally {
       setLoading(false);
     }
@@ -87,16 +82,16 @@ export default function LinkExternalCalendarsScreen() {
 
     setConfirmModal({
       visible: true,
-      message: `¿Deseas desvincular "${calendar.calendarName}"? Se eliminarán todos los eventos sincronizados de este calendario.`,
+      message: `Tu pareja dejará de ver los horarios de "${calendar.calendarName}". Los eventos del teléfono no se borran.`,
       onConfirm: async () => {
         try {
           setLoading(true);
           await externalCalendarIntegration.unlinkCalendar(user.userId, calendar.deviceCalendarId);
-          setSuccessModal({ visible: true, message: 'Calendario desvinculado y eventos eliminados' });
+          setSuccessModal({ visible: true, message: 'Calendario desvinculado' });
           await loadCalendars();
         } catch (error) {
           console.error('Error desvinculando calendario:', error);
-          setErrorModal({ visible: true, message: 'No se pudo desvincular el calendario' });
+          setErrorModal({ visible: true, message: 'No se pudo desvincular el calendario. Inténtalo de nuevo.' });
         } finally {
           setLoading(false);
         }
@@ -108,16 +103,11 @@ export default function LinkExternalCalendarsScreen() {
     if (!user) return;
 
     try {
-      await externalCalendarIntegration.updateCalendarSettings(
-        user.userId,
-        calendar.deviceCalendarId,
-        enabled,
-        undefined
-      );
+      await externalCalendarIntegration.updateCalendarSettings(user.userId, calendar.deviceCalendarId, enabled, undefined);
       await loadCalendars();
     } catch (error) {
       console.error('Error actualizando sincronización:', error);
-      setErrorModal({ visible: true, message: 'No se pudo actualizar la configuración' });
+      setErrorModal({ visible: true, message: 'No se pudo cambiar la sincronización. Inténtalo de nuevo.' });
     }
   };
 
@@ -125,18 +115,12 @@ export default function LinkExternalCalendarsScreen() {
     if (!user) return;
 
     const newMode = calendar.privacyMode === 'FULL_DETAILS' ? 'BUSY_ONLY' : 'FULL_DETAILS';
-
     try {
-      await externalCalendarIntegration.updateCalendarSettings(
-        user.userId,
-        calendar.deviceCalendarId,
-        undefined,
-        newMode
-      );
+      await externalCalendarIntegration.updateCalendarSettings(user.userId, calendar.deviceCalendarId, undefined, newMode);
       await loadCalendars();
     } catch (error) {
       console.error('Error toggling privacy:', error);
-      setErrorModal({ visible: true, message: 'No se pudo actualizar la privacidad' });
+      setErrorModal({ visible: true, message: 'No se pudo cambiar lo que ve tu pareja. Inténtalo de nuevo.' });
     }
   };
 
@@ -146,192 +130,153 @@ export default function LinkExternalCalendarsScreen() {
     setSyncing(true);
     try {
       await externalCalendarIntegration.performPeriodicSync(user.userId);
-      setSuccessModal({ visible: true, message: 'Los calendarios han sido sincronizados' });
+      setSuccessModal({ visible: true, message: 'Calendarios al día' });
       await loadCalendars();
     } catch (error: any) {
       console.error('Error en sincronización:', error);
-      
-      // Mensaje más específico según el tipo de error
-      if (error?.code === 'ERR_NETWORK' || error?.message?.includes('Network Error')) {
-        setErrorModal({
-          visible: true,
-          message: `No se pudo conectar con el servidor. Verifica que el backend esté corriendo en ${API_CONFIG.BASE_URL}`
-        });
-      } else {
-        setErrorModal({ visible: true, message: 'No se pudo sincronizar los calendarios' });
-      }
+      const offline = error?.code === 'ERR_NETWORK' || error?.message?.includes('Network Error');
+      setErrorModal({
+        visible: true,
+        message: offline
+          ? 'Sin conexión con Nexus. Revisa tu internet e inténtalo de nuevo.'
+          : 'No se pudieron sincronizar los calendarios. Inténtalo de nuevo.',
+      });
     } finally {
       setSyncing(false);
     }
   };
 
-  const isCalendarLinked = (deviceCalendarId: string) => {
-    return linkedCalendars.some(cal => cal.deviceCalendarId === deviceCalendarId && cal.isActive);
-  };
+  const isCalendarLinked = (deviceCalendarId: string) =>
+    linkedCalendars.some(cal => cal.deviceCalendarId === deviceCalendarId && cal.isActive);
 
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <Header onBack={() => router.back()} />
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={palette.secondary} />
-          <Text style={styles.loadingText}>Cargando calendarios...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  const available = deviceCalendars.filter(cal => cal.allowsModifications !== false);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Header onBack={() => router.back()} />
-      <ScrollView style={styles.scrollView}>
-        <View style={styles.headerSection}>
-          <Text style={styles.title}>Calendarios Externos</Text>
-          <Text style={styles.subtitle}>
-            Vincula tus calendarios para sincronizar eventos con tu pareja
-          </Text>
+    <View style={styles.container}>
+      <ScreenHeader title="Calendarios externos" onBack={() => router.back()} />
+      {loading ? (
+        <View style={styles.loading}>
+          <ActivityIndicator size="large" color={palette.primary} />
         </View>
+      ) : (
+        <ScrollView contentContainerStyle={styles.content}>
+          <Text style={styles.intro}>
+            Tu pareja ve tus horarios ocupados. Tú decides si también ve los detalles.
+          </Text>
 
-        {/* Calendarios vinculados */}
-        {linkedCalendars.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Calendarios Vinculados</Text>
-            {linkedCalendars.map((calendar) => (
-              <View key={calendar.id} style={styles.calendarCard}>
-                <View style={styles.calendarHeader}>
-                  <View style={[styles.colorDot, { backgroundColor: calendar.calendarColor }]} />
-                  <View style={styles.calendarInfo}>
-                    <Text style={styles.calendarName}>{calendar.calendarName}</Text>
-                    <Text style={styles.calendarSource}>{calendar.calendarSource}</Text>
-                    {calendar.lastSync && (
-                      <Text style={styles.lastSync}>
-                        Última sync: {new Date(calendar.lastSync).toLocaleString()}
-                      </Text>
-                    )}
-                  </View>
-                </View>
-
-                <View style={styles.settingsRow}>
-                  <Text style={styles.settingLabel}>Sincronizar</Text>
-                  <Switch
-                    value={calendar.syncEnabled}
-                    onValueChange={(value) => handleToggleSync(calendar, value)}
-                    {...switchColors}
-                  />
-                </View>
-
-                <TouchableOpacity
-                  style={styles.settingsRow}
-                  onPress={() => handleTogglePrivacy(calendar)}
-                >
-                  <Text style={styles.settingLabel}>Privacidad</Text>
-                  <Text style={styles.privacyMode}>
-                    {calendar.privacyMode === 'FULL_DETAILS' ? 'Detalles completos' : 'Solo ocupado/libre'}
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.unlinkButton}
-                  onPress={() => handleUnlinkCalendar(calendar)}
-                  activeOpacity={0.9}
-                >
-                  <Text style={styles.unlinkButtonText}>Desvincular</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
-
-            <TouchableOpacity
-              style={[styles.syncButton, syncing && styles.syncButtonDisabled]}
-              onPress={handleSyncNow}
-              disabled={syncing}
-              activeOpacity={0.9}
-            >
-              <LinearGradient
-                colors={gradients.primary}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.syncButtonGradient}
-              >
-                {syncing ? (
-                  <ActivityIndicator color={palette.onPrimary} />
-                ) : (
-                  <Text style={styles.syncButtonText}>Sincronizar Ahora</Text>
-                )}
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* Calendarios disponibles para vincular */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Calendarios Disponibles</Text>
-          {deviceCalendars.filter(cal => cal.allowsModifications !== false).length === 0 ? (
-            <Text style={styles.emptyText}>No se encontraron calendarios en tu dispositivo</Text>
-          ) : (
-            deviceCalendars
-              .filter(cal => cal.allowsModifications !== false)
-              .map((calendar) => {
-              const linked = isCalendarLinked(calendar.id);
-              return (
-                <View key={calendar.id} style={styles.calendarCard}>
+          {linkedCalendars.length > 0 && (
+            <View style={styles.section}>
+              <SectionLabel>Compartidos</SectionLabel>
+              {linkedCalendars.map((calendar) => (
+                <Card key={calendar.id} style={styles.card}>
                   <View style={styles.calendarHeader}>
-                    <View style={[styles.colorDot, { backgroundColor: calendar.color }]} />
+                    <View style={[styles.colorDot, { backgroundColor: calendar.calendarColor }]} />
                     <View style={styles.calendarInfo}>
-                      <Text style={styles.calendarName}>{calendar.title}</Text>
-                      <Text style={styles.calendarSource}>
-                        {calendar.source.name} ({calendar.source.type})
-                      </Text>
-                      {calendar.isPrimary && (
-                        <Text style={styles.primaryBadge}>📍 Principal</Text>
+                      <Text style={styles.calendarName}>{calendar.calendarName}</Text>
+                      {calendar.lastSync && (
+                        <Text style={styles.meta}>
+                          Actualizado {new Date(calendar.lastSync).toLocaleString('es-MX', {
+                            day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+                          })}
+                        </Text>
                       )}
                     </View>
                   </View>
-
-                  {linked ? (
-                    <View style={styles.linkedBadge}>
-                      <Text style={styles.linkedBadgeText}>✅ Vinculado</Text>
-                    </View>
-                  ) : (
-                    <TouchableOpacity
-                      style={styles.linkButton}
-                      onPress={() => handleLinkCalendar(calendar)}
-                      activeOpacity={0.9}
-                    >
-                      <LinearGradient
-                        colors={gradients.primary}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={styles.linkButtonGradient}
-                      >
-                        <Text style={styles.linkButtonText}>Vincular</Text>
-                      </LinearGradient>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              );
-            })
+                  <View style={styles.divider} />
+                  <ListRow
+                    icon="sync-outline"
+                    title="Sincronizar"
+                    trailing={
+                      <Switch
+                        value={calendar.syncEnabled}
+                        onValueChange={(value) => handleToggleSync(calendar, value)}
+                        accessibilityLabel={`Sincronizar ${calendar.calendarName}`}
+                        {...switchColors}
+                      />
+                    }
+                  />
+                  <View style={styles.divider} />
+                  <ListRow
+                    icon="eye-outline"
+                    title="Tu pareja ve"
+                    subtitle="Toca para cambiar"
+                    onPress={() => handleTogglePrivacy(calendar)}
+                    trailing={<Pill label={calendar.privacyMode === 'FULL_DETAILS' ? 'Los detalles' : 'Solo ocupado'} />}
+                  />
+                  <TouchableOpacity
+                    onPress={() => handleUnlinkCalendar(calendar)}
+                    style={styles.unlink}
+                    accessibilityRole="button"
+                  >
+                    <Text style={styles.unlinkText}>Dejar de compartir</Text>
+                  </TouchableOpacity>
+                </Card>
+              ))}
+              {!ON_WEB && <GradientButton title="Sincronizar ahora" onPress={handleSyncNow} loading={syncing} />}
+            </View>
           )}
-        </View>
-      </ScrollView>
 
-      {/* Modales */}
+          <View style={styles.section}>
+            <SectionLabel>En tu teléfono</SectionLabel>
+            {ON_WEB ? (
+              <Card style={styles.webCard}>
+                <SoftIcon name="phone-portrait-outline" />
+                <Text style={styles.webText}>
+                  Los calendarios se vinculan desde la app en tu teléfono.
+                </Text>
+              </Card>
+            ) : available.length === 0 ? (
+              <Text style={styles.empty}>No encontramos calendarios en tu teléfono.</Text>
+            ) : (
+              <Card style={styles.card}>
+                {available.map((calendar, index) => {
+                  const linked = isCalendarLinked(calendar.id);
+                  return (
+                    <View key={calendar.id}>
+                      {index > 0 && <View style={styles.divider} />}
+                      <View style={styles.availableRow}>
+                        <View style={[styles.colorDot, { backgroundColor: calendar.color }]} />
+                        <View style={styles.calendarInfo}>
+                          <Text style={styles.calendarName}>{calendar.title}</Text>
+                          <Text style={styles.meta}>{calendar.isPrimary ? 'Principal · ' : ''}{calendar.source.name}</Text>
+                        </View>
+                        {linked ? (
+                          <Pill label="Compartido" tone="success" icon="checkmark" />
+                        ) : (
+                          <TouchableOpacity
+                            onPress={() => handleLinkCalendar(calendar)}
+                            style={styles.linkButton}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Compartir ${calendar.title}`}
+                          >
+                            <Text style={styles.linkText}>Compartir</Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    </View>
+                  );
+                })}
+              </Card>
+            )}
+          </View>
+        </ScrollView>
+      )}
+
       <ErrorModal
         visible={errorModal.visible}
         message={errorModal.message}
         onClose={() => setErrorModal({ visible: false, message: "" })}
       />
-
       <SuccessModal
         visible={successModal.visible}
         message={successModal.message}
         onClose={() => setSuccessModal({ visible: false, message: "" })}
       />
-
       <ConfirmModal
         visible={confirmModal.visible}
-        title="Desvincular calendario"
+        title="Dejar de compartir"
         message={confirmModal.message}
-        confirmText="Desvincular"
+        confirmText="Dejar de compartir"
         cancelText="Cancelar"
         type="confirm"
         onConfirm={() => {
@@ -340,190 +285,36 @@ export default function LinkExternalCalendarsScreen() {
         }}
         onCancel={() => setConfirmModal({ visible: false, message: "", onConfirm: () => {} })}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: palette.surface,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: palette.textSecondary,
-  },
-  headerSection: {
-    paddingHorizontal: 24,
-    paddingTop: 10,
-    paddingBottom: 24,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: palette.text,
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 15,
-    color: palette.textSecondary,
-  },
-  section: {
-    marginTop: 20,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: palette.text,
-    marginBottom: 16,
-  },
-  calendarCard: {
-    backgroundColor: palette.surface,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: palette.divider,
-    shadowColor: palette.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  calendarHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  colorDot: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    marginRight: 12,
-  },
-  calendarInfo: {
-    flex: 1,
-  },
-  calendarName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: palette.text,
-    marginBottom: 4,
-  },
-  calendarSource: {
-    fontSize: 13,
-    color: palette.textSecondary,
-  },
-  lastSync: {
-    fontSize: 12,
-    color: palette.textSecondary,
-    marginTop: 4,
-  },
-  primaryBadge: {
-    fontSize: 12,
-    color: palette.textAccent,
-    marginTop: 4,
-    fontWeight: '600',
-  },
-  settingsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: palette.divider,
-  },
-  settingLabel: {
-    fontSize: 15,
-    color: palette.text,
-  },
-  privacyMode: {
-    fontSize: 14,
-    color: palette.textAccent,
-    fontWeight: '600',
-  },
+  container: { flex: 1, backgroundColor: palette.background },
+  loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  content: { padding: 16, paddingBottom: 32, gap: 24 },
+  intro: { fontSize: 14, lineHeight: 20, color: palette.textSecondary },
+  section: { gap: 12 },
+  card: { gap: 0 },
+  calendarHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  colorDot: { width: 14, height: 14, borderRadius: 7 },
+  calendarInfo: { flex: 1, gap: 2 },
+  calendarName: { fontSize: 15, fontWeight: '600', color: palette.text },
+  meta: { fontSize: 12, color: palette.textSecondary },
+  divider: { height: 1, backgroundColor: palette.divider, marginVertical: 12 },
+  unlink: { alignSelf: 'flex-start', marginTop: 12, paddingVertical: 4 },
+  unlinkText: { fontSize: 14, fontWeight: '600', color: palette.error },
+  availableRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   linkButton: {
-    borderRadius: 24,
-    overflow: 'hidden',
-    marginTop: 12,
-    shadowColor: palette.shadow,
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 5,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: palette.primaryBorder,
+    backgroundColor: palette.primarySoft,
   },
-  linkButtonGradient: {
-    height: 56,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  linkButtonText: {
-    color: palette.onPrimary,
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  unlinkButton: {
-    backgroundColor: palette.error,
-    borderRadius: 24,
-    padding: 14,
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  unlinkButtonText: {
-    color: palette.onPrimary,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  linkedBadge: {
-    backgroundColor: palette.success,
-    borderRadius: 12,
-    padding: 10,
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  linkedBadgeText: {
-    color: palette.onPrimary,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  syncButton: {
-    borderRadius: 24,
-    overflow: 'hidden',
-    marginTop: 16,
-    marginBottom: 24,
-    shadowColor: palette.shadow,
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 5,
-  },
-  syncButtonGradient: {
-    height: 56,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  syncButtonDisabled: {
-    opacity: 0.6,
-  },
-  syncButtonText: {
-    color: palette.onPrimary,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  emptyText: {
-    textAlign: 'center',
-    fontSize: 15,
-    color: palette.textSecondary,
-    padding: 24,
-  },
+  linkText: { fontSize: 13, fontWeight: '600', color: palette.textAccent },
+  webCard: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  webText: { flex: 1, fontSize: 14, lineHeight: 20, color: palette.text },
+  empty: { fontSize: 14, color: palette.textSecondary },
 });

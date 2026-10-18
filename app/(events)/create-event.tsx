@@ -22,6 +22,7 @@ import { RecurrenceModal } from "../components/RecurrenceModal";
 import { RemindersModal, Reminder } from "../components/RemindersModal";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { endFromDuration } from "../../utils/ideaFormat";
+import { EVENT_CATEGORIES, missingForEvent } from "../../utils/eventForm";
 import { palette, gradients } from "../../constants/colors";
 import { ScreenHeader } from "../components/layout/ScreenHeader";
 
@@ -51,7 +52,9 @@ export default function CreateEventScreen() {
   const [showRecurrenceModal, setShowRecurrenceModal] = useState(false);
   const [recurrenceConfig, setRecurrenceConfig] = useState<any>(null);
   const [location, setLocation] = useState('');
-  const [category, setCategory] = useState(ideaTitle ? 'Cita' : '');
+  const [category, setCategory] = useState('');
+  // Color, categoría, descripción y recordatorios van en "Más opciones" para no mostrar 10 campos a la vez.
+  const [showMore, setShowMore] = useState(!!ideaDescription);
   const [description, setDescription] = useState(ideaDescription ?? '');
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [showRemindersModal, setShowRemindersModal] = useState(false);
@@ -83,6 +86,8 @@ export default function CreateEventScreen() {
     { name: 'Naranja', value: '#F59E0B' },
     { name: 'Rojo', value: '#EF4444' },
   ];
+
+  const missing = missingForEvent({ title, startDateSelected, endDateSelected, startTimeSelected, endTimeSelected, isAllDay });
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -512,10 +517,22 @@ export default function CreateEventScreen() {
           </TouchableOpacity>
         )}
 
+        <TouchableOpacity
+          style={styles.moreToggle}
+          onPress={() => setShowMore(!showMore)}
+          accessibilityRole="button"
+          accessibilityState={{ expanded: showMore }}
+        >
+          <Text style={styles.moreToggleText}>{showMore ? 'Menos opciones' : 'Más opciones'}</Text>
+          <Text style={styles.moreToggleHint}>{showMore ? '' : 'Color, tipo de plan, descripción y recordatorios'}</Text>
+          <Ionicons name={showMore ? 'chevron-up' : 'chevron-down'} size={18} color={palette.icon} />
+        </TouchableOpacity>
+
+        {showMore && (<>
         {/* Color picker */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Color del evento</Text>
-          <View style={styles.colorGrid}>
+          <View style={styles.colorGrid} accessibilityRole="radiogroup">
             {colors.map((color) => (
               <TouchableOpacity
                 key={color.value}
@@ -526,26 +543,31 @@ export default function CreateEventScreen() {
                   selectedColor === color.value && styles.colorButtonActive,
                 ]}
                 disabled={loading}
+                accessibilityRole="radio"
+                accessibilityLabel={color.name}
+                accessibilityState={{ checked: selectedColor === color.value }}
               />
             ))}
           </View>
         </View>
 
-        {/* Categoría */}
+        {/* Tipo de plan: las 7 dimensiones, como en el banco de ideas */}
         <View style={styles.inputGroup}>
           <View style={styles.labelContainer}>
-            <Text style={styles.label}>Categoría (opcional)</Text>
+            <Text style={styles.label}>Tipo de plan (opcional)</Text>
           </View>
           <View style={styles.categoryContainer}>
-            {['Romántica', 'Diversión', 'Especial', 'Cita'].map((cat) => (
+            {EVENT_CATEGORIES.map((cat) => (
               <TouchableOpacity
                 key={cat}
                 style={[
                   styles.categoryChip,
                   category === cat && styles.categoryChipActive,
                 ]}
-                onPress={() => setCategory(cat)}
+                onPress={() => setCategory(category === cat ? '' : cat)}
                 disabled={loading}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: category === cat }}
               >
                 <Text
                   style={[
@@ -611,13 +633,21 @@ export default function CreateEventScreen() {
             </View>
           )}
         </View>
+        </>)}
+
+        {/* Que falta (si el boton esta gris) y que pasa al crear */}
+        <Text style={[styles.formHint, missing && styles.formHintMissing]}>
+          {missing ?? 'Tu pareja recibirá la invitación para aprobarla.'}
+        </Text>
 
         {/* Botón crear (móvil) */}
         <TouchableOpacity
-          style={[styles.createButton, (!title || !startDateSelected || !endDateSelected || (!isAllDay && (!startTimeSelected || !endTimeSelected)) || loading) && styles.createButtonDisabled]}
+          style={[styles.createButton, (!!missing || loading) && styles.createButtonDisabled]}
           onPress={handleCreateEvent}
-          disabled={!title || !startDateSelected || !endDateSelected || (!isAllDay && (!startTimeSelected || !endTimeSelected)) || loading}
+          disabled={!!missing || loading}
           activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: !!missing || loading }}
         >
           <LinearGradient
             colors={gradients.primary}
@@ -877,6 +907,38 @@ const styles = StyleSheet.create({
   colorButtonActive: {
     borderWidth: 3,
     borderColor: palette.text,
+  },
+  moreToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+    borderRadius: 12,
+    backgroundColor: palette.surface,
+    borderWidth: 1,
+    borderColor: palette.border,
+  },
+  moreToggleText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: palette.text,
+  },
+  moreToggleHint: {
+    flex: 1,
+    fontSize: 12,
+    color: palette.textSecondary,
+  },
+  formHint: {
+    marginBottom: 12,
+    fontSize: 13,
+    textAlign: 'center',
+    color: palette.textSecondary,
+  },
+  formHintMissing: {
+    color: palette.textAccent,
+    fontWeight: '600',
   },
   categoryContainer: {
     flexDirection: "row",

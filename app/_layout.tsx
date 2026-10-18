@@ -8,6 +8,9 @@ import { QuestionnaireProvider } from "../context/QuestionnaireContext";
 import { AvailabilityProvider } from "../context/AvailabilityContext";
 import notificationService from "../services/firebase.service";
 import { externalCalendarIntegration } from "../services/externalCalendar.integration.service";
+import { Platform } from "react-native";
+
+const CHANGE_PASSWORD_ROUTES = ["forgot-password", "reset-password"];
 
 function RootNavigator() {
   const { user, isLoading } = useAuth();
@@ -30,7 +33,8 @@ function RootNavigator() {
     if (!user && !inAuthGroup) {
       // No autenticado, enviar a login
       router.replace("/(auth)/login");
-    } else if (user && inAuthGroup && hasCheckedAuth) {
+    } else if (user && inAuthGroup && hasCheckedAuth && !CHANGE_PASSWORD_ROUTES.includes(route[1])) {
+      // Con sesion, las pantallas de cambio de contrasena si se pueden abrir (Perfil > Cambiar contrasena).
       // Ya autenticado y en pantallas de auth, ir a tabs
       // El QuestionnaireProvider manejará la lógica del cuestionario
       router.replace("/(tabs)");
@@ -73,7 +77,8 @@ function RootNavigator() {
 
   // Sincronización automática de calendarios externos al abrir la app
   useEffect(() => {
-    if (!user?.userId) return;
+    // En web no hay calendario del dispositivo: solo llenaba la consola de errores de permisos.
+    if (!user?.userId || Platform.OS === "web") return;
 
     const syncCalendars = async () => {
       try {

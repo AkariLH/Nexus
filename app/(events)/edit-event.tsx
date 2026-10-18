@@ -22,6 +22,7 @@ import { RemindersModal, Reminder } from "../components/RemindersModal";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { palette, gradients } from "../../constants/colors";
 import { ScreenHeader } from "../components/layout/ScreenHeader";
+import { EVENT_CATEGORIES } from "../../utils/eventForm";
 
 export default function EditEventScreen() {
   const router = useRouter();
@@ -681,7 +682,7 @@ export default function EditEventScreen() {
           {/* Color picker */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Color del evento</Text>
-            <View style={styles.colorGrid}>
+            <View style={styles.colorGrid} accessibilityRole="radiogroup">
               {colors.map((color) => (
                 <TouchableOpacity
                   key={color.value}
@@ -692,26 +693,31 @@ export default function EditEventScreen() {
                     selectedColor === color.value && styles.colorButtonActive,
                   ]}
                   disabled={saving}
+                  accessibilityRole="radio"
+                  accessibilityLabel={color.name}
+                  accessibilityState={{ checked: selectedColor === color.value }}
                 />
               ))}
             </View>
           </View>
 
-          {/* Categoría */}
+          {/* Tipo de plan: las 7 dimensiones (un evento viejo conserva su categoria anterior) */}
           <View style={styles.inputGroup}>
             <View style={styles.labelContainer}>
-              <Text style={styles.label}>Categoría (opcional)</Text>
+              <Text style={styles.label}>Tipo de plan (opcional)</Text>
             </View>
             <View style={styles.categoryContainer}>
-              {['Romántica', 'Diversión', 'Especial', 'Cita'].map((cat) => (
+              {(category && !EVENT_CATEGORIES.includes(category) ? [...EVENT_CATEGORIES, category] : EVENT_CATEGORIES).map((cat) => (
                 <TouchableOpacity
                   key={cat}
                   style={[
                     styles.categoryChip,
                     category === cat && styles.categoryChipActive,
                   ]}
-                  onPress={() => setCategory(cat)}
+                  onPress={() => setCategory(category === cat ? '' : cat)}
                   disabled={saving}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: category === cat }}
                 >
                   <Text
                     style={[

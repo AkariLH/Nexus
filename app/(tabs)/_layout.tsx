@@ -4,6 +4,10 @@ import { View, ActivityIndicator } from "react-native";
 import { useQuestionnaire } from "../../context/QuestionnaireContext";
 import { palette } from "../../constants/colors";
 
+// Pantallas que se abren desde Perfil: llevan encabezado con regreso y no son de ninguna pestaña,
+// asi que no se muestra la barra (antes aparecia sin ninguna pestaña marcada).
+const SUBSCREEN = { display: "none" as const };
+
 export default function TabLayout() {
   const { isCompleted, isLoading } = useQuestionnaire();
 
@@ -91,6 +95,7 @@ export default function TabLayout() {
         name="configuraciones"
         options={{
           href: null, // No mostrar en tabs, accesible desde perfil
+          tabBarStyle: SUBSCREEN,
         }}
       />
       {/* Ocultar del tabBar pero mantener accesible programáticamente */}
@@ -104,12 +109,14 @@ export default function TabLayout() {
         name="preferences"
         options={{
           href: null, // No mostrar en tabs, accesible desde perfil
+          tabBarStyle: SUBSCREEN,
         }}
       />
       <Tabs.Screen
         name="link-external-calendars"
         options={{
           href: null, // No mostrar en tabs, accesible desde configuraciones
+          tabBarStyle: SUBSCREEN,
         }}
       />
     </Tabs>

@@ -12,6 +12,7 @@ import { ConfirmModal } from '../components/ConfirmModal';
 import { palette } from '../../constants/colors';
 import { ScreenHeader } from '../components/layout/ScreenHeader';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { eventRange, sortForList } from '@/utils/eventFormat';
 
 type EventGroup = 'CONFIRMED' | 'PENDING' | 'REJECTED';
 
@@ -21,16 +22,6 @@ const FILTERS: { value: EventGroup; label: string }[] = [
   { value: 'REJECTED', label: 'Rechazados' },
 ];
 
-const DAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-const clock = (d: Date) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-
-/** "Sáb 18 oct · 17:00 – 19:00" en la hora del telefono. */
-function eventRange(startIso: string, endIso: string): string {
-  const start = new Date(startIso);
-  const end = new Date(endIso);
-  return `${DAYS[start.getDay()]} ${start.getDate()} ${MONTHS[start.getMonth()]} · ${clock(start)} – ${clock(end)}`;
-}
 
 /**
  * Pantalla para ver los eventos propios creados por el usuario
@@ -55,11 +46,8 @@ export default function MyEventsScreen() {
 
     try {
       const myEvents = await eventService.getMyCreatedEvents(user.userId);
-      // Ordenar por fecha de creación descendente (más recientes primero)
-      const sorted = myEvents.sort((a, b) => 
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
-      setEvents(sorted);
+      // Primero lo que viene (lo más cercano arriba); al final lo que ya pasó.
+      setEvents(sortForList(myEvents, new Date()));
     } catch (error) {
       console.error('Error loading my events:', error);
       setErrorModal({visible: true, message: 'No se pudieron cargar los eventos'});
@@ -150,6 +138,7 @@ export default function MyEventsScreen() {
   }
 
   const visible = events.filter((e) => groupOf(e) === filter);
+  const now = new Date();
 
   return (
     <View style={styles.container}>
@@ -176,6 +165,8 @@ export default function MyEventsScreen() {
                 <OptionChip key={f.value} label={f.label} selected={filter === f.value} onPress={() => setFilter(f.value)} />
               ))}
             </View>
+
+            <Text style={styles.scopeText}>Los que tú creaste. Los de tu pareja están en el calendario.</Text>
 
             {visible.length === 0 && <Text style={styles.noneText}>No hay eventos en esta lista.</Text>}
 
@@ -207,10 +198,11 @@ export default function MyEventsScreen() {
                         </TouchableOpacity>
                       )}
                     </View>
-                    <MetaLine icon="calendar-outline" text={eventRange(event.startDateTime, event.endDateTime)} />
+                    <MetaLine icon="calendar-outline" text={eventRange(event.startDateTime, event.endDateTime, now)} />
                     {event.location ? <MetaLine icon="location-outline" text={event.location} /> : null}
                     <View style={styles.pills}>
                       <Pill label={pill.label} tone={pill.tone} icon={pill.icon} />
+                      {event.isRecurring ? <Pill label="Se repite" icon="repeat-outline" /> : null}
                       {event.category ? <Pill label={event.category} /> : null}
                     </View>
                   </View>
@@ -264,6 +256,7 @@ const styles = StyleSheet.create({
   content: { padding: 16, gap: 16 },
   filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   noneText: { fontSize: 14, color: palette.textSecondary, textAlign: 'center', paddingVertical: 24 },
+  scopeText: { fontSize: 12, color: palette.textSecondary },
   eventCard: { flexDirection: 'row', gap: 12, paddingLeft: 0, overflow: 'hidden' },
   colorBar: { width: 4, alignSelf: 'stretch' },
   eventBody: { flex: 1, gap: 6 },

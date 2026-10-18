@@ -16,6 +16,7 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 import { processProfilePhoto } from '@/utils/imageProcessor';
+import { birthDateLabel } from '@/utils/profileFormat';
 import { LinearGradient } from "expo-linear-gradient";
 import { Card, ListCard, ListRow, TabTitle } from "../../components/ui/Surface";
 import { GradientButton } from "../components/ui/GradientButton";
@@ -498,9 +499,9 @@ export default function PerfilScreen() {
           {infoRow(
             "calendar-outline",
             "Fecha de nacimiento",
-            birthDate,
+            birthDateLabel(birthDate),
             <TouchableOpacity style={styles.dateInput} onPress={() => setShowDatePicker(true)} disabled={isLoading}>
-              <Text style={styles.inputText}>{editBirthDate}</Text>
+              <Text style={styles.inputText}>{birthDateLabel(editBirthDate)}</Text>
               <Ionicons name="chevron-down" size={18} color={palette.icon} />
             </TouchableOpacity>,
           )}
@@ -535,7 +536,12 @@ export default function PerfilScreen() {
               subtitle="Cómo te has sentido estos días"
               onPress={() => router.push("/(mood)/mood-history")}
             />
-            <ListRow icon="key-outline" title="Cambiar contraseña" disabled />
+            <ListRow
+              icon="key-outline"
+              title="Cambiar contraseña"
+              subtitle="Te enviamos un código a tu correo"
+              onPress={() => router.push({ pathname: "/(auth)/forgot-password", params: { email } })}
+            />
             <ListRow
               icon="settings-outline"
               title="Configuraciones"
