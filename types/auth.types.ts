@@ -43,6 +43,11 @@ export interface VerifyEmailResponse {
   displayName: string;
   nickname: string;
   emailConfirmed: boolean;
+  // Figma H4: al verificar el correo se entra directo con esta sesion (null en verify-reset-code).
+  linkCode?: string;
+  token?: string;
+  tokenExpiresAt?: string;
+  questionnaireCompleted?: boolean;
 }
 
 export interface ForgotPasswordRequest {

@@ -16,6 +16,8 @@ interface ResultModalProps {
   title: string;
   /** Icono en el circulo superior; sin icono el modal empieza por el titulo. */
   icon?: keyof typeof Ionicons.glyphMap;
+  /** Contenido propio en lugar del icono (p. ej. los avatares de "¡Ya están vinculados!", H7). */
+  header?: ReactNode;
   /**
    * `brand`: circulo con degradado; `danger`: rojo claro (rechazos); `warning`: ambar claro
    * (vencimientos); `soft`: morado claro (preguntas).
@@ -51,6 +53,7 @@ export function ResultModal({
   visible,
   title,
   icon,
+  header,
   tone = "brand",
   animateIcon,
   subtitle,
@@ -83,6 +86,7 @@ export function ResultModal({
     <Modal animationType="fade" transparent visible={visible} onRequestClose={onRequestClose}>
       <View style={styles.overlay}>
         <View style={styles.card} accessibilityViewIsModal>
+          {header && <View style={styles.header}>{header}</View>}
           {icon && tone === "brand" && (
             <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.icon}>
               <Animated.View style={popStyle}>
@@ -166,6 +170,9 @@ const styles = StyleSheet.create({
     borderRadius: 44,
     justifyContent: "center",
     alignItems: "center",
+    marginBottom: 16,
+  },
+  header: {
     marginBottom: 16,
   },
   badge: {

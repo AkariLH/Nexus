@@ -2,6 +2,7 @@ import {
   belowBusy,
   buildCalendarItems,
   collapseAllDay,
+  freeSlotCount,
   freeSlotsOn,
   freeTogetherDays,
   itemsOnDay,
@@ -188,6 +189,9 @@ describe('calendarLayout', () => {
       ['Sábado 17', 1],
     ]);
     expect(days[1].slots[0]).toMatchObject({ date: '2026-10-17', startTime: '11:00', endTime: '14:00' });
+    // Figma H7: "Esta semana tienen N horarios libres juntos".
+    expect(freeSlotCount(mutual, now)).toBe(2);
+    expect(freeSlotCount(null, now)).toBe(0);
   });
 
   it('escribe los títulos como en Figma', () => {

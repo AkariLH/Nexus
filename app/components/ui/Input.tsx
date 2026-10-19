@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { forwardRef, useState } from "react";
 import {
+  Platform,
   StyleSheet,
   Text,
   TextInput,
@@ -13,23 +14,28 @@ import { palette } from "../../../constants/colors";
 interface InputProps extends TextInputProps {
   label?: string;
   icon?: keyof typeof Ionicons.glyphMap;
+  /** Texto de error; pinta el campo en rojo y sustituye a la ayuda. */
   error?: string;
+  /** Ayuda fija bajo el campo (p. ej. las reglas de la contrasena, Figma H2). */
+  help?: string;
   isPassword?: boolean;
 }
 
-export function Input({
-  label,
-  icon,
-  error,
-  isPassword,
-  ...textInputProps
-}: InputProps) {
+/**
+ * "Campo de texto" de Figma (Componentes de entrada `115:2625`): etiqueta, campo con estados
+ * Normal / Enfocado / Error, ayuda debajo y ojo para las contrasenas.
+ */
+export const Input = forwardRef<TextInput, InputProps>(function Input(
+  { label, icon, error, help, isPassword, onFocus, onBlur, ...textInputProps },
+  ref
+) {
   const [showPassword, setShowPassword] = useState(false);
+  const [focused, setFocused] = useState(false);
 
   return (
     <View style={styles.field}>
       {label && <Text style={styles.label}>{label}</Text>}
-      <View style={styles.inputWrapper}>
+      <View style={[styles.inputWrapper, focused && styles.focused, !!error && styles.errored]}>
         {icon && (
           <Ionicons
             name={icon}
@@ -39,10 +45,20 @@ export function Input({
           />
         )}
         <TextInput
+          ref={ref}
           accessibilityLabel={label}
+          accessibilityHint={error || help}
           {...textInputProps}
+          onFocus={(e) => {
+            setFocused(true);
+            onFocus?.(e);
+          }}
+          onBlur={(e) => {
+            setFocused(false);
+            onBlur?.(e);
+          }}
           placeholderTextColor={palette.textMuted}
-          style={[styles.input, textInputProps.style]}
+          style={[styles.input, icon && styles.inputWithIcon, isPassword && styles.inputWithEye, textInputProps.style]}
           secureTextEntry={isPassword && !showPassword}
         />
         {isPassword && (
@@ -55,16 +71,20 @@ export function Input({
           >
             <Ionicons
               name={showPassword ? "eye-off-outline" : "eye-outline"}
-              size={20}
-              color={palette.icon}
+              size={22}
+              color={palette.textSecondary}
             />
           </TouchableOpacity>
         )}
       </View>
-      {error && <Text style={styles.error}>{error}</Text>}
+      {error ? (
+        <Text style={styles.error} accessibilityLiveRegion="polite">{error}</Text>
+      ) : help ? (
+        <Text style={styles.help}>{help}</Text>
+      ) : null}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   field: {
@@ -74,13 +94,24 @@ const styles = StyleSheet.create({
     color: palette.text,
     marginBottom: 8,
     fontSize: 14,
+    fontWeight: "600",
   },
   inputWrapper: {
     position: "relative",
     backgroundColor: palette.surfaceMuted,
-    borderRadius: 20,
-    height: 56,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: palette.border,
+    height: 54,
     justifyContent: "center",
+  },
+  focused: {
+    borderWidth: 2,
+    borderColor: palette.secondary,
+  },
+  errored: {
+    borderWidth: 2,
+    borderColor: palette.error,
   },
   iconLeft: {
     position: "absolute",
@@ -92,14 +123,28 @@ const styles = StyleSheet.create({
   },
   input: {
     height: "100%",
-    paddingLeft: 44,
-    paddingRight: 44,
+    paddingHorizontal: 16,
     fontSize: 16,
     color: palette.text,
+    // En web el navegador pinta su propio contorno encima del borde de enfoque.
+    ...(Platform.OS === "web" ? { outlineWidth: 0 } : {}),
+  },
+  inputWithIcon: {
+    paddingLeft: 44,
+  },
+  inputWithEye: {
+    paddingRight: 52,
+  },
+  help: {
+    color: palette.textSecondary,
+    fontSize: 12,
+    lineHeight: 16,
+    marginTop: 6,
   },
   error: {
-    color: palette.textAccent,
+    color: palette.error,
     fontSize: 12,
-    marginTop: 4,
+    lineHeight: 16,
+    marginTop: 6,
   },
 });

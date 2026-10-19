@@ -328,6 +328,11 @@ export function freeTogetherDays(mutual: MutualAvailabilityResponse | null, now:
     .filter((day) => day.slots.length > 0);
 }
 
+/** Cuantos huecos libres tienen los dos (Figma H7: "Esta semana tienen 6 horarios libres juntos"). */
+export function freeSlotCount(mutual: MutualAvailabilityResponse | null, now: Date): number {
+  return freeTogetherDays(mutual, now).reduce((total, day) => total + day.slots.length, 0);
+}
+
 /**
  * Parametros de Crear evento al llegar desde el calendario ("2026-10-17", "11:00", "14:00"):
  * el dia y, si vienen, las horas como fechas locales.
