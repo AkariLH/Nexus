@@ -248,6 +248,12 @@ export default function HomeScreen() {
     };
   }, [linked, user?.userId, partnerId]);
 
+  // El nombre se guarda para que el modal no quede sin el mientras se desvanece al cerrarse.
+  const [linkedName, setLinkedName] = useState("");
+  useEffect(() => {
+    if (linked) setLinkedName(linked);
+  }, [linked]);
+
   const closeLinked = (then?: () => void) => {
     router.setParams({ linked: undefined });
     then?.();
@@ -350,7 +356,7 @@ export default function HomeScreen() {
                   </Text>
                 </View>
               </View>
-              <GradientButton title="Compartir mi código" onPress={() => router.push("/(link)/my-link-code")} />
+              <GradientButton compact title="Compartir mi código" onPress={() => router.push("/(link)/my-link-code")} />
               <TouchableOpacity
                 style={styles.connectSecondary}
                 onPress={() => router.push("/(link)/enter-link-code")}
@@ -518,9 +524,9 @@ export default function HomeScreen() {
       {/* H7: recien vinculados */}
       <ResultModal
         visible={!!linked && !questionnaire}
-        header={<LinkedAvatars me={displayName} partner={linked ?? ''} />}
+        header={<LinkedAvatars me={displayName} partner={linkedName} />}
         title="¡Ya están vinculados!"
-        subtitle={linkedSubtitle(displayName, linked ?? '', freeCount)}
+        subtitle={linkedSubtitle(displayName, linkedName, freeCount)}
         primary={{
           label: 'Ver horarios libres juntos',
           onPress: () => closeLinked(() => router.push({ pathname: '/(tabs)/calendario', params: { freeTogether: '1' } })),
@@ -698,7 +704,7 @@ const styles = StyleSheet.create({
   connectTitle: { fontSize: 15, fontWeight: "700", color: palette.text },
   connectSubtitle: { fontSize: 13, lineHeight: 18, color: palette.textSecondary },
   connectSecondary: {
-    height: 48,
+    height: 44,
     borderRadius: 24,
     borderWidth: 1,
     borderColor: palette.secondaryBorder,

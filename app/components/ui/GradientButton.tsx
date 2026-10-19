@@ -9,6 +9,8 @@ interface GradientButtonProps {
   loading?: boolean;
   colors?: readonly [string, string, ...string[]];
   style?: any;
+  /** Variante "Compacto" de Figma (44 px), p. ej. dentro de tarjetas. */
+  compact?: boolean;
 }
 
 export function GradientButton({
@@ -18,6 +20,7 @@ export function GradientButton({
   loading = false,
   colors = gradients.primary,
   style,
+  compact = false,
 }: GradientButtonProps) {
   return (
     <TouchableOpacity
@@ -33,7 +36,7 @@ export function GradientButton({
         colors={colors}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
-        style={styles.button}
+        style={[styles.button, compact && styles.compact]}
       >
         {loading ? (
           <ActivityIndicator color={palette.onPrimary} />
@@ -59,6 +62,9 @@ const styles = StyleSheet.create({
     height: 56,
     justifyContent: "center",
     alignItems: "center",
+  },
+  compact: {
+    height: 44,
   },
   buttonText: {
     color: palette.onPrimary,
