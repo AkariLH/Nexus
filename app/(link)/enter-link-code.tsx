@@ -40,10 +40,10 @@ export default function EnterLinkCodeScreen() {
       // Obtener el nombre de la pareja del response
       const partnerName = data.partner?.displayName || data.partner?.nickname || "tu pareja";
       
-      // Navegar directamente a la pantalla de éxito con el nombre de la pareja
+      // Figma H7: Inicio con el modal "¡Ya están vinculados!"
       router.replace({
-        pathname: "/(link)/link-success",
-        params: { partnerName }
+        pathname: "/(tabs)",
+        params: { linked: partnerName }
       });
     } catch (err: any) {
       console.error("Error:", err);

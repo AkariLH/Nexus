@@ -95,10 +95,10 @@ export default function MyLinkCodeScreen() {
           
           const partnerName = data.partner.displayName || data.partner.nickname || 'tu pareja';
           
-          // Navegar a la pantalla de éxito con animación
+          // Figma H7: Inicio con el modal "¡Ya están vinculados!"
           router.replace({
-            pathname: '/(link)/link-success',
-            params: { partnerName },
+            pathname: '/(tabs)',
+            params: { linked: partnerName },
           });
         }
       } catch (error) {

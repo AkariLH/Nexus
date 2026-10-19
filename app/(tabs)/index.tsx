@@ -1,9 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Href, useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { StyleSheet, Text, TouchableOpacity, View, ScrollView, ActivityIndicator } from "react-native";
-import { Card, GradientIcon, ListRow, MetaLine, SectionLabel } from "../../components/ui/Surface";
+import { Card, GradientIcon, MetaLine, SectionLabel } from "../../components/ui/Surface";
+import { findMutualAvailability } from "../../services/availabilityService";
+import { freeSlotCount } from "../../utils/calendarLayout";
+import { linkedSubtitle, listLabel } from "../../utils/linkFormat";
+import { GradientButton } from "../components/ui/GradientButton";
 import { useAuth } from "../../context/AuthContext";
 import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
 import eventService, { EventResponse } from "../../services/event.service";
@@ -47,7 +51,8 @@ export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuth();
   // Figma D5: al terminar el cuestionario se llega aqui con ?questionnaire=done.
-  const { questionnaire } = useLocalSearchParams<{ questionnaire?: string }>();
+  // Figma H7: al vincularse se llega con ?linked=<nombre de la pareja>.
+  const { questionnaire, linked } = useLocalSearchParams<{ questionnaire?: string; linked?: string }>();
   const [linkStatus, setLinkStatus] = useState<LinkStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [pendingCount, setPendingCount] = useState(0);
@@ -229,6 +234,31 @@ export default function HomeScreen() {
     }
   };
 
+  // H7: cuantos horarios libres tienen los dos esta semana (si no se puede saber, no se dice).
+  const [freeCount, setFreeCount] = useState<number | null>(null);
+  const partnerId = linkStatus?.partner?.userId;
+  useEffect(() => {
+    if (!linked || !user?.userId || !partnerId) return;
+    let alive = true;
+    findMutualAvailability(user.userId, partnerId, 7)
+      .then((mutual) => alive && setFreeCount(freeSlotCount(mutual, new Date())))
+      .catch(() => alive && setFreeCount(null));
+    return () => {
+      alive = false;
+    };
+  }, [linked, user?.userId, partnerId]);
+
+  const closeLinked = (then?: () => void) => {
+    router.setParams({ linked: undefined });
+    then?.();
+  };
+
+  // D5 -> H6: si al terminar el cuestionario todavia no hay vinculo, se ofrece conectar.
+  const finishQuestionnaire = () => {
+    router.setParams({ questionnaire: undefined });
+    if (linkStatus && !linkStatus.hasActiveLink) router.push("/(link)/connect");
+  };
+
   const displayName = user?.displayName || user?.nickname || "Usuario";
   const badgeCount = pendingCount + unreadNotices;
   const quickActions: { icon: keyof typeof Ionicons.glyphMap; label: string; route: Href; needsLink: boolean }[] = [
@@ -237,13 +267,14 @@ export default function HomeScreen() {
     { icon: "happy-outline", label: "¿Cómo estuvo tu día?", route: "/(mood)/mood-log", needsLink: false },
     { icon: "bulb-outline", label: "Banco de ideas", route: "/(ideas)/idea-bank", needsLink: true },
   ];
+  const lockedLabels = isLinked ? [] : quickActions.filter((q) => q.needsLink).map((q) => q.label);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: insets.top + 20 }]}>
       <View style={styles.header}>
         <View style={styles.headerText}>
           <Text style={styles.greeting}>Hola, {displayName}</Text>
-          <Text style={styles.subtitle}>{isLinked ? `Conectado con ${partnerName}` : "Bienvenido a Nexus"}</Text>
+          <Text style={styles.subtitle}>{isLinked ? `Conectado con ${partnerName}` : "Te damos la bienvenida"}</Text>
         </View>
         <TouchableOpacity
           style={styles.bell}
@@ -307,15 +338,27 @@ export default function HomeScreen() {
             </TouchableOpacity>
           )}
 
+          {/* H8: sin vinculo, lo primero es conectar */}
           {!isLinked && (
-            <Card>
-              <ListRow
-                icon="link-outline"
-                title="Vincúlate con tu pareja"
-                subtitle="El calendario y las citas se comparten con tu pareja."
-                onPress={() => router.push("/(tabs)/link")}
-              />
-            </Card>
+            <View style={styles.connectCard}>
+              <View style={styles.connectHead}>
+                <GradientIcon name="people-outline" />
+                <View style={styles.connectText}>
+                  <Text style={styles.connectTitle}>Conecta con tu pareja para empezar</Text>
+                  <Text style={styles.connectSubtitle}>
+                    El calendario, las ideas y las citas se comparten entre los dos.
+                  </Text>
+                </View>
+              </View>
+              <GradientButton title="Compartir mi código" onPress={() => router.push("/(link)/my-link-code")} />
+              <TouchableOpacity
+                style={styles.connectSecondary}
+                onPress={() => router.push("/(link)/enter-link-code")}
+                accessibilityRole="button"
+              >
+                <Text style={styles.connectSecondaryText}>Tengo un código</Text>
+              </TouchableOpacity>
+            </View>
           )}
 
           <View style={styles.section}>
@@ -334,16 +377,14 @@ export default function HomeScreen() {
                     accessibilityState={{ disabled: locked }}
                   >
                     <GradientIcon name={q.icon} />
-                    <Text style={styles.quickLabel}>{q.label}</Text>
-                    {locked && (
-                      <View style={styles.lock}>
-                        <Ionicons name="lock-closed" size={12} color={palette.icon} />
-                      </View>
-                    )}
+                    <Text style={[styles.quickLabel, locked && styles.quickLabelLocked]}>{q.label}</Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
+            {lockedLabels.length > 0 && (
+              <Text style={styles.lockedNote}>{listLabel(lockedLabels)} se abren al vincularse.</Text>
+            )}
           </View>
 
           {isLinked && upcomingEvents.length > 0 && (
@@ -470,8 +511,22 @@ export default function HomeScreen() {
         animateIcon
         title="¡Listo!"
         subtitle="Ya conocemos tus gustos."
-        primary={{ label: 'Continuar', onPress: () => router.setParams({ questionnaire: undefined }) }}
-        onRequestClose={() => router.setParams({ questionnaire: undefined })}
+        primary={{ label: 'Continuar', onPress: finishQuestionnaire }}
+        onRequestClose={finishQuestionnaire}
+      />
+
+      {/* H7: recien vinculados */}
+      <ResultModal
+        visible={!!linked && !questionnaire}
+        header={<LinkedAvatars me={displayName} partner={linked ?? ''} />}
+        title="¡Ya están vinculados!"
+        subtitle={linkedSubtitle(displayName, linked ?? '', freeCount)}
+        primary={{
+          label: 'Ver horarios libres juntos',
+          onPress: () => closeLinked(() => router.push({ pathname: '/(tabs)/calendario', params: { freeTogether: '1' } })),
+        }}
+        secondary={{ label: 'Ir al inicio', onPress: () => closeLinked() }}
+        onRequestClose={() => closeLinked()}
       />
 
       {/* B8a: la invitacion vencio */}
@@ -519,6 +574,27 @@ export default function HomeScreen() {
         )}
       </ResultModal>
     </ScrollView>
+  );
+}
+
+/** H7: los dos avatares con el corazon en medio. */
+function LinkedAvatars({ me, partner }: { me: string; partner: string }) {
+  const avatar = (name: string) => (
+    <View>
+      <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.avatar}>
+        <Text style={styles.avatarText}>{name.charAt(0).toUpperCase()}</Text>
+      </LinearGradient>
+      <View style={styles.avatarDot} />
+    </View>
+  );
+  return (
+    <View style={styles.avatars} accessible accessibilityLabel={`${me} y ${partner}`}>
+      {avatar(me)}
+      <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.avatarHeart}>
+        <Ionicons name="heart-outline" size={18} color={palette.onPrimary} />
+      </LinearGradient>
+      {avatar(partner)}
+    </View>
   );
 }
 
@@ -605,9 +681,47 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
   },
-  quickLocked: { opacity: 0.5 },
+  quickLocked: { opacity: 0.55 },
   quickLabel: { fontSize: 14, fontWeight: "500", color: palette.text },
-  lock: { position: "absolute", top: 12, right: 12 },
+  quickLabelLocked: { color: palette.textSecondary },
+  lockedNote: { fontSize: 12, lineHeight: 17, color: palette.textSecondary },
+  connectCard: {
+    gap: 12,
+    padding: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: palette.primaryBorder,
+    backgroundColor: palette.primarySoft,
+  },
+  connectHead: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 4 },
+  connectText: { flex: 1, gap: 2 },
+  connectTitle: { fontSize: 15, fontWeight: "700", color: palette.text },
+  connectSubtitle: { fontSize: 13, lineHeight: 18, color: palette.textSecondary },
+  connectSecondary: {
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: palette.secondaryBorder,
+    backgroundColor: palette.surface,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  connectSecondaryText: { fontSize: 15, fontWeight: "700", color: palette.textAccent },
+  avatars: { flexDirection: "row", alignItems: "center", gap: 10 },
+  avatar: { width: 52, height: 52, borderRadius: 26, justifyContent: "center", alignItems: "center" },
+  avatarText: { fontSize: 20, fontWeight: "700", color: palette.onPrimary },
+  avatarDot: {
+    position: "absolute",
+    right: 0,
+    bottom: 0,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 2,
+    borderColor: palette.surface,
+    backgroundColor: palette.success,
+  },
+  avatarHeart: { width: 36, height: 36, borderRadius: 18, justifyContent: "center", alignItems: "center" },
   eventCard: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12, paddingLeft: 12 },
   dateBadge: {
     width: 52,

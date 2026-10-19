@@ -8,278 +8,86 @@ import { palette, gradients } from "../../constants/colors";
 import { decorativeLoop, motionMs } from "../../utils/motion";
 import { useAuth } from "../../context/AuthContext";
 
+/** Figma H0: el splash dura 1.2 s en total. */
+const SPLASH_MS = 1200;
+
+/** Corazones tenues de fondo (posicion, tamano y cuanto flotan). */
+const HEARTS = [
+  { style: { top: "15%", left: "11%" }, size: 26, drift: -10 },
+  { style: { top: "27%", right: "17%" }, size: 22, drift: 8 },
+  { style: { bottom: "22%", left: "18%" }, size: 28, drift: -8 },
+  { style: { bottom: "18%", right: "22%" }, size: 18, drift: 6 },
+] as const;
+
 export default function SplashScreen() {
   const router = useRouter();
-  // Al terminar la animacion: con sesion va a la app; sin sesion, a la bienvenida.
+  // Al terminar: con sesion va a la app; sin sesion, a la bienvenida.
   const { user } = useAuth();
   const hasSession = useRef(false);
   hasSession.current = !!user;
-  const scaleAnim = useRef(new Animated.Value(0)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  
-  // Animaciones para los puntos de carga
-  const dot1Anim = useRef(new Animated.Value(0)).current;
-  const dot2Anim = useRef(new Animated.Value(0)).current;
-  const dot3Anim = useRef(new Animated.Value(0)).current;
 
-  // Animaciones para los corazones flotantes
-  const heart1Float = useRef(new Animated.Value(0)).current;
-  const heart2Float = useRef(new Animated.Value(0)).current;
-  const heart3Float = useRef(new Animated.Value(0)).current;
+  const grow = useRef(new Animated.Value(0)).current;
+  const fade = useRef(new Animated.Value(0)).current;
+  const float = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Animación del logo
-    Animated.parallel([
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: motionMs(800),
-        easing: Easing.out(Easing.exp),
-        useNativeDriver: true,
-      }),
-      Animated.timing(rotateAnim, {
-        toValue: 1,
-        duration: motionMs(800),
-        easing: Easing.out(Easing.exp),
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    // Fade in del texto
-    Animated.timing(fadeAnim, {
+    // El logo crece (sin girar) y luego aparecen el nombre y el lema.
+    Animated.timing(grow, {
       toValue: 1,
-      delay: 500,
       duration: motionMs(600),
+      easing: Easing.out(Easing.back(1.4)),
       useNativeDriver: true,
     }).start();
+    Animated.timing(fade, {
+      toValue: 1,
+      delay: motionMs(300),
+      duration: motionMs(450),
+      useNativeDriver: true,
+    }).start();
+    decorativeLoop(
+      Animated.sequence([
+        Animated.timing(float, { toValue: 1, duration: 1600, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(float, { toValue: 0, duration: 1600, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
+    ).start();
 
-    // Animación de los puntos de carga (pulsación continua)
-    const createDotAnimation = (animValue: Animated.Value, delay: number) => {
-      return decorativeLoop(
-        Animated.sequence([
-          Animated.delay(delay),
-          Animated.timing(animValue, {
-            toValue: 1,
-            duration: motionMs(400),
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
-          }),
-          Animated.timing(animValue, {
-            toValue: 0,
-            duration: motionMs(400),
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
-          }),
-        ])
-      );
-    };
-
-    createDotAnimation(dot1Anim, 0).start();
-    createDotAnimation(dot2Anim, 200).start();
-    createDotAnimation(dot3Anim, 400).start();
-
-    // Animación de corazones flotantes
-    const createHeartAnimation = (animValue: Animated.Value) => {
-      return decorativeLoop(
-        Animated.sequence([
-          Animated.timing(animValue, {
-            toValue: 1,
-            duration: motionMs(2000),
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
-          }),
-          Animated.timing(animValue, {
-            toValue: 0,
-            duration: motionMs(2000),
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
-          }),
-        ])
-      );
-    };
-
-    createHeartAnimation(heart1Float).start();
-    createHeartAnimation(heart2Float).start();
-    createHeartAnimation(heart3Float).start();
-
-    // Navegación automática
     const timer = setTimeout(() => {
       router.replace(hasSession.current ? "/(tabs)" : "/(auth)/welcome");
-    }, 2500);
+    }, SPLASH_MS);
     return () => clearTimeout(timer);
   }, []);
 
-  const spin = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["-180deg", "0deg"],
-  });
-
   return (
-    <LinearGradient
-      colors={gradients.primary}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.container}
-    >
-      {/* Corazones flotantes */}
-      <Animated.View
-        style={[
-          styles.heart,
-          {
-            top: 80,
-            left: 40,
-            opacity: 0.4,
-            transform: [
-              {
-                translateY: heart1Float.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, -20],
-                }),
-              },
-              {
-                rotate: heart1Float.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ["0deg", "10deg"],
-                }),
-              },
-            ],
-          },
-        ]}
-      >
-        <Ionicons name="heart" size={32} color={palette.onPrimary} />
-      </Animated.View>
-      <Animated.View
-        style={[
-          styles.heart,
-          {
-            top: 160,
-            right: 60,
-            opacity: 0.5,
-            transform: [
-              {
-                translateY: heart2Float.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, 20],
-                }),
-              },
-              {
-                rotate: heart2Float.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ["0deg", "-10deg"],
-                }),
-              },
-            ],
-          },
-        ]}
-      >
-        <Ionicons name="heart" size={26} color={palette.onPrimary} />
-      </Animated.View>
-      <Animated.View
-        style={[
-          styles.heart,
-          {
-            bottom: 120,
-            left: 80,
-            opacity: 0.4,
-            transform: [
-              {
-                translateY: heart3Float.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, -15],
-                }),
-              },
-              {
-                scale: heart3Float.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [1, 1.15],
-                }),
-              },
-            ],
-          },
-        ]}
-      >
-        <Ionicons name="heart" size={36} color={palette.onPrimary} />
-      </Animated.View>
+    <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.container}>
+      {HEARTS.map((heart, i) => (
+        <Animated.View
+          key={i}
+          style={[
+            styles.heart,
+            heart.style,
+            { transform: [{ translateY: float.interpolate({ inputRange: [0, 1], outputRange: [0, heart.drift] }) }] },
+          ]}
+          importantForAccessibility="no-hide-descendants"
+        >
+          <Ionicons name="heart" size={heart.size} color={palette.onPrimaryFaint} />
+        </Animated.View>
+      ))}
 
-      {/* Logo central */}
       <Animated.View
-        style={[
-          styles.logoContainer,
-          {
-            transform: [
-              { scale: scaleAnim },
-              { rotate: spin },
-            ],
-          },
-        ]}
+        style={{
+          opacity: grow.interpolate({ inputRange: [0, 0.4, 1], outputRange: [0, 1, 1] }),
+          transform: [{ scale: grow.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] }) }],
+        }}
       >
         <View style={styles.logoBox}>
-          <Image 
-            source={require("@/assets/images/icon.svg")} 
-            style={styles.logo}
-            contentFit="contain"
-          />
+          <Image source={require("@/assets/images/icon.svg")} style={styles.logo} contentFit="contain" />
         </View>
       </Animated.View>
 
-      {/* Texto */}
-      <Animated.Text style={[styles.title, { opacity: fadeAnim }]}>
+      <Animated.Text style={[styles.title, { opacity: fade }]} accessibilityRole="header">
         Nexus
       </Animated.Text>
-
-      {/* Indicador de carga */}
-      <View style={styles.loader}>
-        <Animated.View
-          style={[
-            styles.dot,
-            {
-              opacity: fadeAnim,
-              transform: [
-                {
-                  scale: dot1Anim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.8, 1.3],
-                  }),
-                },
-              ],
-            },
-          ]}
-        />
-        <Animated.View
-          style={[
-            styles.dot,
-            {
-              opacity: fadeAnim,
-              marginLeft: 8,
-              transform: [
-                {
-                  scale: dot2Anim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.8, 1.3],
-                  }),
-                },
-              ],
-            },
-          ]}
-        />
-        <Animated.View
-          style={[
-            styles.dot,
-            {
-              opacity: fadeAnim,
-              marginLeft: 8,
-              transform: [
-                {
-                  scale: dot3Anim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.8, 1.3],
-                  }),
-                },
-              ],
-            },
-          ]}
-        />
-      </View>
+      <Animated.Text style={[styles.tagline, { opacity: fade }]}>Su tiempo, juntos</Animated.Text>
     </LinearGradient>
   );
 }
@@ -294,21 +102,17 @@ const styles = StyleSheet.create({
   heart: {
     position: "absolute",
   },
-  logoContainer: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
   logoBox: {
-    width: 110,
-    height: 110,
+    width: 112,
+    height: 112,
     backgroundColor: palette.surface,
     borderRadius: 28,
     justifyContent: "center",
     alignItems: "center",
     shadowColor: palette.shadow,
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 8 },
     elevation: 10,
   },
   logo: {
@@ -316,22 +120,14 @@ const styles = StyleSheet.create({
     height: 80,
   },
   title: {
-    marginTop: 24,
-    fontSize: 44,
+    marginTop: 20,
+    fontSize: 40,
     fontWeight: "700",
     color: palette.onPrimary,
-    letterSpacing: 2,
   },
-  loader: {
-    position: "absolute",
-    bottom: 80,
-    flexDirection: "row",
-    justifyContent: "center",
-  },
-  dot: {
-    width: 10,
-    height: 10,
-    backgroundColor: palette.surface,
-    borderRadius: 5,
+  tagline: {
+    marginTop: 12,
+    fontSize: 16,
+    color: palette.onPrimarySoft,
   },
 });

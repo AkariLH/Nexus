@@ -54,9 +54,10 @@ function RootNavigator() {
         user.userId,
         (partnerName) => {
           console.log('🎉 Vínculo establecido con:', partnerName);
+          // Figma H7: Inicio con el modal "¡Ya están vinculados!"
           router.replace({
-            pathname: '/(link)/link-success',
-            params: { partnerName },
+            pathname: '/(tabs)',
+            params: { linked: partnerName },
           });
         },
         (partnerName) => {

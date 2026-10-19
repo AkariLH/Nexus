@@ -3,170 +3,70 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useEffect, useRef } from "react";
-import {
-  Animated,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Animated, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { palette, gradients } from "../../constants/colors";
-import { decorativeLoop } from "../../utils/motion";
+import { decorativeLoop, motionMs } from "../../utils/motion";
+import { GradientButton } from "../components/ui/GradientButton";
 
+/** Figma H1 (opción B): la bienvenida de siempre, pulida. El texto de apoyo es de la usuaria. */
 export default function WelcomeScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
-  // Animaciones
-  const heartRotate = useRef(new Animated.Value(0)).current;
-  const iconScale1 = useRef(new Animated.Value(1)).current;
-  const iconScale2 = useRef(new Animated.Value(1)).current;
   const fadeIn = useRef(new Animated.Value(0)).current;
-  const slideUp = useRef(new Animated.Value(30)).current;
+  const pulse = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Oscilación del corazón
+    Animated.timing(fadeIn, { toValue: 1, duration: motionMs(600), delay: 150, useNativeDriver: true }).start();
     decorativeLoop(
       Animated.sequence([
-        Animated.timing(heartRotate, {
-          toValue: 1,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(heartRotate, {
-          toValue: 0,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
+        Animated.timing(pulse, { toValue: 1, duration: 1400, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0, duration: 1400, useNativeDriver: true }),
       ])
     ).start();
-
-    // Pulso de iconos secundarios
-    decorativeLoop(
-      Animated.sequence([
-        Animated.timing(iconScale1, {
-          toValue: 1.2,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(iconScale1, {
-          toValue: 1,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-
-    setTimeout(() => {
-      decorativeLoop(
-        Animated.sequence([
-          Animated.timing(iconScale2, {
-            toValue: 1.2,
-            duration: 1000,
-            useNativeDriver: true,
-          }),
-          Animated.timing(iconScale2, {
-            toValue: 1,
-            duration: 1000,
-            useNativeDriver: true,
-          }),
-        ])
-      ).start();
-    }, 500);
-
-    // Fade in + slide up de texto y botones
-    Animated.parallel([
-      Animated.timing(fadeIn, {
-        toValue: 1,
-        duration: 600,
-        delay: 300,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideUp, {
-        toValue: 0,
-        duration: 600,
-        delay: 300,
-        useNativeDriver: true,
-      }),
-    ]).start();
   }, []);
 
-  const rotateInterpolate = heartRotate.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["-10deg", "10deg"],
+  const appear = {
+    opacity: fadeIn,
+    transform: [{ translateY: fadeIn.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }],
+  };
+  const bubbleScale = (from: number, to: number) => ({
+    transform: [{ scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [from, to] }) }],
   });
 
   return (
-    <View style={styles.container}>
-      {/* Área ilustración */}
-      <Animated.View
-        style={[
-          styles.illustration,
-          { opacity: fadeIn, transform: [{ translateY: slideUp }] },
-        ]}
-      >
-        <View style={styles.circleBg}>
-          <View style={styles.heartContainer}>
-            <Image 
-              source={require("@/assets/images/icon.svg")} 
-              style={styles.logo}
-              contentFit="contain"
-            />
+    <View style={[styles.container, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 32 }]}>
+      <Animated.View style={[styles.illustration, appear]}>
+        <LinearGradient colors={gradients.soft} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.circle}>
+          <View style={styles.logoCard}>
+            <Image source={require("@/assets/images/icon.svg")} style={styles.logo} contentFit="contain" />
           </View>
-
-          <Animated.View
-            style={[styles.iconTopRight, { transform: [{ scale: iconScale1 }] }]}
-          >
-            <Ionicons name="calendar-outline" size={48} color={palette.secondary} />
+          <Animated.View style={[styles.bubble, styles.bubbleCalendar, bubbleScale(1, 1.08)]}>
+            <Ionicons name="calendar-outline" size={26} color={palette.secondary} />
           </Animated.View>
-
-          <Animated.View
-            style={[styles.iconBottomLeft, { transform: [{ scale: iconScale2 }] }]}
-          >
-            <Ionicons name="link" size={48} color={palette.primary} />
+          <Animated.View style={[styles.bubble, styles.bubbleLink, bubbleScale(1.08, 1)]}>
+            <Ionicons name="link-outline" size={26} color={palette.primary} />
           </Animated.View>
-        </View>
+        </LinearGradient>
 
-        <Animated.View
-          style={[
-            styles.textContainer,
-            { opacity: fadeIn, transform: [{ translateY: slideUp }] },
-          ]}
-        >
-          <Text style={styles.title}>Bienvenido a Nexus</Text>
-          <Text style={styles.subtitle}>
-            Organiza tu vida compartida con tu pareja.{"\n"}Agenda, eventos y vínculos emocionales en un solo lugar.
-          </Text>
-        </Animated.View>
+        <Text style={styles.title} accessibilityRole="header">
+          Te damos la bienvenida a Nexus
+        </Text>
+        <Text style={styles.subtitle}>
+          La vida es más divertida juntos. Nexus dice cuándo, tú pones las reglas.
+        </Text>
       </Animated.View>
 
-      {/* Botones */}
-      <Animated.View
-        style={[
-          styles.buttons,
-          { opacity: fadeIn, transform: [{ translateY: slideUp }] },
-        ]}
-      >
-        <TouchableOpacity accessibilityRole="button"
-          activeOpacity={0.85}
-          style={styles.primaryButton}
-          onPress={() => router.push("/(auth)/login")}
-        >
-          <LinearGradient
-            colors={gradients.primary}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.gradient}
-          >
-            <Text style={styles.primaryText}>Iniciar sesión</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-
-        <TouchableOpacity accessibilityRole="button"
+      <Animated.View style={[styles.buttons, { opacity: fadeIn }]}>
+        <GradientButton title="Iniciar sesión" onPress={() => router.push("/(auth)/login")} />
+        <TouchableOpacity
           activeOpacity={0.85}
           style={styles.secondaryButton}
           onPress={() => router.push("/(auth)/register")}
+          accessibilityRole="button"
         >
-          <Text style={styles.secondaryText}>Registrarse</Text>
+          <Text style={styles.secondaryText}>Crear cuenta</Text>
         </TouchableOpacity>
       </Animated.View>
     </View>
@@ -177,63 +77,69 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: palette.surface,
-    alignItems: "center",
+    paddingHorizontal: 24,
     justifyContent: "space-between",
-    padding: 32,
-    paddingBottom: 48,
   },
   illustration: { flex: 1, alignItems: "center", justifyContent: "center" },
-  circleBg: {
-    width: 256,
-    height: 256,
-    borderRadius: 128,
-    backgroundColor: palette.primarySoft,
+  circle: {
+    width: 220,
+    height: 220,
+    borderRadius: 110,
     alignItems: "center",
     justifyContent: "center",
-    position: "relative",
   },
-  heartContainer: { justifyContent: "center", alignItems: "center" },
-  logo: {
-    width: 120,
-    height: 120,
-  },
-  iconTopRight: { position: "absolute", top: 50, right: 25 },
-  iconBottomLeft: { position: "absolute", bottom: 50, left: 60 },
-  textContainer: { marginTop: 32, alignItems: "center" },
-  title: { fontSize: 28, fontWeight: "700", color: palette.text, marginBottom: 8 },
-  subtitle: {
-    textAlign: "center",
-    fontSize: 14,
-    color: palette.textSecondary,
-    lineHeight: 20,
-    paddingHorizontal: 16,
-  },
-  buttons: { width: "100%", gap: 16 },
-  primaryButton: {
-    height: 56,
-    borderRadius: 24,
-    overflow: "hidden",
+  logoCard: {
+    width: 112,
+    height: 112,
+    borderRadius: 28,
+    backgroundColor: palette.surface,
+    alignItems: "center",
+    justifyContent: "center",
     shadowColor: palette.shadow,
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 5,
+    shadowOpacity: 0.1,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
   },
-  gradient: {
-    flex: 1,
-    justifyContent: "center",
+  logo: { width: 80, height: 80 },
+  bubble: {
+    position: "absolute",
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: palette.surface,
     alignItems: "center",
+    justifyContent: "center",
+    shadowColor: palette.shadow,
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
   },
-  primaryText: {
-    color: palette.onPrimary,
+  bubbleCalendar: { top: 10, right: 0 },
+  bubbleLink: { bottom: 18, left: 8 },
+  title: {
+    marginTop: 36,
+    fontSize: 24,
     fontWeight: "700",
-    fontSize: 16,
+    color: palette.text,
+    textAlign: "center",
   },
+  subtitle: {
+    marginTop: 12,
+    fontSize: 14,
+    lineHeight: 21,
+    color: palette.textSecondary,
+    textAlign: "center",
+    paddingHorizontal: 8,
+  },
+  buttons: { width: "100%", gap: 12 },
   secondaryButton: {
-    height: 56,
-    borderRadius: 24,
-    borderWidth: 2,
-    borderColor: palette.primary,
+    height: 52,
+    borderRadius: 26,
+    borderWidth: 1,
+    borderColor: palette.secondaryBorder,
+    backgroundColor: palette.surface,
     justifyContent: "center",
     alignItems: "center",
   },
