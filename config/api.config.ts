@@ -245,6 +245,10 @@ export const API_CONFIG = {
       LIST: '/notifications/:userId',
       READ: '/notifications/:userId/read',
     },
+    RATINGS: {
+      PENDING: '/ratings/:userId/pending',
+      RATE: '/ratings/:userId/events/:eventId',
+    },
   },
   
   TIMEOUT: 30000, // 30 segundos para dar tiempo al envío de email

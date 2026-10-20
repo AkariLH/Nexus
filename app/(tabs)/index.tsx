@@ -21,6 +21,7 @@ import { ResultModal } from "../components/ResultModal";
 import { PlanSummaryCard } from "../components/PlanSummaryCard";
 import planningService, { PlanningView } from "../../services/planning.service";
 import appNotificationService from "../../services/appNotification.service";
+import ratingService from "../../services/rating.service";
 import { markSeen, PlanningNotice, wasSeen } from "../../utils/planningSeen";
 import { closedNotice, remainingLabel } from "../../utils/planningFormat";
 
@@ -181,6 +182,19 @@ export default function HomeScreen() {
     then?.();
   };
 
+  // CU42: citas que aun se pueden calificar (48 h despues de terminar).
+  const [ratingsDue, setRatingsDue] = useState(0);
+
+  const checkRatings = useCallback(async () => {
+    if (!user?.userId) return;
+    try {
+      setRatingsDue((await ratingService.pending(user.userId)).length);
+    } catch {
+      // Sin red o sin la tabla nueva, Inicio sigue igual.
+      setRatingsDue(0);
+    }
+  }, [user?.userId]);
+
   // Verificar cada vez que el tab obtiene foco
   useFocusEffect(
     useCallback(() => {
@@ -190,7 +204,8 @@ export default function HomeScreen() {
       loadUpcomingEvents();
       checkInviteNotice();
       checkPlanning();
-    }, [fetchLinkStatus, loadPendingCount, loadUpcomingEvents, checkInviteNotice, checkPlanning])
+      checkRatings();
+    }, [fetchLinkStatus, loadPendingCount, loadUpcomingEvents, checkInviteNotice, checkPlanning, checkRatings])
   );
 
   const isLinked = linkStatus?.hasActiveLink || false;
@@ -321,6 +336,24 @@ export default function HomeScreen() {
                 </View>
                 <Ionicons name="chevron-forward" size={22} color={palette.onPrimary} />
               </LinearGradient>
+            </TouchableOpacity>
+          )}
+
+          {/* CU42: hay citas por calificar (no esta en Figma; mismo estilo que la planeacion) */}
+          {isLinked && ratingsDue > 0 && (
+            <TouchableOpacity
+              style={styles.planningBanner}
+              onPress={() => router.push("/(rating)/pending-ratings")}
+              accessibilityRole="button"
+            >
+              <GradientIcon name="happy-outline" />
+              <View style={styles.planningText}>
+                <Text style={styles.planningTitle}>Califica tu cita</Text>
+                <Text style={styles.planningSubtitle}>
+                  {ratingsDue === 1 ? "Tienes 1 cita por calificar" : `Tienes ${ratingsDue} citas por calificar`}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={palette.icon} />
             </TouchableOpacity>
           )}
 
