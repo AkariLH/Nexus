@@ -105,7 +105,7 @@ function clock(iso: string): string {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: palette.background },
-  content: { paddingHorizontal: 16, paddingBottom: 24, gap: 20 },
+  content: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 24, gap: 20 },
   dateCard: {
     gap: 8,
     padding: 16,

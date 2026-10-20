@@ -102,7 +102,7 @@ export default function PendingRatingsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: palette.background },
-  content: { paddingHorizontal: 16, paddingBottom: 32, gap: 16 },
+  content: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 32, gap: 16 },
   privacy: {
     flexDirection: "row",
     alignItems: "center",
