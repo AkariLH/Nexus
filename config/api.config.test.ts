@@ -1,4 +1,10 @@
-import { rebaseApiUrl, resolveApiBaseUrl, suggestApiBaseUrl } from './api.config';
+import {
+  DEFAULT_RECOMMEND_TIMEOUT_MS,
+  rebaseApiUrl,
+  resolveApiBaseUrl,
+  resolveRecommendTimeoutMs,
+  suggestApiBaseUrl,
+} from './api.config';
 
 /**
  * Tests de la resolución de la base de la API (nexus-OPS-03).
@@ -168,5 +174,19 @@ describe('rebaseApiUrl', () => {
     const docs = 'https://docs.example/apidocs/link';
 
     expect(rebaseApiUrl(docs, CONFIGURED)).toBe(docs);
+  });
+});
+
+describe('resolveRecommendTimeoutMs (t06b)', () => {
+  it('TC-22: uses the configured milliseconds', () => {
+    expect(resolveRecommendTimeoutMs('660000')).toBe(660000);
+    expect(resolveRecommendTimeoutMs(' 90000 ')).toBe(90000);
+  });
+
+  it('TC-23: falls back to 30 s when the value is missing, empty, not an integer or not positive', () => {
+    for (const raw of [undefined, '', '   ', 'diez', '1.5', '0', '-5']) {
+      expect(resolveRecommendTimeoutMs(raw)).toBe(DEFAULT_RECOMMEND_TIMEOUT_MS);
+    }
+    expect(DEFAULT_RECOMMEND_TIMEOUT_MS).toBe(30000);
   });
 });

@@ -39,7 +39,7 @@ describe('recommendationService (F4)', () => {
 
     const batch = await recommendationService.request(4, params);
 
-    expect(post).toHaveBeenCalledWith('/recommendations/4', params);
+    expect(post).toHaveBeenCalledWith('/recommendations/4', params, { timeout: 30000 });
     expect(batch.requestId).toBe(9);
   });
 

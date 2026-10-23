@@ -165,9 +165,36 @@ const baseUrl = (): string => {
   return resolvedBaseUrl;
 };
 
+/** Espera de "Pedir recomendación" si no se configura otra: la misma que el resto de la API. */
+export const DEFAULT_RECOMMEND_TIMEOUT_MS = 30000;
+
+/**
+ * [t06b] Cuánto espera la app la respuesta de "Pedir recomendación".
+ *
+ * Con el agente en política HARD el servidor responde en menos de 10 s (RNF-12) y basta el valor
+ * por omisión. Solo para ver elegir a Mistral en un equipo sin GPU (política SOFT con `soft-cap`
+ * alto) se sube con `EXPO_PUBLIC_RECOMMEND_TIMEOUT_MS`. Un valor vacío, no numérico o ≤ 0 se
+ * ignora.
+ *
+ * @param raw  valor crudo de `EXPO_PUBLIC_RECOMMEND_TIMEOUT_MS`
+ * @returns    milisegundos de espera
+ * @complexity T: O(n), S: O(1)
+ */
+export const resolveRecommendTimeoutMs = (raw: string | undefined): number => {
+  const trimmed = raw?.trim();
+  const ms = trimmed ? Number(trimmed) : NaN;
+
+  return Number.isInteger(ms) && ms > 0 ? ms : DEFAULT_RECOMMEND_TIMEOUT_MS;
+};
+
 export const API_CONFIG = {
   get BASE_URL(): string {
     return baseUrl();
+  },
+
+  /** Escrita completa y estática por la misma razón que `EXPO_PUBLIC_API_URL`. */
+  get RECOMMEND_TIMEOUT(): number {
+    return resolveRecommendTimeoutMs(process.env.EXPO_PUBLIC_RECOMMEND_TIMEOUT_MS);
   },
 
   ENDPOINTS: {

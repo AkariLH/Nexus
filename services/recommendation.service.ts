@@ -69,8 +69,11 @@ const recommendationService = {
     return response.data;
   },
 
+  /** Espera `API_CONFIG.RECOMMEND_TIMEOUT` (30 s salvo `EXPO_PUBLIC_RECOMMEND_TIMEOUT_MS`). */
   request: async (userId: number, params: RecommendationParams): Promise<RecommendationBatch> => {
-    const response = await apiClient.post(paths.REQUEST.replace(':userId', String(userId)), params);
+    const response = await apiClient.post(paths.REQUEST.replace(':userId', String(userId)), params, {
+      timeout: API_CONFIG.RECOMMEND_TIMEOUT,
+    });
     return response.data;
   },
 
