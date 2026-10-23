@@ -41,6 +41,7 @@
     "plugins": [
       "expo-router",
       "./plugins/withCleartextTraffic",
+      "./plugins/withCxxStagingDir",
       [
         "expo-location",
         {
