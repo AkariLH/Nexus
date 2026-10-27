@@ -63,9 +63,58 @@ export interface PlaceSource {
   scope: 'HOME' | 'CITY';
   placeName?: string | null;
   boroughName?: string | null;
+  placeAddress?: string | null;
+  placeNeighborhood?: string | null;
+  placeWebsite?: string | null;
+  placePhone?: string | null;
 }
 
 export function placeLabel(item: PlaceSource): string {
   if (item.scope === 'HOME') return 'En casa';
   return [item.boroughName, item.placeName].filter(Boolean).join(' · ');
+}
+
+/** [kb-lugares] U8 - Lo que muestra el bloque del lugar; cada enlace solo si el dato sirve. */
+export interface PlaceDetail {
+  /** "Lugar · Alcaldía" */
+  name: string;
+  /** "Dirección, Colonia" */
+  address?: string;
+  websiteUrl?: string;
+  phoneUrl?: string;
+  /** Busqueda en Google Maps por nombre, direccion y alcaldia (la tarjeta no lleva coordenadas). */
+  mapsUrl: string;
+}
+
+const MAPS_SEARCH = 'https://www.google.com/maps/search/?api=1&query=';
+const MIN_PHONE_DIGITS = 7;
+
+const filled = (...parts: (string | null | undefined)[]): string[] =>
+  parts.map((p) => p?.trim()).filter((p): p is string => !!p);
+
+/** Solo http(s): nunca abre esquemas como javascript: ni direcciones sin esquema. */
+function websiteUrl(raw?: string | null): string | undefined {
+  const url = raw?.trim();
+  return url && /^https?:\/\//i.test(url) ? url : undefined;
+}
+
+/** Digitos y un + inicial; con muy pocos digitos no es un telefono. */
+function phoneUrl(raw?: string | null): string | undefined {
+  const trimmed = raw?.trim() ?? '';
+  const digits = trimmed.replace(/\D/g, '');
+  if (digits.length < MIN_PHONE_DIGITS) return undefined;
+  return `tel:${trimmed.startsWith('+') ? '+' : ''}${digits}`;
+}
+
+export function placeDetail(item: PlaceSource): PlaceDetail | null {
+  if (item.scope === 'HOME') return null;
+  const address = filled(item.placeAddress, item.placeNeighborhood).join(', ');
+  const query = filled(item.placeName, item.placeAddress, item.placeNeighborhood, item.boroughName).join(', ');
+  return {
+    name: filled(item.placeName, item.boroughName).join(' · '),
+    address: address || undefined,
+    websiteUrl: websiteUrl(item.placeWebsite),
+    phoneUrl: phoneUrl(item.placePhone),
+    mapsUrl: MAPS_SEARCH + encodeURIComponent(query),
+  };
 }

@@ -4,7 +4,8 @@ import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "rea
 import { palette, gradients } from "../../constants/colors";
 import type { RecommendationItem } from "../../services/recommendation.service";
 import { formatDuration } from "../../utils/ideaFormat";
-import { costLabel, placeLabel, slotLabel } from "../../utils/recommendationFormat";
+import { costLabel, placeDetail, placeLabel, slotLabel } from "../../utils/recommendationFormat";
+import { PlaceBlock } from "./PlaceBlock";
 
 interface RecommendationCardProps {
   item: RecommendationItem;
@@ -23,9 +24,11 @@ const Meta = ({ icon, text }: { icon: keyof typeof Ionicons.glyphMap; text: stri
 
 /**
  * RF-37 - Tarjeta de una recomendacion individual (Figma "Tarjeta recomendación"): mismo diseño que
- * la conjunta, con la franja de horario en lugar de votos.
+ * la conjunta, con la franja de horario en lugar de votos. [kb-lugares] En la ciudad el lugar va en
+ * su propio bloque ({@link PlaceBlock}); en casa sigue en la fila de datos.
  */
 export function RecommendationCard({ item, now, busy, onDiscard, onInvite }: RecommendationCardProps) {
+  const place = placeDetail(item);
   return (
     <View style={styles.card}>
       <View style={styles.header}>
@@ -36,10 +39,12 @@ export function RecommendationCard({ item, now, busy, onDiscard, onInvite }: Rec
       </View>
 
       <View style={styles.metaRow}>
-        <Meta icon="location-outline" text={placeLabel(item)} />
+        {place ? null : <Meta icon="location-outline" text={placeLabel(item)} />}
         <Meta icon="time-outline" text={formatDuration(item.durationMinutes)} />
         <Meta icon="cash-outline" text={costLabel(item.costPerPersonMxn)} />
       </View>
+
+      {place ? <PlaceBlock detail={place} /> : null}
 
       {item.reason ? <Text style={styles.reason}>{item.reason}</Text> : null}
 

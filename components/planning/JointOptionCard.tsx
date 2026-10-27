@@ -5,7 +5,8 @@ import { palette, gradients } from '../../constants/colors';
 import type { PlanningOption, VoteValue } from '../../services/planning.service';
 import { formatDuration } from '../../utils/ideaFormat';
 import { agreementOf, voteLine } from '../../utils/planningFormat';
-import { costLabel, placeLabel, slotLabel } from '../../utils/recommendationFormat';
+import { costLabel, placeDetail, placeLabel, slotLabel } from '../../utils/recommendationFormat';
+import { PlaceBlock } from '../../app/components/PlaceBlock';
 
 interface JointOptionCardProps {
   option: PlanningOption;
@@ -27,11 +28,13 @@ const Meta = ({ icon, text }: { icon: keyof typeof Ionicons.glyphMap; text: stri
 
 /**
  * Figma "Tarjeta conjunta" (Sin votar / Votaste / Coinciden / No coinciden): mismos datos que la
- * individual, con los votos de los dos en lugar del horario.
+ * individual, con los votos de los dos en lugar del horario. [kb-lugares] En la ciudad el lugar va
+ * en su propio bloque ({@link PlaceBlock}); en casa sigue en la fila de datos.
  */
 export function JointOptionCard({ option, partnerName, now, mode, busy, onVote, onPropose }: JointOptionCardProps) {
   const { item, myVote, partnerVote } = option;
   const agreement = agreementOf(myVote, partnerVote);
+  const place = placeDetail(item);
 
   return (
     <View style={[styles.card, agreement === 'match' && styles.cardMatch]}>
@@ -56,10 +59,12 @@ export function JointOptionCard({ option, partnerName, now, mode, busy, onVote, 
       </View>
 
       <View style={styles.metaRow}>
-        <Meta icon="location-outline" text={placeLabel(item)} />
+        {place ? null : <Meta icon="location-outline" text={placeLabel(item)} />}
         <Meta icon="time-outline" text={formatDuration(item.durationMinutes)} />
         <Meta icon="cash-outline" text={costLabel(item.costPerPersonMxn)} />
       </View>
+
+      {place ? <PlaceBlock detail={place} /> : null}
 
       {item.reason ? <Text style={styles.reason}>{item.reason}</Text> : null}
 

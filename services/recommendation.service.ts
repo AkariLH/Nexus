@@ -28,6 +28,11 @@ export interface RecommendationItem {
   scope: 'HOME' | 'CITY';
   placeName?: string | null;
   boroughName?: string | null;
+  /** [kb-lugares] Datos del lugar en la ciudad; cualquiera puede faltar. */
+  placeAddress?: string | null;
+  placeNeighborhood?: string | null;
+  placeWebsite?: string | null;
+  placePhone?: string | null;
   durationMinutes: number;
   costPerPersonMxn: number;
   reason: string;
