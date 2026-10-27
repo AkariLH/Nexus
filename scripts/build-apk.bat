@@ -10,18 +10,26 @@ rem   4. Genera los objetos C++ en C:\bn para no pasar de 260 caracteres.
 rem   5. Copia el APK a dist\ del proyecto.
 rem
 rem La direccion del backend queda dentro del APK: si cambia la IP de la laptop, se recompila.
+rem Sin IP, el script usa la IP actual de la laptop (lan-ip.bat).
 rem
-rem Uso:  scripts\build-apk.bat 192.168.0.197            compila contra http://192.168.0.197:8080/api
+rem Uso:  scripts\build-apk.bat                          compila contra la IP actual
+rem       scripts\build-apk.bat install                  compila contra la IP actual e instala por USB
+rem       scripts\build-apk.bat 192.168.0.197            compila contra http://192.168.0.197:8080/api
 rem       scripts\build-apk.bat 192.168.0.197 install    compila e instala en el telefono por USB
 
 setlocal
-if "%~1"=="" (
-  echo Uso: scripts\build-apk.bat ^<IP de la laptop^> [install]
-  echo La IP sale en ipconfig, linea "Direccion IPv4" del Wi-Fi.
-  exit /b 1
+set "TARGET_IP=%~1"
+set "INSTALL=%~2"
+if /I "%~1"=="install" (
+  set "TARGET_IP="
+  set "INSTALL=install"
+)
+if not defined TARGET_IP (
+  call "%~dp0lan-ip.bat" || exit /b 1
+  call set "TARGET_IP=%%LAN_IP%%"
 )
 for %%I in ("%~dp0..") do set "PROJECT=%%~fI"
-set "API_URL=http://%~1:8080/api"
+set "API_URL=http://%TARGET_IP%:8080/api"
 set "SDK=%LOCALAPPDATA%\Android\Sdk"
 set "SDK_DRIVE=S:"
 set "BUILD_DIR=C:\nx"
@@ -79,7 +87,7 @@ set "APK=%PROJECT%\dist\nexus-%VERSION%.apk"
 copy /Y "%BUILD_DIR%\android\app\build\outputs\apk\release\app-release.apk" "%APK%" >nul || exit /b 1
 echo Listo: %APK%
 
-if /I "%~2"=="install" (
+if /I "%INSTALL%"=="install" (
   echo Instalando en el telefono ...
   adb install -r "%APK%" || exit /b 1
 )
