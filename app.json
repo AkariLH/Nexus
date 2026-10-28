@@ -19,6 +19,7 @@
     },
     "android": {
       "package": "com.nexusapp.pareja",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/images/icon.png"
@@ -31,7 +32,10 @@
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.CAMERA",
         "android.permission.READ_CALENDAR",
-        "android.permission.WRITE_CALENDAR"
+        "android.permission.WRITE_CALENDAR",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
@@ -66,11 +70,24 @@
             "backgroundColor": "#000000"
           }
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#FF4F81"
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "252e2689-f825-4f58-af77-8d91ad93ec58"
+      }
+    },
+    "owner": "akarilh"
   }
 }
