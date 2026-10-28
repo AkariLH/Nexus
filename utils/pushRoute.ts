@@ -14,3 +14,6 @@ export function routeForPush(data: Record<string, unknown> | undefined): PushTar
   }
   return { pathname: route };
 }
+
+/** Evento de la app cuando llega una push con la app abierta: Inicio recarga la campanita. */
+export const NOTICES_EVENT = 'nexus:notices';

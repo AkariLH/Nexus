@@ -4,6 +4,7 @@ import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { apiClient } from './api.client';
+import { PushTarget, routeForPush } from '../utils/pushRoute';
 
 // Configurar cómo se deben manejar las notificaciones cuando la app está en primer plano
 Notifications.setNotificationHandler({
@@ -136,93 +137,65 @@ class NotificationService {
   }
 
   /**
-   * Inicializar notificaciones y configurar todos los listeners
+   * [push-avisos] U9: al cerrar sesión el teléfono deja de recibir los avisos de esta cuenta.
+   */
+  async unregister(userId: number): Promise<void> {
+    if (Platform.OS === 'web') return;
+    await apiClient.delete(`/profile/${userId}/fcm-token`);
+    await AsyncStorage.removeItem('push_token');
+  }
+
+  /**
+   * Registra el token del teléfono y escucha las push de todos los avisos de la campanita
+   * ([push-avisos] U8). `onOpen` recibe la pantalla a abrir cuando se toca una push (también si
+   * la app estaba cerrada) y `onReceive`, los datos de una push que llega con la app abierta.
+   * En web y en Expo Go no hay push nativa: no registra nada (R10).
    */
   async initialize(
-    userId: number, 
-    onLinkEstablished: (partnerName: string) => void,
-    onLinkDeleted?: (partnerName: string) => void
-  ) {
+    userId: number,
+    onOpen: (target: PushTarget) => void,
+    onReceive?: (data: Record<string, unknown>) => void
+  ): Promise<(() => void) | undefined> {
+    const isExpoGo = Constants.appOwnership === 'expo';
+    if (Platform.OS === 'web' || isExpoGo) {
+      console.log('ℹ️ Sin notificaciones push en web ni en Expo Go');
+      return undefined;
+    }
     try {
-      console.log('🚀 Iniciando sistema de notificaciones...');
-      console.log('⚠️ NOTA: Expo Go no soporta notificaciones push desde SDK 53');
-      console.log('ℹ️ Para usar notificaciones push reales, necesitas crear un Development Build');
-      console.log('ℹ️ Por ahora, la app funcionará sin notificaciones push automáticas');
-      
-      // Intentar registrar token solo si no estamos en Expo Go con SDK 53+
-      const isExpoGo = Constants.appOwnership === 'expo';
-      
-      if (!isExpoGo) {
-        // Solo intentar obtener token si NO estamos en Expo Go
-        console.log('✅ No estás en Expo Go, intentando obtener push token...');
-        
-        // 1. Solicitar permisos
-        const granted = await this.requestPermission();
-        if (!granted) {
-          console.log('⚠️ Sin permisos de notificación');
-        } else {
-          // 2. Intentar obtener token
-          try {
-            const token = await this.getPushToken();
-            if (token) {
-              console.log('✅ Token obtenido exitosamente');
-              // 3. Registrar token en backend
-              await this.registerTokenWithBackend(userId, token);
-            }
-          } catch (tokenError) {
-            console.error('⚠️ Error al obtener token:', tokenError);
-          }
-        }
-      } else {
-        console.log('⚠️ Estás usando Expo Go - las notificaciones push no están disponibles');
-        console.log('💡 La app seguirá funcionando, pero deberás refrescar manualmente para ver cambios');
+      if (await this.requestPermission()) {
+        const token = await this.getPushToken();
+        if (token) await this.registerTokenWithBackend(userId, token);
       }
 
-      // 4. Listener para notificaciones recibidas cuando la app está en primer plano
-      const foregroundSubscription = Notifications.addNotificationReceivedListener((notification) => {
-        console.log('📬 Notificación recibida en primer plano:', notification);
-        const data = notification.request.content.data;
-        
-        if (data?.type === 'LINK_ESTABLISHED') {
-          const partnerName = (data.partnerName as string) || 'tu pareja';
-          onLinkEstablished(partnerName);
-        } else if (data?.type === 'LINK_DELETED' && onLinkDeleted) {
-          const partnerName = (data.partnerName as string) || 'tu pareja';
-          console.log('💔 Notificación de desvinculación recibida de:', partnerName);
-          onLinkDeleted(partnerName);
-        }
+      const open = (response: Notifications.NotificationResponse) => {
+        const id = response.notification.request.identifier;
+        if (id === lastOpenedId) return;
+        lastOpenedId = id;
+        const target = routeForPush(response.notification.request.content.data);
+        if (target) onOpen(target);
+      };
+
+      const receivedSubscription = Notifications.addNotificationReceivedListener((notification) => {
+        onReceive?.(notification.request.content.data ?? {});
       });
+      const responseSubscription = Notifications.addNotificationResponseReceivedListener(open);
 
-      // 5. Listener para cuando el usuario toca una notificación
-      const responseSubscription = Notifications.addNotificationResponseReceivedListener((response) => {
-        console.log('📱 Notificación tocada por el usuario:', response);
-        const data = response.notification.request.content.data;
-        
-        if (data?.type === 'LINK_ESTABLISHED') {
-          const partnerName = (data.partnerName as string) || 'tu pareja';
-          onLinkEstablished(partnerName);
-        } else if (data?.type === 'LINK_DELETED' && onLinkDeleted) {
-          const partnerName = (data.partnerName as string) || 'tu pareja';
-          console.log('💔 Usuario tocó notificación de desvinculación de:', partnerName);
-          onLinkDeleted(partnerName);
-        }
-      });
+      // La app estaba cerrada y se abrió tocando una push: initialize corre ya con sesión (R9).
+      const last = await Notifications.getLastNotificationResponseAsync();
+      if (last) open(last);
 
-      console.log('🎉 Sistema de notificaciones inicializado');
-      if (isExpoGo) {
-        console.log('ℹ️ Modo Expo Go: sin notificaciones push automáticas');
-      }
-
-      // Retornar función para limpiar listeners
       return () => {
-        foregroundSubscription.remove();
+        receivedSubscription.remove();
         responseSubscription.remove();
       };
     } catch (error) {
       console.error('❌ Error inicializando notificaciones:', error);
-      console.log('⚠️ La app continuará funcionando sin notificaciones');
+      return undefined;
     }
   }
 }
+
+/** La última push que se abrió, para no abrirla otra vez si initialize vuelve a correr. */
+let lastOpenedId: string | null = null;
 
 export default new NotificationService();

@@ -1,6 +1,6 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
-import { Stack, useRouter, useSegments } from "expo-router";
+import { Href, Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { AuthProvider, useAuth } from "../context/AuthContext";
@@ -8,7 +8,8 @@ import { QuestionnaireProvider } from "../context/QuestionnaireContext";
 import { AvailabilityProvider } from "../context/AvailabilityContext";
 import notificationService from "../services/firebase.service";
 import { externalCalendarIntegration } from "../services/externalCalendar.integration.service";
-import { Platform } from "react-native";
+import { DeviceEventEmitter, Platform } from "react-native";
+import { NOTICES_EVENT } from "../utils/pushRoute";
 
 const CHANGE_PASSWORD_ROUTES = ["forgot-password", "reset-password"];
 
@@ -52,17 +53,19 @@ function RootNavigator() {
     const initNotifications = async () => {
       const unsubscribe = await notificationService.initialize(
         user.userId,
-        (partnerName) => {
-          console.log('🎉 Vínculo establecido con:', partnerName);
-          // Figma H7: Inicio con el modal "¡Ya están vinculados!"
-          router.replace({
-            pathname: '/(tabs)',
-            params: { linked: partnerName },
-          });
-        },
-        (partnerName) => {
-          console.log('💔 Vínculo eliminado por:', partnerName);
-          router.push('/(tabs)/link');
+        // [push-avisos] Al tocar una push se abre la pantalla de su aviso.
+        (target) => router.push(target as Href),
+        (data) => {
+          // Avisa a Inicio que hay un aviso nuevo en la campanita.
+          DeviceEventEmitter.emit(NOTICES_EVENT);
+          // Con la app abierta, al vincularse o desvincularse se cambia de pantalla como antes.
+          const partnerName = typeof data.partnerName === 'string' ? data.partnerName : 'tu pareja';
+          if (data.type === 'LINK_ESTABLISHED') {
+            // Figma H7: Inicio con el modal "¡Ya están vinculados!"
+            router.replace({ pathname: '/(tabs)', params: { linked: partnerName } });
+          } else if (data.type === 'LINK_DELETED') {
+            router.push('/(tabs)/link');
+          }
         }
       );
 
