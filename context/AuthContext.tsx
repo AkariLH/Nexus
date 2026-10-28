@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { setAuthToken, clearAuthToken, getAuthToken } from '../utils/authToken';
 import { isSessionExpired, onSessionExpired } from '../utils/session';
+import notificationService from '../services/firebase.service';
 
 interface UserData {
   userId: number;
@@ -78,6 +79,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
+      // [push-avisos] U9: este teléfono deja de recibir los avisos de la cuenta. Va antes de borrar
+      // la sesión (el DELETE necesita el token) y nunca impide salir: sin red, a lo más espera 3 s.
+      if (user?.userId) {
+        await Promise.race([
+          notificationService.unregister(user.userId).catch(() => {}),
+          new Promise((resolve) => setTimeout(resolve, 3000)),
+        ]);
+      }
       await AsyncStorage.removeItem(STORAGE_KEY);
       await clearAuthToken();
       setUser(null);

@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Href, useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { useState, useCallback, useEffect } from "react";
-import { StyleSheet, Text, TouchableOpacity, View, ScrollView, ActivityIndicator } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View, ScrollView, ActivityIndicator, DeviceEventEmitter } from "react-native";
 import { Card, GradientIcon, MetaLine, SectionLabel } from "../../components/ui/Surface";
 import { findMutualAvailability } from "../../services/availabilityService";
 import { freeSlotCount } from "../../utils/calendarLayout";
@@ -24,6 +24,7 @@ import appNotificationService from "../../services/appNotification.service";
 import ratingService from "../../services/rating.service";
 import { markSeen, PlanningNotice, wasSeen } from "../../utils/planningSeen";
 import { closedNotice, remainingLabel } from "../../utils/planningFormat";
+import { NOTICES_EVENT } from "../../utils/pushRoute";
 
 const OPEN_PHASES = ["INVITED", "FILTERS", "OPTIONS", "PROPOSAL"];
 
@@ -207,6 +208,15 @@ export default function HomeScreen() {
       checkRatings();
     }, [fetchLinkStatus, loadPendingCount, loadUpcomingEvents, checkInviteNotice, checkPlanning, checkRatings])
   );
+
+  // [push-avisos] Llegó una push con la app abierta: la campanita sube sin salir de Inicio.
+  useEffect(() => {
+    const subscription = DeviceEventEmitter.addListener(NOTICES_EVENT, () => {
+      loadPendingCount();
+      checkPlanning();
+    });
+    return () => subscription.remove();
+  }, [loadPendingCount, checkPlanning]);
 
   const isLinked = linkStatus?.hasActiveLink || false;
   const partnerName = linkStatus?.partner?.displayName || linkStatus?.partner?.nickname || "";

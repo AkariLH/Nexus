@@ -6,6 +6,12 @@
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
+// [push-avisos] U9: al cerrar sesion se quita el token de push del telefono.
+const mockUnregister = jest.fn();
+jest.mock('../services/firebase.service', () => ({
+  __esModule: true,
+  default: { unregister: (userId: number) => mockUnregister(userId) },
+}));
 
 import React from 'react';
 import { Text, Button } from 'react-native';
@@ -45,6 +51,8 @@ function Probe() {
 describe('AuthContext — persistencia del token', () => {
   beforeEach(async () => {
     await AsyncStorage.clear();
+    mockUnregister.mockReset();
+    mockUnregister.mockResolvedValue(undefined);
   });
 
   it('guarda el token al iniciar sesion', async () => {
@@ -59,6 +67,40 @@ describe('AuthContext — persistencia del token', () => {
   });
 
   it('limpia el token al cerrar sesion', async () => {
+    render(
+      <AuthProvider>
+        <Probe />
+      </AuthProvider>
+    );
+    fireEvent.press(screen.getByTestId('login-btn'));
+    await waitFor(() => expect(screen.getByTestId('user').props.children).toBe('4'));
+
+    fireEvent.press(screen.getByTestId('logout-btn'));
+    await waitFor(() => expect(screen.getByTestId('user').props.children).toBe('none'));
+    await expect(getAuthToken()).resolves.toBeNull();
+  });
+
+  it('quita el token de push con la sesion todavia guardada al cerrar sesion', async () => {
+    let tokenWhenUnregistering: string | null = 'sin llamar';
+    mockUnregister.mockImplementation(async () => {
+      tokenWhenUnregistering = await getAuthToken();
+    });
+    render(
+      <AuthProvider>
+        <Probe />
+      </AuthProvider>
+    );
+    fireEvent.press(screen.getByTestId('login-btn'));
+    await waitFor(() => expect(screen.getByTestId('user').props.children).toBe('4'));
+
+    fireEvent.press(screen.getByTestId('logout-btn'));
+    await waitFor(() => expect(screen.getByTestId('user').props.children).toBe('none'));
+    expect(mockUnregister).toHaveBeenCalledWith(4);
+    expect(tokenWhenUnregistering).toBe('abc.def.ghi');
+  });
+
+  it('cierra sesion aunque no se pueda quitar el token de push', async () => {
+    mockUnregister.mockRejectedValue(new Error('sin red'));
     render(
       <AuthProvider>
         <Probe />
