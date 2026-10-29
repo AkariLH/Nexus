@@ -14,6 +14,11 @@ const QUARTER_MS = 15 * 60_000;
 
 export const MAX_COST_MXN = 15_000;
 
+/** [rango-distancia] Distancias que se pueden elegir (ProximityFilter.RADIUS_OPTIONS_KM). */
+export const RADIUS_OPTIONS_KM = [1, 3, 5, 10, 15] as const;
+export const DEFAULT_RADIUS_KM = 15;
+const RANGE_STEP_MINUTES = 30;
+
 /** Un hueco libre de los dos; `start` puede venir recortado si es de hoy. */
 export interface SlotOption {
   key: string;
@@ -27,6 +32,11 @@ export interface RequestForm {
   boroughCode?: string;
   coords?: { lat: number; lon: number };
   slot?: SlotOption;
+  /** [rango-distancia] Parte del hueco que se quiere; sin ellos, el hueco completo. */
+  rangeFrom?: string;
+  rangeTo?: string;
+  /** [rango-distancia] Distancia maxima; sin ella, {@link DEFAULT_RADIUS_KM}. */
+  radiusKm?: number;
   scope: Scope;
   maxCostMxn: number;
   category?: string;
@@ -73,6 +83,57 @@ export function slotToInstants(slot: SlotOption): { slotStart: string; slotEnd: 
   };
 }
 
+const toMinutes = (time: string): number => {
+  const [h, m] = time.split(':').map(Number);
+  return h * 60 + m;
+};
+
+const toClock = (minutes: number): string =>
+  `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
+
+/**
+ * [rango-distancia] Horas en que puede empezar el rango: la hora real del hueco (puede ser 10:15) y
+ * luego cada 30 minutos, dejando al menos una hora antes del fin.
+ *
+ * @complexity T: O(n), S: O(n), n = medias horas del hueco
+ */
+export function rangeStarts(slot: SlotOption): string[] {
+  const latest = toMinutes(slot.end) - MIN_SLOT_MINUTES;
+  const out: string[] = [];
+  for (let t = toMinutes(slot.start); t <= latest; t += RANGE_STEP_MINUTES) out.push(toClock(t));
+  return out;
+}
+
+/**
+ * [rango-distancia] Horas en que puede terminar el rango si empieza en `from`: desde una hora despues,
+ * cada 30 minutos, y siempre el fin del hueco.
+ *
+ * @complexity T: O(n), S: O(n), n = medias horas del hueco
+ */
+export function rangeEnds(slot: SlotOption, from: string): string[] {
+  const end = toMinutes(slot.end);
+  const out: string[] = [];
+  for (let t = toMinutes(from) + MIN_SLOT_MINUTES; t <= end; t += RANGE_STEP_MINUTES) out.push(toClock(t));
+  if (out.length > 0 && out[out.length - 1] !== slot.end) out.push(slot.end);
+  return out;
+}
+
+/** [rango-distancia] El hueco recortado al rango; la `key` no cambia para que siga marcado. */
+export function withRange(slot: SlotOption, from: string, to: string): SlotOption {
+  return { ...slot, start: from, end: to };
+}
+
+/** [rango-distancia] Elegir otro hueco: el rango vuelve a ser el hueco completo. */
+export function chooseSlot<T extends RequestForm>(form: T, slot: SlotOption): T {
+  return { ...form, slot, rangeFrom: undefined, rangeTo: undefined };
+}
+
+/** El horario que se pide: el rango si se eligio, si no el hueco completo. */
+export function requestedSlot(form: RequestForm): SlotOption | undefined {
+  if (!form.slot) return undefined;
+  return form.rangeFrom && form.rangeTo ? withRange(form.slot, form.rangeFrom, form.rangeTo) : form.slot;
+}
+
 /** F2 / F3 - Zona completa, horario elegido y presupuesto en rango. */
 export function isValid(form: RequestForm): boolean {
   if (!form.slot || !form.zoneType) return false;
@@ -92,8 +153,10 @@ export function toParams(form: RequestForm): RecommendationParams {
     zoneType: form.zoneType,
     scope: form.scope,
     maxCostMxn: form.maxCostMxn,
-    ...slotToInstants(form.slot),
+    ...slotToInstants(requestedSlot(form) ?? form.slot),
   };
+  // [rango-distancia] Sin zona no hay desde donde medir la distancia.
+  if (form.zoneType !== 'NONE') params.radiusKm = form.radiusKm ?? DEFAULT_RADIUS_KM;
   if (form.zoneType === 'BOROUGH') params.boroughCode = form.boroughCode;
   if (form.zoneType === 'NEAR_US' && form.coords) {
     params.lat = form.coords.lat;

@@ -16,6 +16,8 @@ export interface RecommendationParams {
   category?: string;
   slotStart: string;
   slotEnd: string;
+  /** [rango-distancia] 1, 3, 5, 10 o 15 km; sin zona no se manda. */
+  radiusKm?: number;
 }
 
 /** Una tarjeta. Nunca trae datos de animo (RN-28) ni coordenadas. */

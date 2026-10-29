@@ -23,6 +23,8 @@ export interface PlanningFilters {
   categories?: string[];
   slotStart?: string | null;
   slotEnd?: string | null;
+  /** [rango-distancia] 1, 3, 5, 10 o 15 km; vacio = 15. */
+  radiusKm?: number | null;
 }
 
 export interface PlanningMember {

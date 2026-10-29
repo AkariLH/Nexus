@@ -1,11 +1,17 @@
 import {
   budgetLabel,
+  chooseSlot,
+  DEFAULT_RADIUS_KM,
   eligibleSlots,
   isValid,
   relaxedMessage,
+  rangeEnds,
+  rangeStarts,
+  RADIUS_OPTIONS_KM,
   RequestForm,
   slotToInstants,
   toParams,
+  withRange,
   zoneLabel,
 } from './recommendationParams';
 
@@ -106,6 +112,7 @@ describe('toParams', () => {
       category: 'SOCIAL',
       slotStart: '2026-10-18T00:00:00.000Z',
       slotEnd: '2026-10-18T03:00:00.000Z',
+      radiusKm: 15,
     });
   });
 
@@ -153,5 +160,65 @@ describe('zoneLabel', () => {
     expect(zoneLabel('NEAR_US')).toBe('Cerca de ustedes');
     expect(zoneLabel('BOROUGH', 'Coyoacán')).toBe('Coyoacán');
     expect(zoneLabel('NONE')).toBeNull();
+  });
+});
+
+describe('rango del horario ([rango-distancia])', () => {
+  const long = { key: 'largo', date: '2026-10-17', start: '10:00', end: '20:00' };
+
+  it('empieza cada 30 minutos dejando al menos una hora', () => {
+    const starts = rangeStarts(long);
+    expect(starts[0]).toBe('10:00');
+    expect(starts[1]).toBe('10:30');
+    expect(starts[starts.length - 1]).toBe('19:00');
+    expect(starts).toHaveLength(19);
+  });
+
+  it('el hueco de hoy empieza en su hora real y sigue cada 30 minutos', () => {
+    expect(rangeStarts({ ...long, start: '10:15', end: '12:00' })).toEqual(['10:15', '10:45']);
+    expect(rangeEnds({ ...long, start: '10:15', end: '12:00' }, '10:15')).toEqual(['11:15', '11:45', '12:00']);
+  });
+
+  it('termina desde una hora despues hasta el fin del hueco', () => {
+    expect(rangeEnds(long, '16:00')).toEqual(['17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00']);
+  });
+
+  it('un hueco de una hora justa solo deja ese horario', () => {
+    const hour = { ...long, start: '18:00', end: '19:00' };
+    expect(rangeStarts(hour)).toEqual(['18:00']);
+    expect(rangeEnds(hour, '18:00')).toEqual(['19:00']);
+  });
+
+  it('recorta el hueco sin cambiar su key', () => {
+    expect(withRange(long, '16:00', '19:00')).toEqual({ ...long, start: '16:00', end: '19:00' });
+  });
+
+  it('pide solo el rango elegido', () => {
+    const params = toParams({ ...base, slot: long, rangeFrom: '16:00', rangeTo: '19:00' });
+    expect(params.slotStart).toBe('2026-10-17T22:00:00.000Z');
+    expect(params.slotEnd).toBe('2026-10-18T01:00:00.000Z');
+  });
+
+  it('al elegir otro hueco vuelve al hueco completo', () => {
+    const form = chooseSlot({ ...base, slot: long, rangeFrom: '16:00', rangeTo: '19:00' }, slot);
+    expect(form.slot).toBe(slot);
+    expect(form.rangeFrom).toBeUndefined();
+    expect(form.rangeTo).toBeUndefined();
+  });
+});
+
+describe('distancia maxima ([rango-distancia])', () => {
+  it('ofrece 1, 3, 5, 10 y 15 km y por defecto 15', () => {
+    expect(RADIUS_OPTIONS_KM).toEqual([1, 3, 5, 10, 15]);
+    expect(DEFAULT_RADIUS_KM).toBe(15);
+  });
+
+  it('manda la distancia elegida con una zona', () => {
+    expect(toParams({ ...base, zoneType: 'BOROUGH', boroughCode: 'COY', radiusKm: 3 }).radiusKm).toBe(3);
+    expect(toParams({ ...base, zoneType: 'NEAR_US', coords: { lat: 19.3, lon: -99.1 } }).radiusKm).toBe(15);
+  });
+
+  it('sin zona no manda distancia', () => {
+    expect(toParams({ ...base, radiusKm: 3 }).radiusKm).toBeUndefined();
   });
 });
