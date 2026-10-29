@@ -1,4 +1,4 @@
-import { agreementOf, closedNotice, filtersToSlot, remainingLabel, timeLeftToDecide, voteLine } from './planningFormat';
+import { agreementOf, closedNotice, filtersToSlot, remainingLabel, timeLeftToDecide, voteLine, slotContaining } from './planningFormat';
 
 const NOW = new Date('2026-10-17T18:00:00.000Z');
 
@@ -85,5 +85,22 @@ describe('filtersToSlot', () => {
       end: '21:00',
     });
     expect(filtersToSlot(null, null)).toBeUndefined();
+  });
+});
+
+describe('slotContaining ([rango-distancia])', () => {
+  const slots = [
+    { key: 'a', date: '2026-10-17', start: '10:00', end: '20:00' },
+    { key: 'b', date: '2026-10-18', start: '12:00', end: '15:00' },
+  ];
+
+  it('encuentra el hueco que contiene un rango mas chico', () => {
+    // 16:00-19:00 del sabado 17 en CDMX = 22:00-01:00 UTC
+    expect(slotContaining(slots, '2026-10-17T22:00:00.000Z', '2026-10-18T01:00:00.000Z')?.key).toBe('a');
+  });
+
+  it('no marca ninguno si el rango no cabe en un hueco', () => {
+    expect(slotContaining(slots, '2026-10-18T20:00:00.000Z', '2026-10-18T23:00:00.000Z')).toBeUndefined();
+    expect(slotContaining(slots, null, null)).toBeUndefined();
   });
 });

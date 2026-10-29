@@ -1,8 +1,15 @@
 import {
   budgetLabel,
+  chooseScope,
   chooseSlot,
+  defaultRange,
   DEFAULT_RADIUS_KM,
   eligibleSlots,
+  hoursQuestion,
+  keepEnd,
+  nextRadius,
+  radiusHint,
+  rangeSummary,
   isValid,
   relaxedMessage,
   rangeEnds,
@@ -220,5 +227,51 @@ describe('distancia maxima ([rango-distancia])', () => {
 
   it('sin zona no manda distancia', () => {
     expect(toParams({ ...base, radiusKm: 3 }).radiusKm).toBeUndefined();
+  });
+});
+
+describe('tarjeta de horas ([rango-distancia], Figma J1)', () => {
+  const sat = { key: 'sab', date: '2026-10-17', start: '10:00', end: '20:00' };
+
+  it('pregunta por el dia y el horario completo', () => {
+    expect(hoursQuestion(sat)).toBe('¿Usamos todo el sábado de 10:00 a 20:00?');
+  });
+
+  it('resume el rango con su duracion', () => {
+    expect(rangeSummary('16:00', '19:00')).toBe('Buscaremos planes de 16:00 a 19:00 (3 horas).');
+    expect(rangeSummary('16:00', '17:00')).toBe('Buscaremos planes de 16:00 a 17:00 (1 hora).');
+    expect(rangeSummary('16:00', '17:30')).toBe('Buscaremos planes de 16:00 a 17:30 (1 h 30 min).');
+  });
+
+  it('al elegir solo unas horas propone las primeras 3, o el hueco si es mas corto', () => {
+    expect(defaultRange(sat)).toEqual({ from: '10:00', to: '13:00' });
+    expect(defaultRange({ ...sat, start: '18:00', end: '19:30' })).toEqual({ from: '18:00', to: '19:30' });
+  });
+
+  it('al mover el inicio conserva el fin si sigue dejando una hora', () => {
+    expect(keepEnd(sat, '16:00', '19:00')).toBe('19:00');
+    expect(keepEnd(sat, '18:30', '19:00')).toBe('19:30');
+  });
+});
+
+describe('distancia y en casa ([rango-distancia])', () => {
+  it('la siguiente distancia de la lista', () => {
+    expect(nextRadius(1)).toBe(3);
+    expect(nextRadius(10)).toBe(15);
+    expect(nextRadius(15)).toBeNull();
+  });
+
+  it('explica desde donde se mide', () => {
+    expect(radiusHint(3, 'NEAR_US')).toBe('Lugares a 3 km o menos de ustedes.');
+    expect(radiusHint(5, 'BOROUGH')).toBe('Lugares a 5 km o menos del centro de la alcaldía.');
+  });
+
+  it('en casa quita la zona y la ubicacion; lo demas no cambia la zona', () => {
+    const near: RequestForm = { ...base, zoneType: 'NEAR_US', coords: { lat: 19.3, lon: -99.1 } };
+    const home = chooseScope(near, 'HOME');
+    expect(home).toMatchObject({ scope: 'HOME', zoneType: 'NONE' });
+    expect(home.coords).toBeUndefined();
+    expect(isValid(home)).toBe(true);
+    expect(chooseScope(near, 'CITY')).toMatchObject({ scope: 'CITY', zoneType: 'NEAR_US' });
   });
 });

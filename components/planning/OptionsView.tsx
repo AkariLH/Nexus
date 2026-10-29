@@ -5,7 +5,8 @@ import { ResultModal } from '../../app/components/ResultModal';
 import { palette } from '../../constants/colors';
 import type { PlanningView, VoteValue } from '../../services/planning.service';
 import { timeLeftToDecide } from '../../utils/planningFormat';
-import { relaxedMessage } from '../../utils/recommendationParams';
+import { DEFAULT_RADIUS_KM, relaxedMessage } from '../../utils/recommendationParams';
+import { GradientButton } from '../../app/components/ui/GradientButton';
 import { JointOptionCard } from './JointOptionCard';
 import { ChatAccess, TimeLeftPill } from './SessionBits';
 
@@ -29,6 +30,10 @@ export function OptionsView({ view, now, busy, onVote, onPropose, onMore, onAdju
   const [askAdjust, setAskAdjust] = useState(false);
   const partner = view.partner.name;
   const notice = relaxedMessage(view.relaxedFilters);
+  // [rango-distancia] Figma J3: sin opciones y con poca distancia, ajustar filtros para ampliarla.
+  const radiusKm = view.filters?.radiusKm ?? DEFAULT_RADIUS_KM;
+  const zone = view.filters?.zoneType;
+  const narrowRadius = (zone === 'NEAR_US' || zone === 'BOROUGH') && radiusKm < DEFAULT_RADIUS_KM;
 
   return (
     <>
@@ -45,6 +50,15 @@ export function OptionsView({ view, now, busy, onVote, onPropose, onMore, onAdju
           <Ionicons name="sparkles-outline" size={16} color={palette.textAccent} />
           <Text style={styles.hintText}>{notice ?? 'Voten por las opciones que les gusten'}</Text>
         </View>
+
+        {view.options.length === 0 && narrowRadius && (
+          <View style={styles.empty}>
+            <Ionicons name="location-outline" size={40} color={palette.primary} />
+            <Text style={styles.emptyTitle}>No encontramos planes a {radiusKm} km</Text>
+            <Text style={styles.emptyText}>Con una distancia mayor suelen salir más opciones.</Text>
+            <GradientButton title="Prueba con más distancia" onPress={onAdjust} disabled={busy} style={styles.emptyButton} />
+          </View>
+        )}
 
         {view.options.map((option) => (
           <JointOptionCard
@@ -95,6 +109,10 @@ export function OptionsView({ view, now, busy, onVote, onPropose, onMore, onAdju
 
 const styles = StyleSheet.create({
   content: { padding: 16, gap: 16, paddingBottom: 24 },
+  empty: { alignItems: 'center', gap: 10, padding: 20, borderRadius: 16, backgroundColor: palette.surface },
+  emptyTitle: { fontSize: 17, fontWeight: '700', color: palette.text, textAlign: 'center' },
+  emptyText: { fontSize: 14, color: palette.textSecondary, textAlign: 'center' },
+  emptyButton: { alignSelf: 'stretch' },
   hint: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
   hintText: { flex: 1, fontSize: 13, color: palette.textSecondary },
   footer: { padding: 16, gap: 12, borderTopWidth: 1, borderTopColor: palette.border, backgroundColor: palette.surface },

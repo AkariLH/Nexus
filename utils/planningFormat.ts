@@ -77,3 +77,14 @@ export function filtersToSlot(startIso?: string | null, endIso?: string | null):
   const from = `${two(start.getUTCHours())}:${two(start.getUTCMinutes())}`;
   return { key: `${date}T${from}`, date, start: from, end: `${two(end.getUTCHours())}:${two(end.getUTCMinutes())}` };
 }
+
+/** [rango-distancia] El hueco libre que contiene el horario guardado (puede ser solo una parte de el). */
+export function slotContaining(
+  slots: SlotOption[],
+  startIso?: string | null,
+  endIso?: string | null,
+): SlotOption | undefined {
+  const range = filtersToSlot(startIso, endIso);
+  if (!range) return undefined;
+  return slots.find((s) => s.date === range.date && s.start <= range.start && range.end <= s.end);
+}

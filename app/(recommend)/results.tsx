@@ -8,7 +8,16 @@ import { useAuth } from "../../context/AuthContext";
 import recommendationService, { RecommendationItem } from "../../services/recommendation.service";
 import { trackInvite } from "../../utils/inviteTracker";
 import { costLabel, placeLabel, slotLabel, slotOptionLabel } from "../../utils/recommendationFormat";
-import { budgetLabel, relaxedMessage, RequestForm, toParams, zoneLabel } from "../../utils/recommendationParams";
+import {
+  budgetLabel,
+  DEFAULT_RADIUS_KM,
+  nextRadius,
+  relaxedMessage,
+  RequestForm,
+  requestedSlot,
+  toParams,
+  zoneLabel,
+} from "../../utils/recommendationParams";
 import { ScreenHeader } from "../components/layout/ScreenHeader";
 import { PlanSummaryCard } from "../components/PlanSummaryCard";
 import { RecommendationCard } from "../components/RecommendationCard";
@@ -141,6 +150,18 @@ export default function RecommendationResultsScreen() {
   };
 
   const adjustFilters = () => router.back();
+  // [rango-distancia] Figma J3: sin opciones con poca distancia se ofrece buscar con la siguiente.
+  const withDistance = form.zoneType === "NEAR_US" || form.zoneType === "BOROUGH";
+  const radiusKm = form.radiusKm ?? DEFAULT_RADIUS_KM;
+  const widerRadius = withDistance ? nextRadius(radiusKm) : null;
+  const tryWider = () => {
+    if (widerRadius === null) return;
+    router.replace({
+      pathname: "/(recommend)/results",
+      params: { form: JSON.stringify({ ...form, radiusKm: widerRadius }), boroughName: params.boroughName ?? "" },
+    });
+  };
+  const shownSlot = requestedSlot(form);
   const zone = zoneLabel(form.zoneType ?? "NONE", params.boroughName || undefined);
   const notice = relaxedMessage(relaxed);
 
@@ -168,14 +189,33 @@ export default function RecommendationResultsScreen() {
     );
   }
 
+  if (items.length === 0 && widerRadius !== null) {
+    return (
+      <SafeAreaView style={styles.container} edges={["left", "right", "bottom"]}>
+        <ScreenHeader title="Recomendaciones" onBack={() => router.back()} />
+        <View style={styles.errorBox}>
+          <View style={[styles.errorIcon, styles.softIcon]}>
+            <Ionicons name="location-outline" size={48} color={palette.primary} />
+          </View>
+          <Text style={styles.emptyTitle}>No encontramos planes a {radiusKm} km</Text>
+          <Text style={styles.errorText}>Con una distancia mayor suelen salir más opciones. Tus demás filtros se quedan igual.</Text>
+          <GradientButton title={`Prueba con ${widerRadius} km`} onPress={tryWider} style={styles.errorButton} />
+          <TouchableOpacity style={[styles.moreButton, styles.errorButton]} onPress={adjustFilters} accessibilityRole="button">
+            <Text style={styles.moreText}>Cambiar filtros</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container} edges={["left", "right", "bottom"]}>
       <ScreenHeader title="Recomendaciones" onBack={() => router.back()} />
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.pills}>
-          {form.slot && <FilterPill icon="calendar-outline" text={slotOptionLabel(form.slot, now)} />}
-          {zone && <FilterPill icon="location-outline" text={zone} />}
+          {shownSlot && <FilterPill icon="calendar-outline" text={slotOptionLabel(shownSlot, now)} />}
+          {zone && <FilterPill icon="location-outline" text={withDistance ? `${zone} · ${radiusKm} km` : zone} />}
           <FilterPill icon="cash-outline" text={budgetLabel(form.maxCostMxn)} />
         </View>
 
@@ -331,5 +371,14 @@ const styles = StyleSheet.create({
   },
   errorButton: {
     alignSelf: "stretch",
+  },
+  softIcon: {
+    backgroundColor: palette.primarySoft,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: palette.text,
+    textAlign: "center",
   },
 });

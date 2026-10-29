@@ -10,9 +10,17 @@ import { findMutualAvailability } from '../../services/availabilityService';
 import { ideaService, IdeaCategory } from '../../services/idea.service';
 import type { PlanningFilters, PlanningView } from '../../services/planning.service';
 import recommendationService, { Borough, Scope, ZoneType } from '../../services/recommendation.service';
-import { filtersToSlot, timeLeftToDecide } from '../../utils/planningFormat';
+import { DistanceChips, HoursCard } from '../recommendation/TimeAndDistance';
+import { filtersToSlot, slotContaining, timeLeftToDecide } from '../../utils/planningFormat';
 import { formatMxn, slotOptionLabel } from '../../utils/recommendationFormat';
-import { eligibleSlots, MAX_COST_MXN, SlotOption, slotToInstants } from '../../utils/recommendationParams';
+import {
+  DEFAULT_RADIUS_KM,
+  eligibleSlots,
+  MAX_COST_MXN,
+  SlotOption,
+  slotToInstants,
+  withRange,
+} from '../../utils/recommendationParams';
 import { ActivityLine, ChatAccess, MemberAvatar, TimeLeftPill } from './SessionBits';
 
 const DAYS_AHEAD = 14;
@@ -44,6 +52,8 @@ const Section = ({ title, hint, children }: { title: string; hint?: string; chil
 /**
  * Figma B2 - Los dos ven y cambian los mismos filtros; cada cambio le avisa a la pareja. La
  * busqueda empieza cuando los dos tocan "Listo". El tipo de plan admite varias dimensiones.
+ * [rango-distancia] Figma J2: mismo orden que la individual (cuando, en casa o fuera, donde,
+ * distancia); el horario guardado puede ser solo una parte del hueco libre.
  */
 export function FiltersView({ view, now, busy, onChange, onReady, onUnready, onOpenChat }: FiltersViewProps) {
   const { user } = useAuth();
@@ -81,7 +91,18 @@ export function FiltersView({ view, now, busy, onChange, onReady, onUnready, onO
     onChange(next);
   };
 
-  const selectedSlot = useMemo(() => filtersToSlot(filters.slotStart, filters.slotEnd), [filters.slotStart, filters.slotEnd]);
+  const fullSlot = useMemo(
+    () => (slots ? slotContaining(slots, filters.slotStart, filters.slotEnd) : undefined),
+    [slots, filters.slotStart, filters.slotEnd],
+  );
+  const chosenRange = useMemo(() => filtersToSlot(filters.slotStart, filters.slotEnd), [filters.slotStart, filters.slotEnd]);
+  const range =
+    fullSlot && chosenRange && (chosenRange.start !== fullSlot.start || chosenRange.end !== fullSlot.end)
+      ? { from: chosenRange.start, to: chosenRange.end }
+      : null;
+  const scope = filters.scope ?? 'ANY';
+  const chooseScope = (value: Scope) =>
+    value === 'HOME' ? send({ scope: value, zoneType: 'NONE', boroughCode: null }) : send({ scope: value });
   const chosen = new Set(filters.categories ?? []);
   const boroughName = boroughs.find((b) => b.code === filters.boroughCode)?.name;
   const partner = view.partner.name;
@@ -129,18 +150,6 @@ export function FiltersView({ view, now, busy, onChange, onReady, onUnready, onO
           <ActivityLine key={`${i}-${line}`} text={line} />
         ))}
 
-        <Section title="¿Dónde?">
-          <View style={styles.chips}>
-            <OptionChip label="Cerca de nosotros" selected={filters.zoneType === 'NEAR_US'} onPress={() => chooseZone('NEAR_US')} />
-            <OptionChip
-              label={filters.zoneType === 'BOROUGH' && boroughName ? boroughName : 'En una alcaldía'}
-              selected={filters.zoneType === 'BOROUGH'}
-              onPress={() => chooseZone('BOROUGH')}
-            />
-            <OptionChip label="Sin preferencia" selected={filters.zoneType === 'NONE'} onPress={() => chooseZone('NONE')} />
-          </View>
-        </Section>
-
         <Section title="¿Cuándo?" hint="Espacios libres de los dos.">
           {slots === null && <ActivityIndicator color={palette.primary} />}
           {slots?.length === 0 && <Text style={styles.empty}>No tienen horarios libres en común en los próximos días.</Text>}
@@ -150,13 +159,52 @@ export function FiltersView({ view, now, busy, onChange, onReady, onUnready, onO
                 <OptionChip
                   key={slot.key}
                   label={slotOptionLabel(slot, now)}
-                  selected={selectedSlot?.key === slot.key}
+                  selected={fullSlot?.key === slot.key}
                   onPress={() => send(slotToInstants(slot))}
                 />
               ))}
             </View>
           )}
+          {fullSlot && (
+            <HoursCard
+              slot={fullSlot}
+              range={range}
+              onChange={(next) => send(slotToInstants(next ? withRange(fullSlot, next.from, next.to) : fullSlot))}
+            />
+          )}
         </Section>
+
+        <Section title="¿En casa o fuera?" hint={scope === 'HOME' ? 'Los planes en casa no necesitan ubicación.' : undefined}>
+          <View style={styles.chips}>
+            {SCOPES.map((s) => (
+              <OptionChip key={s.value} label={s.label} selected={scope === s.value} onPress={() => chooseScope(s.value)} />
+            ))}
+          </View>
+        </Section>
+
+        {scope !== 'HOME' && (
+          <>
+            <Section title="¿Dónde?">
+              <View style={styles.chips}>
+                <OptionChip label="Cerca de nosotros" selected={filters.zoneType === 'NEAR_US'} onPress={() => chooseZone('NEAR_US')} />
+                <OptionChip
+                  label={filters.zoneType === 'BOROUGH' && boroughName ? boroughName : 'En una alcaldía'}
+                  selected={filters.zoneType === 'BOROUGH'}
+                  onPress={() => chooseZone('BOROUGH')}
+                />
+                <OptionChip label="Sin preferencia" selected={filters.zoneType === 'NONE'} onPress={() => chooseZone('NONE')} />
+              </View>
+            </Section>
+
+            {(filters.zoneType === 'NEAR_US' || filters.zoneType === 'BOROUGH') && (
+              <DistanceChips
+                radiusKm={filters.radiusKm ?? DEFAULT_RADIUS_KM}
+                zoneType={filters.zoneType}
+                onChange={(radiusKm) => send({ radiusKm })}
+              />
+            )}
+          </>
+        )}
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
@@ -180,14 +228,6 @@ export function FiltersView({ view, now, busy, onChange, onReady, onUnready, onO
             <Text style={styles.scaleText}>${formatMxn(MAX_COST_MXN)}</Text>
           </View>
         </View>
-
-        <Section title="¿En casa o fuera?">
-          <View style={styles.chips}>
-            {SCOPES.map((s) => (
-              <OptionChip key={s.value} label={s.label} selected={(filters.scope ?? 'ANY') === s.value} onPress={() => send({ scope: s.value })} />
-            ))}
-          </View>
-        </Section>
 
         <Section title="Tipo de plan">
           <View style={styles.chips}>

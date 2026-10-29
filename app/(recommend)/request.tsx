@@ -20,8 +20,12 @@ import { findMutualAvailability } from "../../services/availabilityService";
 import { ideaService, IdeaCategory } from "../../services/idea.service";
 import linkService from "../../services/link.service";
 import recommendationService, { Borough, Scope, ZoneType } from "../../services/recommendation.service";
+import { DistanceChips, HoursCard } from "../../components/recommendation/TimeAndDistance";
 import {
   budgetLabel,
+  chooseScope,
+  chooseSlot,
+  DEFAULT_RADIUS_KM,
   eligibleSlots,
   isValid,
   MAX_COST_MXN,
@@ -58,6 +62,8 @@ const Section = ({ title, hint, children }: { title: string; hint?: string; chil
 /**
  * Figma A2, A3a y A3b - CU36 / CU39: detalles de la cita. "Cerca de nosotros" pide la ubicacion
  * solo en ese momento y no se guarda (RN-30); si se niega, se ofrece alcaldia o sin filtro.
+ * [rango-distancia] Figma J1: primero cuando (todo el hueco o solo unas horas) y si es en casa;
+ * con "En casa" no se pide zona ni distancia.
  */
 export default function RecommendationRequestScreen() {
   const router = useRouter();
@@ -146,18 +152,6 @@ export default function RecommendationRequestScreen() {
       <ScreenHeader title="Detalles de la cita" onBack={() => router.back()} />
 
       <ScrollView contentContainerStyle={styles.content}>
-        <Section title="¿Dónde?">
-          <View style={styles.chips}>
-            <OptionChip label="Cerca de nosotros" selected={form.zoneType === "NEAR_US"} onPress={() => chooseZone("NEAR_US")} />
-            <OptionChip
-              label={form.zoneType === "BOROUGH" && boroughName ? boroughName : "En una alcaldía"}
-              selected={form.zoneType === "BOROUGH"}
-              onPress={() => chooseZone("BOROUGH")}
-            />
-            <OptionChip label="Sin preferencia" selected={form.zoneType === "NONE"} onPress={() => chooseZone("NONE")} />
-          </View>
-        </Section>
-
         <Section title="¿Cuándo?" hint="Espacios libres de los dos.">
           {slotsState === "loading" && <ActivityIndicator color={palette.primary} style={styles.slotsLoading} />}
           {slotsState === "no-link" && <Text style={styles.emptyText}>Necesitas estar vinculado con tu pareja.</Text>}
@@ -178,12 +172,59 @@ export default function RecommendationRequestScreen() {
                   key={slot.key}
                   label={slotOptionLabel(slot, now)}
                   selected={form.slot?.key === slot.key}
-                  onPress={() => update({ slot })}
+                  onPress={() => setForm((current) => chooseSlot(current, slot))}
                 />
               ))}
             </View>
           )}
+          {form.slot && (
+            <HoursCard
+              slot={form.slot}
+              range={form.rangeFrom && form.rangeTo ? { from: form.rangeFrom, to: form.rangeTo } : null}
+              onChange={(range) => update({ rangeFrom: range?.from, rangeTo: range?.to })}
+            />
+          )}
         </Section>
+
+        <Section
+          title="¿En casa o fuera?"
+          hint={form.scope === "HOME" ? "Los planes en casa no necesitan ubicación." : undefined}
+        >
+          <View style={styles.chips}>
+            {SCOPES.map((s) => (
+              <OptionChip
+                key={s.value}
+                label={s.label}
+                selected={form.scope === s.value}
+                onPress={() => setForm((current) => chooseScope(current, s.value))}
+              />
+            ))}
+          </View>
+        </Section>
+
+        {form.scope !== "HOME" && (
+          <>
+            <Section title="¿Dónde?">
+              <View style={styles.chips}>
+                <OptionChip label="Cerca de nosotros" selected={form.zoneType === "NEAR_US"} onPress={() => chooseZone("NEAR_US")} />
+                <OptionChip
+                  label={form.zoneType === "BOROUGH" && boroughName ? boroughName : "En una alcaldía"}
+                  selected={form.zoneType === "BOROUGH"}
+                  onPress={() => chooseZone("BOROUGH")}
+                />
+                <OptionChip label="Sin preferencia" selected={form.zoneType === "NONE"} onPress={() => chooseZone("NONE")} />
+              </View>
+            </Section>
+
+            {(form.zoneType === "NEAR_US" || form.zoneType === "BOROUGH") && (
+              <DistanceChips
+                radiusKm={form.radiusKm ?? DEFAULT_RADIUS_KM}
+                zoneType={form.zoneType}
+                onChange={(radiusKm) => update({ radiusKm })}
+              />
+            )}
+          </>
+        )}
 
         <View style={styles.section}>
           <View style={styles.budgetHeader}>
@@ -207,14 +248,6 @@ export default function RecommendationRequestScreen() {
             <Text style={styles.scaleText}>${formatMxn(MAX_COST_MXN)}</Text>
           </View>
         </View>
-
-        <Section title="¿En casa o fuera?">
-          <View style={styles.chips}>
-            {SCOPES.map((s) => (
-              <OptionChip key={s.value} label={s.label} selected={form.scope === s.value} onPress={() => update({ scope: s.value })} />
-            ))}
-          </View>
-        </Section>
 
         <Section title="Tipo de plan" hint="Opcional.">
           <View style={styles.chips}>

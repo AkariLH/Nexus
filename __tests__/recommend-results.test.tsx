@@ -7,18 +7,18 @@ import React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 
 const mockBack = jest.fn();
+const mockReplace = jest.fn();
+const mockBaseForm = {
+  zoneType: 'BOROUGH',
+  boroughCode: 'COY',
+  scope: 'ANY',
+  maxCostMxn: 1500,
+  slot: { key: 'k', date: '2026-10-17', start: '18:00', end: '21:00' },
+};
+let mockForm: Record<string, unknown> = mockBaseForm;
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ back: mockBack, dismissAll: jest.fn(), navigate: jest.fn() }),
-  useLocalSearchParams: () => ({
-    form: JSON.stringify({
-      zoneType: 'BOROUGH',
-      boroughCode: 'COY',
-      scope: 'ANY',
-      maxCostMxn: 1500,
-      slot: { key: 'k', date: '2026-10-17', start: '18:00', end: '21:00' },
-    }),
-    boroughName: 'Coyoacán',
-  }),
+  useRouter: () => ({ back: mockBack, replace: mockReplace, dismissAll: jest.fn(), navigate: jest.fn() }),
+  useLocalSearchParams: () => ({ form: JSON.stringify(mockForm), boroughName: 'Coyoacán' }),
 }));
 jest.mock('react-native-safe-area-context', () => {
   const { View } = require('react-native');
@@ -80,13 +80,30 @@ describe('Resultados de recomendaciones', () => {
 
   afterEach(() => {
     jest.useRealTimers();
+    mockForm = mockBaseForm;
+  });
+
+  it('[rango-distancia] sin opciones a 1 km ofrece buscar con 3 km (Figma J3)', async () => {
+    mockForm = { ...mockBaseForm, radiusKm: 1 };
+    service.request.mockResolvedValue({ requestId: 9, items: [], relaxedFilters: [], hasMore: false });
+    render(<RecommendationResultsScreen />);
+    await act(async () => {
+      jest.advanceTimersByTime(3000);
+    });
+
+    expect(await screen.findByText('No encontramos planes a 1 km')).toBeTruthy();
+    fireEvent.press(screen.getByText('Prueba con 3 km'));
+
+    const target = mockReplace.mock.calls[0][0];
+    expect(JSON.parse(target.params.form).radiusKm).toBe(3);
+    expect(service.request.mock.calls[0][1].radiusKm).toBe(1);
   });
 
   it('muestra las 5 opciones, los filtros y el aviso de presupuesto ampliado', async () => {
     await renderLoaded();
 
     expect(screen.getAllByText(/^Plan \d$/)).toHaveLength(5);
-    expect(screen.getByText('Coyoacán')).toBeTruthy();
+    expect(screen.getByText('Coyoacán · 15 km')).toBeTruthy();
     expect(screen.getByText('Hasta $1,500')).toBeTruthy();
     expect(screen.getByText('Ampliamos un poco el presupuesto para darte más opciones.')).toBeTruthy();
     expect(screen.getByText('Buscar más opciones')).toBeTruthy();

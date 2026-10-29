@@ -189,3 +189,53 @@ export function zoneLabel(zoneType: ZoneType, boroughName?: string): string | nu
   if (zoneType === 'BOROUGH') return boroughName ?? null;
   return null;
 }
+
+const WEEKDAYS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+const DEFAULT_RANGE_MINUTES = 180;
+
+/** [rango-distancia] Figma J1: "¿Usamos todo el sábado de 10:00 a 20:00?". */
+export function hoursQuestion(slot: SlotOption): string {
+  const weekday = WEEKDAYS[new Date(`${slot.date}T12:00:00${CDMX_OFFSET}`).getUTCDay()];
+  return `¿Usamos todo el ${weekday} de ${slot.start} a ${slot.end}?`;
+}
+
+/** [rango-distancia] "Buscaremos planes de 16:00 a 19:00 (3 horas)." */
+export function rangeSummary(from: string, to: string): string {
+  const minutes = toMinutes(to) - toMinutes(from);
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  const length = m === 0 ? `${h} ${h === 1 ? 'hora' : 'horas'}` : `${h} h ${m} min`;
+  return `Buscaremos planes de ${from} a ${to} (${length}).`;
+}
+
+/** [rango-distancia] Al elegir "Solo unas horas": desde el inicio, unas 3 horas (o el hueco entero). */
+export function defaultRange(slot: SlotOption): { from: string; to: string } {
+  const ends = rangeEnds(slot, slot.start);
+  const target = toMinutes(slot.start) + DEFAULT_RANGE_MINUTES;
+  const to = ends.find((e) => toMinutes(e) >= target) ?? ends[ends.length - 1] ?? slot.end;
+  return { from: slot.start, to };
+}
+
+/** [rango-distancia] Al cambiar el inicio, el fin se queda si sigue dejando una hora; si no, el primero valido. */
+export function keepEnd(slot: SlotOption, from: string, to: string): string {
+  const ends = rangeEnds(slot, from);
+  return ends.includes(to) ? to : ends[0] ?? slot.end;
+}
+
+/** [rango-distancia] La siguiente distancia de la lista, o null si ya es la mayor. */
+export function nextRadius(km: number): number | null {
+  return RADIUS_OPTIONS_KM.find((option) => option > km) ?? null;
+}
+
+/** [rango-distancia] Figma J1: texto bajo "Distancia maxima". */
+export function radiusHint(km: number, zoneType?: ZoneType): string {
+  return zoneType === 'BOROUGH'
+    ? `Lugares a ${km} km o menos del centro de la alcaldía.`
+    : `Lugares a ${km} km o menos de ustedes.`;
+}
+
+/** [rango-distancia] Elegir "En casa" quita la zona: los planes en casa no necesitan ubicacion. */
+export function chooseScope<T extends RequestForm>(form: T, scope: Scope): T {
+  if (scope !== 'HOME') return { ...form, scope };
+  return { ...form, scope, zoneType: 'NONE', boroughCode: undefined, coords: undefined };
+}
