@@ -91,30 +91,37 @@ const toMinutes = (time: string): number => {
 const toClock = (minutes: number): string =>
   `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
 
+/** La siguiente hora en punto o y media despues de `minutes`. */
+const nextHalfHour = (minutes: number): number => (Math.floor(minutes / RANGE_STEP_MINUTES) + 1) * RANGE_STEP_MINUTES;
+
 /**
- * [rango-distancia] Horas en que puede empezar el rango: la hora real del hueco (puede ser 10:15) y
- * luego cada 30 minutos, dejando al menos una hora antes del fin.
+ * [rango-distancia] Horas en que puede empezar el rango: la hora real del hueco (puede ser 09:05) y
+ * luego horas en punto y medias (09:30, 10:00...), dejando al menos una hora antes del fin.
  *
  * @complexity T: O(n), S: O(n), n = medias horas del hueco
  */
 export function rangeStarts(slot: SlotOption): string[] {
+  const first = toMinutes(slot.start);
   const latest = toMinutes(slot.end) - MIN_SLOT_MINUTES;
-  const out: string[] = [];
-  for (let t = toMinutes(slot.start); t <= latest; t += RANGE_STEP_MINUTES) out.push(toClock(t));
+  if (first > latest) return [];
+  const out = [toClock(first)];
+  for (let t = nextHalfHour(first); t <= latest; t += RANGE_STEP_MINUTES) out.push(toClock(t));
   return out;
 }
 
 /**
- * [rango-distancia] Horas en que puede terminar el rango si empieza en `from`: desde una hora despues,
- * cada 30 minutos, y siempre el fin del hueco.
+ * [rango-distancia] Horas en que puede terminar el rango si empieza en `from`: una hora despues, luego
+ * horas en punto y medias, y siempre el fin del hueco.
  *
  * @complexity T: O(n), S: O(n), n = medias horas del hueco
  */
 export function rangeEnds(slot: SlotOption, from: string): string[] {
   const end = toMinutes(slot.end);
-  const out: string[] = [];
-  for (let t = toMinutes(from) + MIN_SLOT_MINUTES; t <= end; t += RANGE_STEP_MINUTES) out.push(toClock(t));
-  if (out.length > 0 && out[out.length - 1] !== slot.end) out.push(slot.end);
+  const first = toMinutes(from) + MIN_SLOT_MINUTES;
+  if (first > end) return [];
+  const out = [toClock(first)];
+  for (let t = nextHalfHour(first); t <= end; t += RANGE_STEP_MINUTES) out.push(toClock(t));
+  if (out[out.length - 1] !== slot.end) out.push(slot.end);
   return out;
 }
 
@@ -208,11 +215,12 @@ export function rangeSummary(from: string, to: string): string {
   return `Buscaremos planes de ${from} a ${to} (${length}).`;
 }
 
-/** [rango-distancia] Al elegir "Solo unas horas": desde el inicio, unas 3 horas (o el hueco entero). */
+/** [rango-distancia] Al elegir "Solo unas horas": desde el inicio, hasta unas 3 horas (o el hueco entero). */
 export function defaultRange(slot: SlotOption): { from: string; to: string } {
   const ends = rangeEnds(slot, slot.start);
   const target = toMinutes(slot.start) + DEFAULT_RANGE_MINUTES;
-  const to = ends.find((e) => toMinutes(e) >= target) ?? ends[ends.length - 1] ?? slot.end;
+  const upToTarget = ends.filter((e) => toMinutes(e) <= target);
+  const to = upToTarget[upToTarget.length - 1] ?? ends[0] ?? slot.end;
   return { from: slot.start, to };
 }
 

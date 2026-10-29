@@ -181,9 +181,11 @@ describe('rango del horario ([rango-distancia])', () => {
     expect(starts).toHaveLength(19);
   });
 
-  it('el hueco de hoy empieza en su hora real y sigue cada 30 minutos', () => {
-    expect(rangeStarts({ ...long, start: '10:15', end: '12:00' })).toEqual(['10:15', '10:45']);
-    expect(rangeEnds({ ...long, start: '10:15', end: '12:00' }, '10:15')).toEqual(['11:15', '11:45', '12:00']);
+  it('un hueco que empieza a una hora suelta sigue en horas en punto y medias', () => {
+    expect(rangeStarts({ ...long, start: '10:15', end: '12:00' })).toEqual(['10:15', '10:30', '11:00']);
+    expect(rangeEnds({ ...long, start: '10:15', end: '12:00' }, '10:15')).toEqual(['11:15', '11:30', '12:00']);
+    expect(rangeStarts({ ...long, start: '09:05', end: '11:05' })).toEqual(['09:05', '09:30', '10:00']);
+    expect(rangeEnds({ ...long, start: '09:05', end: '11:05' }, '10:00')).toEqual(['11:00', '11:05']);
   });
 
   it('termina desde una hora despues hasta el fin del hueco', () => {
@@ -246,6 +248,7 @@ describe('tarjeta de horas ([rango-distancia], Figma J1)', () => {
   it('al elegir solo unas horas propone las primeras 3, o el hueco si es mas corto', () => {
     expect(defaultRange(sat)).toEqual({ from: '10:00', to: '13:00' });
     expect(defaultRange({ ...sat, start: '18:00', end: '19:30' })).toEqual({ from: '18:00', to: '19:30' });
+    expect(defaultRange({ ...sat, start: '09:05', end: '22:00' })).toEqual({ from: '09:05', to: '12:00' });
   });
 
   it('al mover el inicio conserva el fin si sigue dejando una hora', () => {

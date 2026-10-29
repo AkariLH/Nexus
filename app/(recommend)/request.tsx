@@ -38,8 +38,8 @@ import { ResultModal } from "../components/ResultModal";
 import { GradientButton } from "../components/ui/GradientButton";
 import { OptionChip } from "../components/ui/OptionChip";
 
-/** Hasta donde el servidor acepta pedir (MutualSlotChecker.DAYS_AHEAD). */
-const DAYS_AHEAD = 14;
+/** Hasta donde el servidor acepta pedir (MutualSlotChecker.DAYS_AHEAD): una semana. */
+const DAYS_AHEAD = 7;
 const DEFAULT_BUDGET = 1500;
 const BUDGET_STEP = 50;
 

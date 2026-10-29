@@ -23,7 +23,8 @@ import {
 } from '../../utils/recommendationParams';
 import { ActivityLine, ChatAccess, MemberAvatar, TimeLeftPill } from './SessionBits';
 
-const DAYS_AHEAD = 14;
+/** Hasta donde el servidor acepta pedir (MutualSlotChecker.DAYS_AHEAD): una semana. */
+const DAYS_AHEAD = 7;
 const BUDGET_STEP = 50;
 const SCOPES: Array<{ value: Scope; label: string }> = [
   { value: 'HOME', label: 'En casa' },
