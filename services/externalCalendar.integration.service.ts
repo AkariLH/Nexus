@@ -667,7 +667,9 @@ class ExternalCalendarIntegrationService {
       location?: string;
       notes?: string;
       allDay?: boolean;
-    }
+    },
+    /** [avisos-calendario] RF-24: evento de Nexus del que sale la copia. */
+    appEventId?: number
   ): Promise<string> {
     try {
       // Crear en calendario nativo
@@ -690,6 +692,7 @@ class ExternalCalendarIntegrationService {
         description: eventData.notes,
         isAllDay: eventData.allDay || false,
         lastDeviceUpdate: new Date().toISOString(),
+        appEventId,
       }]);
 
       console.log('✅ Evento creado y sincronizado');
@@ -701,9 +704,11 @@ class ExternalCalendarIntegrationService {
   }
 
   /**
-   * Sincronización automática periódica (RF-21)
+   * Sincronización automática periódica (RF-21). [avisos-calendario] RF-24: devuelve los eventos
+   * creados en Nexus que cambiaron en el teléfono (el backend ya dejó el aviso en la campanita).
    */
-  async performPeriodicSync(userId: number): Promise<void> {
+  async performPeriodicSync(userId: number): Promise<{ conflicts: string[] }> {
+    const conflicts: string[] = [];
     try {
       console.log('🔄 Iniciando sincronización periódica...');
 
@@ -712,7 +717,7 @@ class ExternalCalendarIntegrationService {
 
       if (syncableCalendars.length === 0) {
         console.log('ℹ️ No hay calendarios habilitados para sincronización');
-        return;
+        return { conflicts };
       }
 
       // Sincronizar 1 mes antes, mes actual y 1 mes después (3 meses total)
@@ -723,13 +728,14 @@ class ExternalCalendarIntegrationService {
 
       for (const calendar of syncableCalendars) {
         try {
-          await this.syncEventsToBackend(
+          const result = await this.syncEventsToBackend(
             userId,
             calendar.id,
             calendar.deviceCalendarId,
             startDate,
             endDate
           );
+          conflicts.push(...(result?.conflicts ?? []));
         } catch (error: any) {
           console.error(`❌ Error sincronizando calendario ${calendar.calendarName}:`, error);
           // No propagar el error, continuar con el siguiente calendario
@@ -744,6 +750,7 @@ class ExternalCalendarIntegrationService {
     } catch (error) {
       console.error('❌ Error en sincronización periódica:', error);
     }
+    return { conflicts };
   }
 
   /**

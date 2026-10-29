@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Switch, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { calendarService, ExternalCalendar } from '../../services/calendar.service';
+import { syncDoneMessage } from '../../utils/syncFormat';
 import { externalCalendarIntegration, LinkedCalendar } from '../../services/externalCalendar.integration.service';
 import { useAuth } from '../../context/AuthContext';
 import { ScreenHeader } from '../components/layout/ScreenHeader';
@@ -129,8 +130,8 @@ export default function LinkExternalCalendarsScreen() {
 
     setSyncing(true);
     try {
-      await externalCalendarIntegration.performPeriodicSync(user.userId);
-      setSuccessModal({ visible: true, message: 'Calendarios al día' });
+      const { conflicts } = await externalCalendarIntegration.performPeriodicSync(user.userId);
+      setSuccessModal({ visible: true, message: syncDoneMessage(conflicts) });
       await loadCalendars();
     } catch (error: any) {
       console.error('Error en sincronización:', error);

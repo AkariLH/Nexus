@@ -161,7 +161,9 @@ export default function NotificationsScreen() {
           location: selectedEvent.location,
           notes: selectedEvent.description,
           allDay: false, // Puedes agregar esta propiedad al EventResponse si la necesitas
-        }
+        },
+        // [avisos-calendario] RF-24: si la copia cambia en el telefono, se avisa.
+        Number(selectedEvent.id)
       );
       
       setOutcome({ kind: "accepted", event: selectedEvent });
