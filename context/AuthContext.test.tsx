@@ -48,6 +48,9 @@ function Probe() {
   );
 }
 
+// El primer render carga en frio el contexto completo; con la suite entera pasa de 5 s.
+jest.setTimeout(20000);
+
 describe('AuthContext — persistencia del token', () => {
   beforeEach(async () => {
     await AsyncStorage.clear();

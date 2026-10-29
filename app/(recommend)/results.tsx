@@ -169,7 +169,7 @@ export default function RecommendationResultsScreen() {
     return (
       <SafeAreaView style={styles.container} edges={["left", "right", "bottom"]}>
         <ScreenHeader title="Recomendaciones" onBack={() => router.back()} />
-        <SearchingPlans withDistance={form.zoneType !== "NONE"} />
+        <SearchingPlans withDistance={withDistance} radiusKm={radiusKm} />
       </SafeAreaView>
     );
   }

@@ -8,6 +8,8 @@ import { decorativeLoop } from "../../utils/motion";
 interface SearchingPlansProps {
   /** Sin zona no se menciona la distancia. */
   withDistance: boolean;
+  /** [rango-distancia] La distancia que eligieron; 15 km si no eligieron. */
+  radiusKm?: number;
 }
 
 const STEP_MS = 550;
@@ -16,8 +18,12 @@ const STEP_MS = 550;
  * Figma A4 - "Buscando planes para ustedes", animada para que la espera sea amena: el circulo
  * late, los pasos se van palomeando y el reloj de arena gira en el ultimo.
  */
-export function SearchingPlans({ withDistance }: SearchingPlansProps) {
-  const steps = ["Sus preferencias", ...(withDistance ? ["Lugares a menos de 15 km"] : []), "Horario libre de los dos"];
+export function SearchingPlans({ withDistance, radiusKm = 15 }: SearchingPlansProps) {
+  const steps = [
+    "Sus preferencias",
+    ...(withDistance ? [`Lugares a ${radiusKm} km o menos`] : []),
+    "Horario libre de los dos",
+  ];
   const [done, setDone] = useState(0);
   const pulse = useRef(new Animated.Value(0)).current;
   const spin = useRef(new Animated.Value(0)).current;
