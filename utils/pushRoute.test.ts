@@ -30,6 +30,23 @@ describe('routeForPush ([push-avisos] U8)', () => {
     });
   });
 
+  it('[avisos-calendario] los libres juntos abren el calendario en Libres juntos', () => {
+    expect(routeForPush({ type: 'FREE_TIME', route: '/(tabs)/calendario', freeTogether: '1' })).toEqual({
+      pathname: '/(tabs)/calendario',
+      params: { freeTogether: '1' },
+    });
+  });
+
+  it('[avisos-calendario] un conflicto abre el evento de Nexus; sin id, la campanita', () => {
+    expect(routeForPush({ type: 'SYNC_CONFLICT', route: '/(events)/edit-event', eventId: '21' })).toEqual({
+      pathname: '/(events)/edit-event',
+      params: { eventId: '21' },
+    });
+    expect(routeForPush({ type: 'SYNC_CONFLICT', route: '/(events)/edit-event' })).toEqual({
+      pathname: '/(events)/notifications',
+    });
+  });
+
   it('ignora rutas desconocidas, vacías o sin datos', () => {
     expect(routeForPush({ type: 'X', route: '/(auth)/login' })).toBeNull();
     expect(routeForPush({ type: 'X', route: 42 })).toBeNull();
