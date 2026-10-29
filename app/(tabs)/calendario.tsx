@@ -143,10 +143,13 @@ export default function CalendarioScreen() {
         title: ext.title,
         description: ext.description || undefined,
         location: ext.location || undefined,
-        startDate: ext.startDatetime,
-        endDate: ext.endDatetime,
+        // [avisos-calendario] La ocurrencia que se toco, no el primer evento de la serie.
+        startDate: item.start.toISOString(),
+        endDate: item.end.toISOString(),
         allDay: ext.isAllDay,
         recurrenceRule: ext.recurrenceRule || undefined,
+        calendarName: item.subtitle,
+        calendarColor: item.color,
       });
     }
   };
