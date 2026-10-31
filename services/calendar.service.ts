@@ -178,7 +178,8 @@ class CalendarService {
       location?: string;
       notes?: string;
       allDay?: boolean;
-      recurrenceRule?: string;
+      /** [sync-calendario] RF-22: repeticion de la copia (ver utils/deviceRecurrence). */
+      recurrenceRule?: Calendar.RecurrenceRule | null;
     }
   ): Promise<string> {
     try {
@@ -195,6 +196,7 @@ class CalendarService {
         notes: eventData.notes,
         allDay: eventData.allDay || false,
         timeZone: 'GMT',
+        recurrenceRule: eventData.recurrenceRule ?? null,
       });
 
       console.log('✅ Evento creado en calendario externo:', eventId);
@@ -217,6 +219,8 @@ class CalendarService {
       location?: string;
       notes?: string;
       allDay?: boolean;
+      /** [sync-calendario] RF-22: `null` quita la repeticion. */
+      recurrenceRule?: Calendar.RecurrenceRule | null;
     }
   ): Promise<void> {
     try {
@@ -230,6 +234,16 @@ class CalendarService {
     } catch (error) {
       console.error('❌ Error actualizando evento en calendario externo:', error);
       throw error;
+    }
+  }
+
+  /** [sync-calendario] R2: el evento sigue en el telefono (no lo borraron a mano). */
+  async eventExists(eventId: string): Promise<boolean> {
+    try {
+      await Calendar.getEventAsync(eventId);
+      return true;
+    } catch {
+      return false;
     }
   }
 

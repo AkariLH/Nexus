@@ -2,6 +2,7 @@ import { apiClient } from './api.client';
 import { API_CONFIG } from '../config/api.config';
 import { calendarService, CalendarEvent, ExternalCalendar, SyncConfig } from './calendar.service';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { toDeviceRecurrence } from '../utils/deviceRecurrence';
 
 const SYNC_CONFIG_KEY = 'calendar_sync_config';
 const LAST_SYNC_KEY = 'calendar_last_sync';
@@ -704,10 +705,137 @@ class ExternalCalendarIntegrationService {
   }
 
   /**
+   * [sync-calendario] RF-22 - Deja el calendario destino como dice el plan del backend: crea,
+   * actualiza y borra copias, y registra cada una como escrita por Nexus. Un error en un evento no
+   * detiene los demás (R7); si el destino no está en este teléfono no hace nada (R4).
+   */
+  async applyCopyPlan(userId: number, plan: CopyPlan): Promise<{ created: number; updated: number; removed: number }> {
+    const result = { created: 0, updated: 0, removed: 0 };
+    if (!(await calendarService.verifyCalendarExists(plan.deviceCalendarId))) return result;
+
+    const orphans = plan.create.length > 0 ? await this.phoneEventsAround(plan) : [];
+    for (const item of plan.create) {
+      try {
+        // R3: si la app se cerró después de crearlo, ya está en el teléfono sin registrar.
+        const orphan = orphans.find((e) => sameTitle(e.title, item.title) && sameMinute(e.startDate, new Date(item.start)));
+        const deviceEventId = orphan?.id ?? (await this.createCopy(plan, item));
+        await this.registerCopy(userId, plan, item, deviceEventId);
+        result.created++;
+      } catch (error) {
+        console.warn('⚠️ No se pudo copiar un evento de Nexus:', error);
+      }
+    }
+    for (const item of plan.update) {
+      try {
+        await calendarService.updateEventInExternalCalendar(item.deviceEventId!, deviceFields(item));
+        await this.registerCopy(userId, plan, item, item.deviceEventId!);
+        result.updated++;
+      } catch {
+        // Ya no estaba en el teléfono: se vuelve a crear.
+        if (await this.recreateCopy(userId, plan, item)) result.updated++;
+      }
+    }
+    for (const item of plan.keep) {
+      if (await calendarService.eventExists(item.deviceEventId!)) continue;
+      // R2: la borraron en el teléfono; manda Nexus.
+      if (await this.recreateCopy(userId, plan, item)) result.created++;
+    }
+    for (const copy of plan.remove) {
+      try {
+        await calendarService.deleteEventFromExternalCalendar(copy.deviceEventId).catch(() => undefined);
+        await apiClient.delete(deleteCopyUrl(userId, copy.externalCalendarId, copy.deviceEventId));
+        result.removed++;
+      } catch (error) {
+        console.warn('⚠️ No se pudo quitar una copia:', error);
+      }
+    }
+    return result;
+  }
+
+  private async recreateCopy(userId: number, plan: CopyPlan, item: CopyItem): Promise<boolean> {
+    try {
+      await apiClient.delete(deleteCopyUrl(userId, plan.externalCalendarId, item.deviceEventId!));
+      const deviceEventId = await this.createCopy(plan, item);
+      await this.registerCopy(userId, plan, item, deviceEventId);
+      return true;
+    } catch (error) {
+      console.warn('⚠️ No se pudo volver a crear una copia:', error);
+      return false;
+    }
+  }
+
+  private createCopy(plan: CopyPlan, item: CopyItem): Promise<string> {
+    return calendarService.createEventInExternalCalendar(plan.deviceCalendarId, deviceFields(item));
+  }
+
+  /** Lo que ya hay en el destino cerca de los eventos a crear (para adoptarlos, R3). */
+  private async phoneEventsAround(plan: CopyPlan): Promise<CalendarEvent[]> {
+    const starts = plan.create.map((i) => new Date(i.start).getTime());
+    const ends = plan.create.map((i) => new Date(i.end).getTime());
+    try {
+      return await calendarService.getEventsFromCalendar(
+        plan.deviceCalendarId,
+        new Date(Math.min(...starts) - 86_400_000),
+        new Date(Math.max(...ends) + 86_400_000),
+      );
+    } catch {
+      return [];
+    }
+  }
+
+  private async registerCopy(userId: number, plan: CopyPlan, item: CopyItem, deviceEventId: string): Promise<void> {
+    const endpoint = API_CONFIG.ENDPOINTS.EXTERNAL_CALENDARS.SYNC_EVENTS.replace(':userId', userId.toString());
+    await apiClient.post(endpoint, [{
+      externalCalendarId: plan.externalCalendarId,
+      deviceEventId,
+      title: item.title,
+      startDatetime: item.start,
+      endDatetime: item.end,
+      location: item.location ?? undefined,
+      description: item.description ?? undefined,
+      isAllDay: item.allDay,
+      recurrenceRule: item.recurrencePattern ?? undefined,
+      lastDeviceUpdate: new Date().toISOString(),
+      appEventId: item.appEventId,
+      fromNexus: true,
+    }]);
+  }
+
+  /**
    * Sincronización automática periódica (RF-21). [avisos-calendario] RF-24: devuelve los eventos
    * creados en Nexus que cambiaron en el teléfono (el backend ya dejó el aviso en la campanita).
+   * [sync-calendario] Después copia lo de Nexus al calendario destino (RF-22). Si ya hay una
+   * sincronización corriendo, devuelve esa misma (nunca corren dos a la vez).
    */
-  async performPeriodicSync(userId: number): Promise<{ conflicts: string[] }> {
+  performPeriodicSync(userId: number): Promise<{ conflicts: string[]; copied: number }> {
+    if (!this.syncInFlight) {
+      this.syncInFlight = this.runPeriodicSync(userId).finally(() => {
+        this.syncInFlight = null;
+      });
+    }
+    return this.syncInFlight;
+  }
+
+  private syncInFlight: Promise<{ conflicts: string[]; copied: number }> | null = null;
+
+  private async runPeriodicSync(userId: number): Promise<{ conflicts: string[]; copied: number }> {
+    const { conflicts } = await this.importLinkedCalendars(userId);
+    let copied = 0;
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.EXTERNAL_CALENDARS.COPY_PLAN.replace(':userId', userId.toString());
+      const response = await apiClient.get(endpoint);
+      if (response.status !== 204 && response.data) {
+        const done = await this.applyCopyPlan(userId, response.data as CopyPlan);
+        copied = done.created + done.updated;
+      }
+    } catch (error) {
+      console.error('❌ Error copiando los eventos de Nexus:', error);
+    }
+    return { conflicts, copied };
+  }
+
+  /** RF-21 / RF-24: trae cada calendario con «Sincronizar» prendido. */
+  private async importLinkedCalendars(userId: number): Promise<{ conflicts: string[] }> {
     const conflicts: string[] = [];
     try {
       console.log('🔄 Iniciando sincronización periódica...');
@@ -803,5 +931,62 @@ class ExternalCalendarIntegrationService {
     }
   }
 }
+
+/** [sync-calendario] RF-22 - Un evento de Nexus a copiar (CopyPlanDTO.CopyItem del backend). */
+export interface CopyItem {
+  appEventId: number;
+  /** `null` al crear. */
+  deviceEventId: string | null;
+  title: string;
+  start: string;
+  end: string;
+  allDay: boolean;
+  location?: string | null;
+  description?: string | null;
+  recurrencePattern?: string | null;
+}
+
+export interface CopyRemoval {
+  appEventId: number;
+  externalCalendarId: number;
+  deviceEventId: string;
+}
+
+/** Lo que hay que hacer en el calendario destino del teléfono. */
+export interface CopyPlan {
+  externalCalendarId: number;
+  deviceCalendarId: string;
+  create: CopyItem[];
+  update: CopyItem[];
+  remove: CopyRemoval[];
+  /** Copias al día: se revisa que sigan en el teléfono (R2). */
+  keep: CopyItem[];
+}
+
+/** Los de todo el día se guardan de 00:00 a 23:59 UTC; en el teléfono van con la fecha local de ese día (R5). */
+function deviceFields(item: CopyItem) {
+  const start = new Date(item.start);
+  const end = new Date(item.end);
+  const day = (d: Date) => new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  return {
+    title: item.title,
+    startDate: item.allDay ? day(start) : start,
+    endDate: item.allDay ? day(end) : end,
+    location: item.location ?? undefined,
+    notes: item.description ?? undefined,
+    allDay: item.allDay,
+    recurrenceRule: toDeviceRecurrence(item.recurrencePattern),
+  };
+}
+
+function deleteCopyUrl(userId: number, externalCalendarId: number, deviceEventId: string): string {
+  return API_CONFIG.ENDPOINTS.EXTERNAL_CALENDARS.DELETE_COPY
+    .replace(':userId', userId.toString())
+    .replace(':externalCalendarId', externalCalendarId.toString())
+    .replace(':deviceEventId', encodeURIComponent(deviceEventId));
+}
+
+const sameTitle = (a: string, b: string) => a.trim().replace(/\s+/g, ' ') === b.trim().replace(/\s+/g, ' ');
+const sameMinute = (a: Date, b: Date) => Math.floor(a.getTime() / 60_000) === Math.floor(b.getTime() / 60_000);
 
 export const externalCalendarIntegration = new ExternalCalendarIntegrationService();

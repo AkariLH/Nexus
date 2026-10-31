@@ -7,8 +7,8 @@ import { AuthProvider, useAuth } from "../context/AuthContext";
 import { QuestionnaireProvider } from "../context/QuestionnaireContext";
 import { AvailabilityProvider } from "../context/AvailabilityContext";
 import notificationService from "../services/firebase.service";
-import { externalCalendarIntegration } from "../services/externalCalendar.integration.service";
-import { DeviceEventEmitter, Platform } from "react-native";
+import { useCalendarAutoSync } from "../hooks/useCalendarAutoSync";
+import { DeviceEventEmitter } from "react-native";
 import { NOTICES_EVENT } from "../utils/pushRoute";
 
 const CHANGE_PASSWORD_ROUTES = ["forgot-password", "reset-password"];
@@ -79,29 +79,8 @@ function RootNavigator() {
     };
   }, [user?.userId, router]);
 
-  // Sincronización automática de calendarios externos al abrir la app
-  useEffect(() => {
-    // En web no hay calendario del dispositivo: solo llenaba la consola de errores de permisos.
-    if (!user?.userId || Platform.OS === "web") return;
-
-    const syncCalendars = async () => {
-      try {
-        console.log('🔄 Sincronizando calendarios externos al iniciar...');
-        await externalCalendarIntegration.performPeriodicSync(user.userId);
-        console.log('✅ Sincronización inicial completada');
-      } catch (error) {
-        console.error('❌ Error en sincronización inicial:', error);
-        // No mostrar error al usuario, es un proceso en segundo plano
-      }
-    };
-
-    // Ejecutar sincronización después de un breve delay para no bloquear la carga inicial
-    const timeoutId = setTimeout(() => {
-      syncCalendars();
-    }, 2000);
-
-    return () => clearTimeout(timeoutId);
-  }, [user?.userId]);
+  // [sync-calendario] RF-21: al abrir, al volver a la app y cada 15 min (nada en web).
+  useCalendarAutoSync(user?.userId);
 
   // Mostrar null mientras carga (Expo Router maneja la pantalla de carga)
   if (isLoading) {

@@ -247,6 +247,9 @@ export const API_CONFIG = {
       GET_AVAILABILITY: '/calendars/external/availability/:userId',
       GET_MUTUAL_AVAILABILITY: '/calendars/external/mutual-availability',
       HEALTH: '/calendars/external/health',
+      // [sync-calendario] RF-22: copias de los eventos de Nexus en el calendario destino.
+      COPY_PLAN: '/calendars/external/:userId/copy-plan',
+      DELETE_COPY: '/calendars/external/:userId/copies/:externalCalendarId/:deviceEventId',
     },
     EMOTIONS: {
       LOG: '/emotions/:userId',
