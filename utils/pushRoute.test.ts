@@ -1,4 +1,15 @@
-import { routeForPush } from './pushRoute';
+import { routeForNotice, routeForPush } from './pushRoute';
+
+describe('routeForNotice ([avisos-calendario] tocar el aviso en la campanita)', () => {
+  it('el aviso de libres juntos abre "Libres juntos" en el calendario', () => {
+    expect(routeForNotice('FREE_TIME')).toEqual({ pathname: '/(tabs)/calendario', params: { freeTogether: '1' } });
+  });
+
+  it('los demas avisos no llevan a ningun lado', () => {
+    expect(routeForNotice('SYNC_CONFLICT')).toBeNull();
+    expect(routeForNotice('EVENT_CONFIRMED')).toBeNull();
+  });
+});
 
 describe('routeForPush ([push-avisos] U8)', () => {
   it('abre la sesión de planeación', () => {

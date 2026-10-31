@@ -30,5 +30,14 @@ export function routeForPush(data: Record<string, unknown> | undefined): PushTar
   return { pathname: route };
 }
 
+/**
+ * [avisos-calendario] Pantalla al tocar un aviso en la campanita (no trae ruta como la push).
+ * Solo "libres juntos"; el de un evento cambiado necesita su id, que la lista no trae.
+ */
+export function routeForNotice(type: string): PushTarget | null {
+  if (type === 'FREE_TIME') return routeForPush({ route: '/(tabs)/calendario' });
+  return null;
+}
+
 /** Evento de la app cuando llega una push con la app abierta: Inicio recarga la campanita. */
 export const NOTICES_EVENT = 'nexus:notices';

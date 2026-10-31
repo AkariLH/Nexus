@@ -25,6 +25,7 @@ import { slotLabel } from "../../utils/recommendationFormat";
 import appNotificationService, { AppNotification } from "../../services/appNotification.service";
 import planningService from "../../services/planning.service";
 import { noticeTime } from "../../utils/eventFormat";
+import { routeForNotice } from "../../utils/pushRoute";
 
 /** A8 / A9 (vista de la pareja): resultado de aceptar o rechazar una invitacion. */
 interface Outcome {
@@ -351,8 +352,17 @@ export default function NotificationsScreen() {
             {notices.length > 0 && <Text style={styles.sectionTitle}>Avisos</Text>}
             {notices.length > 0 && (
               <View style={styles.noticeList}>
-                {notices.map((n) => (
-                  <View key={n.id} style={styles.noticeCard}>
+                {notices.map((n) => {
+                  // [avisos-calendario] El de libres juntos abre "Libres juntos"; los demas solo se leen.
+                  const target = routeForNotice(n.type);
+                  return (
+                  <TouchableOpacity
+                    key={n.id}
+                    style={styles.noticeCard}
+                    disabled={!target}
+                    accessibilityRole={target ? "button" : undefined}
+                    onPress={() => target && router.push(target as any)}
+                  >
                     <LinearGradient colors={gradients.primary} style={styles.noticeIcon}>
                       <Ionicons name="heart-outline" size={20} color={palette.onPrimary} />
                     </LinearGradient>
@@ -363,8 +373,9 @@ export default function NotificationsScreen() {
                       </View>
                       <Text style={styles.noticeBody}>{n.body}</Text>
                     </View>
-                  </View>
-                ))}
+                  </TouchableOpacity>
+                  );
+                })}
               </View>
             )}
           </>
