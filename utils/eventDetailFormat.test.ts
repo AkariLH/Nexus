@@ -1,4 +1,23 @@
-import { detailWhen, recurrenceLabel } from './eventDetailFormat';
+import { atOccurrence, detailWhen, recurrenceLabel } from './eventDetailFormat';
+
+describe('atOccurrence ([avisos-calendario] «De los dos»)', () => {
+  const serie = { id: 39, title: 'Cine', startDateTime: '2026-11-02T00:00:00.000Z', endDateTime: '2026-11-02T01:00:00.000Z' };
+
+  it('pone las horas de la ocurrencia que se toco y deja lo demas igual', () => {
+    const start = new Date('2026-11-09T00:00:00.000Z');
+    const end = new Date('2026-11-09T01:00:00.000Z');
+    expect(atOccurrence(serie, start, end)).toEqual({
+      ...serie,
+      startDateTime: '2026-11-09T00:00:00.000Z',
+      endDateTime: '2026-11-09T01:00:00.000Z',
+    });
+  });
+
+  it('no cambia el evento original', () => {
+    atOccurrence(serie, new Date('2026-11-09T00:00:00.000Z'), new Date('2026-11-09T01:00:00.000Z'));
+    expect(serie.startDateTime).toBe('2026-11-02T00:00:00.000Z');
+  });
+});
 
 describe('detailWhen ([avisos-calendario] Figma J5)', () => {
   it('dice el dia de la ocurrencia y sus horas', () => {

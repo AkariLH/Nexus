@@ -27,6 +27,7 @@ import {
   shortDay,
   weekOf,
 } from "../../utils/calendarLayout";
+import { atOccurrence } from "../../utils/eventDetailFormat";
 import { CalendarMode, CalendarTop } from "../../components/calendar/CalendarTop";
 import { MonthGrid } from "../../components/calendar/MonthGrid";
 import { DayStrip } from "../../components/calendar/DayStrip";
@@ -134,7 +135,8 @@ export default function CalendarioScreen() {
     if (item.eventId !== null) {
       const event = events.find((e) => e.id === item.eventId);
       // Las repeticiones guardan el id compuesto "id-fecha" para editar o borrar solo esa.
-      if (event) setSelectedEvent(item.id.includes("-") ? { ...event, id: item.id as any } : event);
+      // [avisos-calendario] y llevan la fecha del dia que se toco, no la del primero de la serie.
+      if (event) setSelectedEvent(item.id.includes("-") ? { ...atOccurrence(event, item.start, item.end), id: item.id as any } : event);
       return;
     }
     const ext = external.find((e) => e.id === item.externalId);

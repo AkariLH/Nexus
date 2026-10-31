@@ -16,6 +16,7 @@ import { ConfirmModal } from "./ConfirmModal";
 import eventService from "../../services/event.service";
 import { useAuth } from "../../context/AuthContext";
 import { palette, gradients } from "../../constants/colors";
+import { recurrenceLabel } from "../../utils/eventDetailFormat";
 
 const { height } = Dimensions.get("window");
 
@@ -78,7 +79,10 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, o
 
   const getRecurrenceText = (pattern?: string): string => {
     if (!pattern) return '';
-    
+    // [avisos-calendario] El mismo texto que la hoja de los eventos del telefono.
+    const label = recurrenceLabel(pattern);
+    if (label) return label;
+
     if (pattern.includes('FREQ=DAILY')) return 'Se repite diariamente';
     if (pattern.includes('FREQ=WEEKLY')) return 'Se repite semanalmente';
     if (pattern.includes('FREQ=MONTHLY')) return 'Se repite mensualmente';

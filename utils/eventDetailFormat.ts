@@ -22,6 +22,11 @@ export function detailWhen(start: Date, end: Date, allDay: boolean): string {
   return `${capital(dayOf(start))}, ${clock(start)} – ${dayOf(end)}, ${clock(end)}`;
 }
 
+/** El evento con las horas de la ocurrencia que se toco; en una serie, el back solo trae la primera. */
+export function atOccurrence<T extends { startDateTime: string; endDateTime: string }>(event: T, start: Date, end: Date): T {
+  return { ...event, startDateTime: start.toISOString(), endDateTime: end.toISOString() };
+}
+
 /** "Cada semana los lunes y miércoles", "Todos los días"... ; null si no se repite o no se entiende. */
 export function recurrenceLabel(rrule?: string | null): string | null {
   if (!rrule) return null;
