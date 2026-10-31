@@ -82,8 +82,10 @@ const session = (userId: number, sessionId: number, action: string): string =>
  * RF-38 / RF-39 - Planeacion en pareja. Todo por apiClient (lleva la sesion).
  */
 const planningService = {
-  invite: async (userId: number): Promise<PlanningView> => {
-    const response = await apiClient.post(paths.INVITE.replace(':userId', String(userId)));
+  /** [libres-juntos] Con `slot`, la planeacion empieza con ese horario ya puesto. */
+  invite: async (userId: number, slot?: { slotStart: string; slotEnd: string }): Promise<PlanningView> => {
+    const url = paths.INVITE.replace(':userId', String(userId));
+    const response = slot ? await apiClient.post(url, slot) : await apiClient.post(url);
     return response.data;
   },
 

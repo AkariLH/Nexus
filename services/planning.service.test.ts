@@ -19,6 +19,14 @@ describe('planningService', () => {
     post.mockResolvedValue({ data: { id: 50 } });
   });
 
+  it('[libres-juntos] invita con un horario ya elegido', async () => {
+    await planningService.invite(4, { slotStart: '2026-11-01T01:00:00.000Z', slotEnd: '2026-11-01T04:00:00.000Z' });
+    expect(post).toHaveBeenCalledWith('/planning/4/invite', {
+      slotStart: '2026-11-01T01:00:00.000Z',
+      slotEnd: '2026-11-01T04:00:00.000Z',
+    });
+  });
+
   it('invita y consulta la planeacion actual (204 = ninguna)', async () => {
     await planningService.invite(4);
     expect(post).toHaveBeenCalledWith('/planning/4/invite');

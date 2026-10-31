@@ -6,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { palette } from "../../constants/colors";
 import { useAuth } from "../../context/AuthContext";
 import planningService from "../../services/planning.service";
+import { slotToInstants } from "../../utils/recommendationParams";
 import { ScreenHeader } from "../components/layout/ScreenHeader";
 import { GradientButton } from "../components/ui/GradientButton";
 import { ResultModal } from "../components/ResultModal";
@@ -59,7 +60,12 @@ export default function RecommendationModeScreen() {
     try {
       const current = await planningService.current(user.userId);
       const open = current && ["INVITED", "FILTERS", "OPTIONS", "PROPOSAL"].includes(current.phase);
-      if (!open) await planningService.invite(user.userId);
+      // [libres-juntos] Desde una propuesta, la planeacion empieza con ese horario.
+      const slot =
+        slotDate && slotStart && slotEnd
+          ? slotToInstants({ key: slotDate, date: slotDate, start: slotStart, end: slotEnd })
+          : undefined;
+      if (!open) await planningService.invite(user.userId, slot && { slotStart: slot.slotStart, slotEnd: slot.slotEnd });
       router.replace("/(planning)/session");
     } catch (e: any) {
       setError(e?.message || "No se pudo enviar la invitación.");
