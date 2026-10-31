@@ -10,6 +10,7 @@ import { ErrorModal } from '../components/ErrorModal';
 import { SuccessModal } from '../components/SuccessModal';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { GradientButton } from '../components/ui/GradientButton';
+import { OptionChip } from '../components/ui/OptionChip';
 import { Card, ListRow, Pill, SectionLabel, SoftIcon } from '../../components/ui/Surface';
 import { palette, switchColors } from '../../constants/colors';
 
@@ -125,13 +126,33 @@ export default function LinkExternalCalendarsScreen() {
     }
   };
 
+  /** [sync-calendario] RF-22 (Figma J6): a qué calendario se copian los eventos de Nexus; `null` = no copiar. */
+  const handleExportTarget = async (target: LinkedCalendar | null) => {
+    if (!user) return;
+    const current = linkedCalendars.find(cal => cal.exportEvents);
+    if ((current?.id ?? null) === (target?.id ?? null)) return;
+
+    try {
+      if (target) {
+        await externalCalendarIntegration.updateCalendarSettings(user.userId, target.deviceCalendarId, undefined, undefined, true);
+      } else if (current) {
+        await externalCalendarIntegration.updateCalendarSettings(user.userId, current.deviceCalendarId, undefined, undefined, false);
+      }
+      await loadCalendars();
+      if (target && !ON_WEB) await handleSyncNow();
+    } catch (error) {
+      console.error('Error eligiendo el calendario destino:', error);
+      setErrorModal({ visible: true, message: 'No se pudo cambiar a dónde se copian tus eventos. Inténtalo de nuevo.' });
+    }
+  };
+
   const handleSyncNow = async () => {
     if (!user) return;
 
     setSyncing(true);
     try {
-      const { conflicts } = await externalCalendarIntegration.performPeriodicSync(user.userId);
-      setSuccessModal({ visible: true, message: syncDoneMessage(conflicts) });
+      const { conflicts, copied } = await externalCalendarIntegration.performPeriodicSync(user.userId);
+      setSuccessModal({ visible: true, message: syncDoneMessage(conflicts, copied) });
       await loadCalendars();
     } catch (error: any) {
       console.error('Error en sincronización:', error);
@@ -217,6 +238,33 @@ export default function LinkExternalCalendarsScreen() {
             </View>
           )}
 
+          {linkedCalendars.length > 0 && (
+            <View style={styles.section}>
+              <SectionLabel>Copiar a tu calendario</SectionLabel>
+              <Card style={styles.exportCard}>
+                <Text style={styles.calendarName}>Copiar mis eventos de Nexus a:</Text>
+                <View style={styles.chips} accessibilityRole="radiogroup">
+                  {linkedCalendars.map((calendar) => (
+                    <OptionChip
+                      key={calendar.id}
+                      label={calendar.calendarName}
+                      selected={!!calendar.exportEvents}
+                      onPress={() => handleExportTarget(calendar)}
+                    />
+                  ))}
+                  <OptionChip
+                    label="No copiar"
+                    selected={!linkedCalendars.some(cal => cal.exportEvents)}
+                    onPress={() => handleExportTarget(null)}
+                  />
+                </View>
+                <Text style={styles.meta}>
+                  Tus eventos confirmados de Nexus se copian a ese calendario y cambian solos si cambian en Nexus. Al elegirlo se prende «Sincronizar».
+                </Text>
+              </Card>
+            </View>
+          )}
+
           <View style={styles.section}>
             <SectionLabel>En tu teléfono</SectionLabel>
             {ON_WEB ? (
@@ -297,6 +345,8 @@ const styles = StyleSheet.create({
   intro: { fontSize: 14, lineHeight: 20, color: palette.textSecondary },
   section: { gap: 12 },
   card: { gap: 0 },
+  exportCard: { gap: 12 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   calendarHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   colorDot: { width: 14, height: 14, borderRadius: 7 },
   calendarInfo: { flex: 1, gap: 2 },

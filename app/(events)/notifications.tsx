@@ -10,6 +10,7 @@ import {
   View,
   ActivityIndicator,
   RefreshControl,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../context/AuthContext";
@@ -49,10 +50,6 @@ export default function NotificationsScreen() {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<EventResponse | null>(null);
   const [modalMessage, setModalMessage] = useState({ title: "", message: "" });
-  
-  // Estados para sincronización con calendario externo
-  const [showSyncModal, setShowSyncModal] = useState(false);
-  const [externalCalendars, setExternalCalendars] = useState<any[]>([]);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [notices, setNotices] = useState<AppNotification[]>([]);
   const inviterName = outcome?.event?.creatorName || outcome?.event?.creatorNickname || "tu pareja";
@@ -104,26 +101,11 @@ export default function NotificationsScreen() {
     
     try {
       await eventService.approveEvent(selectedEvent.id, user.userId);
-      
-      // Cargar calendarios externos para preguntar si quiere sincronizar
-      try {
-        const calendars = await externalCalendarIntegration.getUserLinkedCalendars(user.userId, true);
-        const syncEnabled = calendars.filter(cal => cal.syncEnabled);
-        setExternalCalendars(syncEnabled);
-        
-        if (syncEnabled.length > 0) {
-          // Mostrar modal para preguntar si quiere agregar al calendario externo
-          setShowSyncModal(true);
-        } else {
-          // No tiene calendarios, solo mostrar éxito
-          setOutcome({ kind: "accepted", event: selectedEvent });
-          loadPendingEvents();
-        }
-      } catch (calError) {
-        console.error('Error cargando calendarios:', calError);
-        // Continuar aunque falle la carga de calendarios
-        setOutcome({ kind: "accepted", event: selectedEvent });
-        loadPendingEvents();
+      setOutcome({ kind: "accepted", event: selectedEvent });
+      loadPendingEvents();
+      // [sync-calendario] RF-22: ya no se pregunta; si eligio un calendario destino, se copia solo.
+      if (Platform.OS !== "web") {
+        externalCalendarIntegration.performPeriodicSync(user.userId).catch(() => undefined);
       }
     } catch (error: any) {
       console.error('Error aprobando evento:', error);
@@ -140,52 +122,6 @@ export default function NotificationsScreen() {
   const handleReject = async (event: EventResponse) => {
     setSelectedEvent(event);
     setShowRejectModal(true);
-  };
-  
-  const handleSyncToExternalCalendar = async () => {
-    if (!user?.userId || !selectedEvent || externalCalendars.length === 0) return;
-    
-    setShowSyncModal(false);
-    setProcessingEventId(selectedEvent.id);
-    
-    try {
-      const calendar = externalCalendars[0]; // Usar el primero
-      
-      await externalCalendarIntegration.createEventInNativeCalendar(
-        user.userId,
-        calendar.id,
-        calendar.deviceCalendarId,
-        {
-          title: selectedEvent.title,
-          startDate: new Date(selectedEvent.startDateTime),
-          endDate: new Date(selectedEvent.endDateTime),
-          location: selectedEvent.location,
-          notes: selectedEvent.description,
-          allDay: false, // Puedes agregar esta propiedad al EventResponse si la necesitas
-        },
-        // [avisos-calendario] RF-24: si la copia cambia en el telefono, se avisa.
-        Number(selectedEvent.id)
-      );
-      
-      setOutcome({ kind: "accepted", event: selectedEvent });
-      loadPendingEvents();
-    } catch (error: any) {
-      console.error('Error sincronizando con calendario externo:', error);
-      setModalMessage({
-        title: "Evento Aprobado",
-        message: "El evento está en Nexus, pero no se pudo agregar a tu calendario externo"
-      });
-      setShowSuccessModal(true);
-      loadPendingEvents();
-    } finally {
-      setProcessingEventId(null);
-    }
-  };
-  
-  const handleSkipSync = () => {
-    setShowSyncModal(false);
-    setOutcome({ kind: "accepted", event: selectedEvent });
-    loadPendingEvents();
   };
   
   const confirmReject = async () => {
@@ -465,18 +401,6 @@ export default function NotificationsScreen() {
         }}
         secondary={{ label: "Cerrar", onPress: () => setOutcome(null) }}
         onRequestClose={() => setOutcome(null)}
-      />
-
-      {/* Modal de sincronización con calendario externo */}
-      <ConfirmModal
-        visible={showSyncModal}
-        type="confirm"
-        title="Agregar a tu calendario"
-        message={`¿Deseas agregar este evento a ${externalCalendars[0]?.name || 'tu calendario externo'}?`}
-        confirmText="Sí, agregar"
-        cancelText="Solo en Nexus"
-        onConfirm={handleSyncToExternalCalendar}
-        onCancel={handleSkipSync}
       />
     </SafeAreaView>
   );

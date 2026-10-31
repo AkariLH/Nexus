@@ -214,6 +214,8 @@ export interface LinkedCalendar {
   calendarSource: string;
   calendarColor: string;
   syncEnabled: boolean;
+  /** [sync-calendario] RF-22: calendario al que se copian los eventos de Nexus. */
+  exportEvents?: boolean;
   privacyMode: 'FULL_DETAILS' | 'BUSY_ONLY';
   lastSync?: string;
   isActive: boolean;
@@ -335,16 +337,19 @@ class ExternalCalendarIntegrationService {
     userId: number,
     deviceCalendarId: string,
     syncEnabled?: boolean,
-    privacyMode?: 'FULL_DETAILS' | 'BUSY_ONLY'
+    privacyMode?: 'FULL_DETAILS' | 'BUSY_ONLY',
+    /** [sync-calendario] RF-22: aquí se copian los eventos de Nexus (uno solo). */
+    exportEvents?: boolean
   ): Promise<LinkedCalendar> {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.EXTERNAL_CALENDARS.UPDATE_SETTINGS
         .replace(':userId', userId.toString())
         .replace(':deviceCalendarId', deviceCalendarId);
-      
+
       const params: any = {};
       if (syncEnabled !== undefined) params.syncEnabled = syncEnabled;
       if (privacyMode) params.privacyMode = privacyMode;
+      if (exportEvents !== undefined) params.exportEvents = exportEvents;
 
       const response = await apiClient.patch(endpoint, null, { params });
       
@@ -650,56 +655,6 @@ class ExternalCalendarIntegrationService {
       return response.data;
     } catch (error) {
       console.error('❌ Error obteniendo disponibilidad mutua:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * RF-22: Crear evento en calendario nativo y sincronizar con backend
-   */
-  async createEventInNativeCalendar(
-    userId: number,
-    externalCalendarId: number,
-    deviceCalendarId: string,
-    eventData: {
-      title: string;
-      startDate: Date;
-      endDate: Date;
-      location?: string;
-      notes?: string;
-      allDay?: boolean;
-    },
-    /** [avisos-calendario] RF-24: evento de Nexus del que sale la copia. */
-    appEventId?: number
-  ): Promise<string> {
-    try {
-      // Crear en calendario nativo
-      const deviceEventId = await calendarService.createEventInExternalCalendar(
-        deviceCalendarId,
-        eventData
-      );
-
-      // Sincronizar con backend
-      const endpoint = API_CONFIG.ENDPOINTS.EXTERNAL_CALENDARS.SYNC_EVENTS
-        .replace(':userId', userId.toString());
-      
-      await apiClient.post(endpoint, [{
-        externalCalendarId,
-        deviceEventId,
-        title: eventData.title,
-        startDatetime: eventData.startDate.toISOString(),
-        endDatetime: eventData.endDate.toISOString(),
-        location: eventData.location,
-        description: eventData.notes,
-        isAllDay: eventData.allDay || false,
-        lastDeviceUpdate: new Date().toISOString(),
-        appEventId,
-      }]);
-
-      console.log('✅ Evento creado y sincronizado');
-      return deviceEventId;
-    } catch (error) {
-      console.error('❌ Error creando evento:', error);
       throw error;
     }
   }
