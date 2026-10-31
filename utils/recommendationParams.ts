@@ -130,6 +130,18 @@ export function withRange(slot: SlotOption, from: string, to: string): SlotOptio
   return { ...slot, start: from, end: to };
 }
 
+/**
+ * [libres-juntos] Llegando desde una propuesta: el hueco que la contiene y su rango; `null` si ese
+ * horario ya no esta libre (alguien agendo algo despues).
+ */
+export function slotForWindow(
+  slots: SlotOption[],
+  w: { date: string; start: string; end: string },
+): { slot: SlotOption; from: string; to: string } | null {
+  const slot = slots.find((s) => s.date === w.date && s.start <= w.start && s.end >= w.end);
+  return slot ? { slot, from: w.start, to: w.end } : null;
+}
+
 /** [rango-distancia] Elegir otro hueco: el rango vuelve a ser el hueco completo. */
 export function chooseSlot<T extends RequestForm>(form: T, slot: SlotOption): T {
   return { ...form, slot, rangeFrom: undefined, rangeTo: undefined };

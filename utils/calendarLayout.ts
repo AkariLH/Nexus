@@ -2,6 +2,7 @@ import type { EventResponse } from '../services/event.service';
 import type { ExternalEventDTO } from '../services/externalCalendar.integration.service';
 import type { MutualAvailabilityResponse } from '../services/availabilityService';
 import { expandRecurringEvent } from './recurrenceUtils';
+import { cleanWindows } from './freeProposals';
 
 /**
  * Datos del calendario (Figma E): eventos de Nexus (de los dos), del calendario del telefono propio
@@ -296,23 +297,30 @@ export interface FreeSlot {
   label: string;
 }
 
-const MIN_FREE_MINUTES = 60;
-
-function slotsOfDay(day: MutualAvailabilityResponse['mutualAvailability'][number], now: Date): FreeSlot[] {
+/**
+ * [libres-juntos] Los huecos ya limpios (desde ahora, a :00/:30, de 1 h o mas; ver freeProposals):
+ * partidos en manana / tarde / noche para la lista, enteros (`split = false`) para la vista Dia.
+ */
+function slotsOfDay(day: MutualAvailabilityResponse['mutualAvailability'][number], now: Date, split = true): FreeSlot[] {
   const [y, m, d] = day.date.split('-').map(Number);
   const at = (time: string) => {
     const [h, min] = time.split(':').map(Number);
     return new Date(y, m - 1, d, h, min);
   };
-  return day.mutualFreeSlots
-    .map((s) => ({ date: day.date, startTime: s.start, endTime: s.end, start: at(s.start), end: at(s.end), label: `${s.start} – ${s.end}` }))
-    .filter((s) => s.end.getTime() - s.start.getTime() >= MIN_FREE_MINUTES * 60_000 && s.end > now);
+  return cleanWindows([day], now, split).map((w) => ({
+    date: w.date,
+    startTime: w.start,
+    endTime: w.end,
+    start: at(w.start),
+    end: at(w.end),
+    label: `${w.start} – ${w.end}`,
+  }));
 }
 
 /** Huecos libres de los dos en un dia (para los bloques punteados de la vista Dia). */
 export function freeSlotsOn(mutual: MutualAvailabilityResponse | null, day: Date, now: Date): FreeSlot[] {
   const found = mutual?.mutualAvailability.find((d) => d.date === isoDate(day));
-  return found ? slotsOfDay(found, now) : [];
+  return found ? slotsOfDay(found, now, false) : [];
 }
 
 /** Dias con huecos libres de los dos (modal E4): "Hoy, viernes 16", "Sábado 17". */

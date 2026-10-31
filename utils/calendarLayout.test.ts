@@ -182,16 +182,34 @@ describe('calendarLayout', () => {
     };
     const now = new Date(2026, 9, 16, 13, 0);
 
+    // La vista Dia: cada hueco entero.
     expect(freeSlotsOn(mutual, new Date(2026, 9, 16), now).map((s) => s.label)).toEqual(['18:00 – 21:00']);
+    // [libres-juntos] La lista: partidos en manana / tarde / noche.
     const days = freeTogetherDays(mutual, now);
-    expect(days.map((d) => [d.title, d.slots.length])).toEqual([
-      ['Hoy, viernes 16', 1],
-      ['Sábado 17', 1],
+    expect(days.map((d) => [d.title, d.slots.map((s) => s.label)])).toEqual([
+      ['Hoy, viernes 16', ['18:00 – 19:00', '19:00 – 21:00']],
+      ['Sábado 17', ['11:00 – 13:00', '13:00 – 14:00']],
     ]);
-    expect(days[1].slots[0]).toMatchObject({ date: '2026-10-17', startTime: '11:00', endTime: '14:00' });
+    expect(days[1].slots[0]).toMatchObject({ date: '2026-10-17', startTime: '11:00', endTime: '13:00' });
     // Figma H7: "Esta semana tienen N horarios libres juntos".
-    expect(freeSlotCount(mutual, now)).toBe(2);
+    expect(freeSlotCount(mutual, now)).toBe(4);
     expect(freeSlotCount(null, now)).toBe(0);
+  });
+
+  it('[libres-juntos] sin horas que ya pasaron ni minutos sueltos', () => {
+    const mutual = {
+      user1Id: 4,
+      user2Id: 13,
+      totalDaysWithMutualAvailability: 1,
+      totalMutualMinutes: 0,
+      mutualAvailability: [
+        { date: '2026-10-31', dayOfWeek: 'SATURDAY', totalMutualMinutes: 0, mutualFreeSlots: [{ start: '09:05', end: '22:00' }] },
+      ],
+    };
+    const now = new Date(2026, 9, 31, 17, 10);
+
+    expect(freeSlotsOn(mutual, new Date(2026, 9, 31), now).map((s) => s.label)).toEqual(['17:30 – 22:00']);
+    expect(freeTogetherDays(mutual, now)[0].slots.map((s) => s.label)).toEqual(['17:30 – 19:00', '19:00 – 22:00']);
   });
 
   it('escribe los títulos como en Figma', () => {
