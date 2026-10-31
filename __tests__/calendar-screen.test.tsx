@@ -104,25 +104,33 @@ describe('CalendarioScreen', () => {
     expect(screen.getByText('Calendario de Sam')).toBeTruthy();
   });
 
-  it('la burbuja abre los horarios libres y tocar uno crea un evento con esa hora', async () => {
+  it('[libres-juntos] la burbuja abre las propuestas; tocar un horario abre la hoja y sus dos salidas', async () => {
     await renderScreen();
+    const tomorrow = iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1));
 
-    // El hueco de hoy dura menos de 1 h, asi que solo cuenta el de mañana.
-    fireEvent.press(screen.getByText('1 horario libre juntos'));
-    expect(screen.getByText('Libres juntos')).toBeTruthy();
+    // El hueco de hoy dura menos de 1 h; el de mañana (11:00-14:00) se parte en mañana y tarde.
+    fireEvent.press(screen.getByText('2 horarios libres juntos'));
+    expect(screen.getByText('Les proponemos estos horarios.')).toBeTruthy();
+    expect(screen.getByText('Mañana en la tarde')).toBeTruthy();
 
-    fireEvent.press(screen.getByText('11:00 – 14:00'));
+    fireEvent.press(screen.getByText('11:00 – 13:00'));
+    expect(screen.getByText('Mañana por la mañana')).toBeTruthy();
+    fireEvent.press(screen.getByText('Agregar un plan nuestro'));
     expect(mockPush).toHaveBeenCalledWith({
       pathname: '/(events)/create-event',
-      params: {
-        suggestedDate: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1)),
-        suggestedStart: '11:00',
-        suggestedEnd: '14:00',
-      },
+      params: { suggestedDate: tomorrow, suggestedStart: '11:00', suggestedEnd: '13:00' },
+    });
+
+    fireEvent.press(screen.getByText('2 horarios libres juntos'));
+    fireEvent.press(screen.getByText('Mañana en la tarde'));
+    fireEvent.press(screen.getByText('Buscar un plan para este horario'));
+    expect(mockPush).toHaveBeenCalledWith({
+      pathname: '/(recommend)/mode',
+      params: { slotDate: tomorrow, slotStart: '13:00', slotEnd: '14:00' },
     });
   });
 
-  it('en Día muestra los huecos libres de los dos', async () => {
+  it('en Día muestra los huecos libres de los dos y tocarlos abre la hoja', async () => {
     await renderScreen();
 
     fireEvent.press(screen.getByText('Día'));
@@ -130,8 +138,9 @@ describe('CalendarioScreen', () => {
 
     expect(screen.getByText('Libres los dos')).toBeTruthy();
     fireEvent.press(screen.getByText('Libres los dos'));
+    fireEvent.press(screen.getByText('Agregar un plan nuestro'));
     expect(mockPush).toHaveBeenCalledWith(
-      expect.objectContaining({ params: expect.objectContaining({ suggestedStart: '11:00' }) }),
+      expect.objectContaining({ params: expect.objectContaining({ suggestedStart: '11:00', suggestedEnd: '14:00' }) }),
     );
   });
 });

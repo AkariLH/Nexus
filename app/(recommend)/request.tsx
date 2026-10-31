@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
 import * as Location from "expo-location";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -31,6 +31,7 @@ import {
   MAX_COST_MXN,
   RequestForm,
   SlotOption,
+  slotForWindow,
 } from "../../utils/recommendationParams";
 import { formatMxn, slotOptionLabel } from "../../utils/recommendationFormat";
 import { ScreenHeader } from "../components/layout/ScreenHeader";
@@ -68,6 +69,9 @@ const Section = ({ title, hint, children }: { title: string; hint?: string; chil
 export default function RecommendationRequestScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  // [libres-juntos] Si llega desde una propuesta de «Libres juntos».
+  const { slotDate, slotStart, slotEnd } = useLocalSearchParams<{ slotDate?: string; slotStart?: string; slotEnd?: string }>();
+  const [slotGone, setSlotGone] = useState(false);
   const [form, setForm] = useState<RequestForm>({ scope: "ANY", maxCostMxn: DEFAULT_BUDGET });
   const [slots, setSlots] = useState<SlotOption[]>([]);
   const [slotsState, setSlotsState] = useState<SlotsState>("loading");
@@ -91,12 +95,22 @@ export default function RecommendationRequestScreen() {
         return;
       }
       const mutual = await findMutualAvailability(user.userId, link.partner.userId, DAYS_AHEAD);
-      setSlots(eligibleSlots(mutual.mutualAvailability ?? [], new Date()));
+      const found = eligibleSlots(mutual.mutualAvailability ?? [], new Date());
+      setSlots(found);
+      // [libres-juntos] Desde una propuesta: ese horario ya elegido, o el aviso si ya no esta libre (R4).
+      if (slotDate && slotStart && slotEnd) {
+        const match = slotForWindow(found, { date: slotDate, start: slotStart, end: slotEnd });
+        if (match) {
+          setForm((current) => ({ ...chooseSlot(current, match.slot), rangeFrom: match.from, rangeTo: match.to }));
+        } else {
+          setSlotGone(true);
+        }
+      }
       setSlotsState("ready");
     } catch {
       setSlotsState("error");
     }
-  }, [user?.userId]);
+  }, [user?.userId, slotDate, slotStart, slotEnd]);
 
   useEffect(() => {
     loadSlots();
@@ -165,6 +179,9 @@ export default function RecommendationRequestScreen() {
           {slotsState === "ready" && slots.length === 0 && (
             <Text style={styles.emptyText}>No tienen horarios libres en común en los próximos días.</Text>
           )}
+          {slotsState === "ready" && slotGone && slots.length > 0 && (
+            <Text style={styles.emptyText}>Ese horario ya no está libre, elijan otro.</Text>
+          )}
           {slotsState === "ready" && slots.length > 0 && (
             <View style={styles.chips}>
               {slots.map((slot) => (
@@ -172,7 +189,10 @@ export default function RecommendationRequestScreen() {
                   key={slot.key}
                   label={slotOptionLabel(slot, now)}
                   selected={form.slot?.key === slot.key}
-                  onPress={() => setForm((current) => chooseSlot(current, slot))}
+                  onPress={() => {
+                    setSlotGone(false);
+                    setForm((current) => chooseSlot(current, slot));
+                  }}
                 />
               ))}
             </View>

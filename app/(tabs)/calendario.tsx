@@ -34,6 +34,9 @@ import { DayStrip } from "../../components/calendar/DayStrip";
 import { EventRow } from "../../components/calendar/EventRow";
 import { TimeGrid } from "../../components/calendar/TimeGrid";
 import { FreeTogetherBubble, FreeTogetherModal } from "../../components/calendar/FreeTogether";
+import { ProposalSheet } from "../../components/calendar/ProposalSheet";
+import { cleanWindows, FreeWindow, proposalsOf, toWindow } from "../../utils/freeProposals";
+import { planParams, reserveParams } from "../../utils/planFromWindow";
 import { barColor, SOURCE_COLORS } from "../../components/calendar/calendarColors";
 import { EventDetailsModal } from "../components/EventDetailsModal";
 import { ExternalEventDetail, ExternalEventDetailModal } from "../components/ExternalEventDetailModal";
@@ -130,6 +133,16 @@ export default function CalendarioScreen() {
   );
   const freeDays = useMemo(() => freeTogetherDays(mutual, now), [mutual, now.getHours()]);
   const freeCount = freeDays.reduce((n, d) => n + d.slots.length, 0);
+  // [libres-juntos] Figma K2: las propuestas de Nexus arriba de la lista.
+  const proposals = useMemo(
+    () => proposalsOf(cleanWindows(mutual?.mutualAvailability ?? [], now)),
+    [mutual, now.getHours()],
+  );
+  const [picked, setPicked] = useState<FreeWindow | null>(null);
+  const pick = (w: FreeWindow) => {
+    setShowFree(false);
+    setPicked(w);
+  };
 
   const openItem = (item: CalendarItem) => {
     if (item.eventId !== null) {
@@ -164,6 +177,16 @@ export default function CalendarioScreen() {
         ? { suggestedDate: slot.date, suggestedStart: slot.startTime, suggestedEnd: slot.endTime }
         : { suggestedDate: isoDate(selected) },
     });
+  };
+
+  // [libres-juntos] Figma K3: buscar un plan para ese horario o agregar uno que ya tienen.
+  const planAt = (w: FreeWindow) => {
+    setPicked(null);
+    router.push({ pathname: "/(recommend)/mode", params: planParams(w) });
+  };
+  const reserveAt = (w: FreeWindow) => {
+    setPicked(null);
+    router.push({ pathname: "/(events)/create-event", params: reserveParams(w) });
   };
 
   const move = (direction: 1 | -1) => {
@@ -335,7 +358,7 @@ export default function CalendarioScreen() {
             firstHour={firstHour}
             freeSlots={mode === "day" ? freeSlotsOn(mutual, selected, now) : []}
             onPressItem={openItem}
-            onPressFree={createAt}
+            onPressFree={(slot) => setPicked(toWindow(slot.date, slot.startTime, slot.endTime))}
           />
         </View>
       )}
@@ -350,7 +373,20 @@ export default function CalendarioScreen() {
         </TouchableOpacity>
       </View>
 
-      <FreeTogetherModal visible={showFree} days={freeDays} onPick={createAt} onClose={() => setShowFree(false)} />
+      <FreeTogetherModal
+        visible={showFree}
+        proposals={proposals}
+        days={freeDays}
+        onPick={pick}
+        onClose={() => setShowFree(false)}
+      />
+      <ProposalSheet
+        visible={picked !== null}
+        window={picked}
+        onPlan={() => picked && planAt(picked)}
+        onReserve={() => picked && reserveAt(picked)}
+        onClose={() => setPicked(null)}
+      />
 
       <EventDetailsModal
         visible={selectedEvent !== null}

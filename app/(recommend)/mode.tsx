@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -48,6 +48,7 @@ const ModeOption = ({ icon, title, subtitle, selected, disabled, onPress }: Mode
 export default function RecommendationModeScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const { slotDate, slotStart, slotEnd } = useLocalSearchParams<{ slotDate?: string; slotStart?: string; slotEnd?: string }>();
   const [mode, setMode] = useState<"INDIVIDUAL" | "JOINT">("INDIVIDUAL");
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -67,7 +68,11 @@ export default function RecommendationModeScreen() {
     }
   };
 
-  const proceed = () => (mode === "INDIVIDUAL" ? router.push("/(recommend)/request") : startJoint());
+  // [libres-juntos] Desde una propuesta, el horario pasa a «Detalles de la cita».
+  const proceed = () =>
+    mode === "INDIVIDUAL"
+      ? router.push(slotDate ? { pathname: "/(recommend)/request", params: { slotDate, slotStart, slotEnd } } : "/(recommend)/request")
+      : startJoint();
 
   return (
     <SafeAreaView style={styles.container} edges={["left", "right", "bottom"]}>

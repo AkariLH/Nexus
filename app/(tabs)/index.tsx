@@ -6,6 +6,11 @@ import { StyleSheet, Text, TouchableOpacity, View, ScrollView, ActivityIndicator
 import { Card, GradientIcon, MetaLine, SectionLabel } from "../../components/ui/Surface";
 import { findMutualAvailability } from "../../services/availabilityService";
 import { freeSlotCount } from "../../utils/calendarLayout";
+import { cleanWindows, FreeWindow, proposalsOf } from "../../utils/freeProposals";
+import { planParams, reserveParams } from "../../utils/planFromWindow";
+import { ProposalSheet } from "../../components/calendar/ProposalSheet";
+import { FreeTogetherCard } from "../../components/home/FreeTogetherCard";
+import { homeHighlight } from "../../components/home/homeHighlight";
 import { linkedSubtitle, listLabel } from "../../utils/linkFormat";
 import { GradientButton } from "../components/ui/GradientButton";
 import { useAuth } from "../../context/AuthContext";
@@ -261,17 +266,30 @@ export default function HomeScreen() {
 
   // H7: cuantos horarios libres tienen los dos esta semana (si no se puede saber, no se dice).
   const [freeCount, setFreeCount] = useState<number | null>(null);
+  // [libres-juntos] Figma K1: las propuestas de la semana (null = no se pudo saber).
+  const [proposals, setProposals] = useState<FreeWindow[] | null>(null);
+  const [picked, setPicked] = useState<FreeWindow | null>(null);
   const partnerId = linkStatus?.partner?.userId;
   useEffect(() => {
-    if (!linked || !user?.userId || !partnerId) return;
+    if (!user?.userId || !partnerId) return;
     let alive = true;
     findMutualAvailability(user.userId, partnerId, 7)
-      .then((mutual) => alive && setFreeCount(freeSlotCount(mutual, new Date())))
-      .catch(() => alive && setFreeCount(null));
+      .then((mutual) => {
+        if (!alive) return;
+        const now = new Date();
+        setFreeCount(freeSlotCount(mutual, now));
+        setProposals(proposalsOf(cleanWindows(mutual.mutualAvailability ?? [], now)));
+      })
+      .catch(() => {
+        if (!alive) return;
+        setFreeCount(null);
+        setProposals(null);
+      });
     return () => {
       alive = false;
     };
   }, [linked, user?.userId, partnerId]);
+  const highlight = isLinked ? homeHighlight(upcomingEvents, proposals, new Date()) : null;
 
   // El nombre se guarda para que el modal no quede sin el mientras se desvanece al cerrarse.
   const [linkedName, setLinkedName] = useState("");
@@ -328,6 +346,16 @@ export default function HomeScreen() {
         </View>
       ) : (
         <>
+          {/* [libres-juntos] Figma K1: lo primero es cuando se ven */}
+          {highlight && (
+            <FreeTogetherCard
+              highlight={highlight}
+              onOpenProposal={setPicked}
+              onSeeMore={() => router.push({ pathname: "/(tabs)/calendario", params: { freeTogether: "1" } })}
+              onOpenEvent={() => router.push("/(tabs)/calendario")}
+            />
+          )}
+
           {/* RF-37: entrada principal para pedir una recomendacion */}
           {isLinked && (
             <TouchableOpacity
@@ -622,6 +650,23 @@ export default function HomeScreen() {
           />
         )}
       </ResultModal>
+
+      {/* [libres-juntos] Figma K3 */}
+      <ProposalSheet
+        visible={picked !== null}
+        window={picked}
+        onPlan={() => {
+          const w = picked;
+          setPicked(null);
+          if (w) router.push({ pathname: "/(recommend)/mode", params: planParams(w) });
+        }}
+        onReserve={() => {
+          const w = picked;
+          setPicked(null);
+          if (w) router.push({ pathname: "/(events)/create-event", params: reserveParams(w) });
+        }}
+        onClose={() => setPicked(null)}
+      />
     </ScrollView>
   );
 }

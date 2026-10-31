@@ -1,5 +1,5 @@
 import fixture from './__fixtures__/free-proposals.json';
-import { cleanWindows, proposalLabel, proposalsOf } from './freeProposals';
+import { cleanWindows, proposalLabel, proposalsOf, toWindow } from './freeProposals';
 import type { MutualAvailableDay } from '../services/availabilityService';
 
 /** "2026-10-30T18:00" como hora local (la de la CDMX en el telefono). */
@@ -29,6 +29,16 @@ describe('freeProposals ([libres-juntos] casos compartidos con el backend)', () 
       expect(proposals).toEqual(c.proposals);
     });
   }
+
+  it('toWindow arma la ventana de un horario de la lista o de la vista Dia', () => {
+    expect(toWindow('2026-10-31', '17:30', '22:00')).toEqual({
+      date: '2026-10-31',
+      start: '17:30',
+      end: '22:00',
+      part: 'AFTERNOON',
+      minutes: 270,
+    });
+  });
 
   it('como mucho las que se piden', () => {
     const c = (fixture.cases as any[]).find((x) => x.name.startsWith('7'));

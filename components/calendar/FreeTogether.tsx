@@ -1,8 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useState } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { gradients, palette } from '../../constants/colors';
 import type { FreeSlot } from '../../utils/calendarLayout';
+import { FreeWindow, proposalLabel, toWindow } from '../../utils/freeProposals';
+import { ProposalCard } from './ProposalCard';
 
 interface Day {
   date: string;
@@ -27,13 +30,21 @@ export function FreeTogetherBubble({ count, onPress }: { count: number; onPress:
 
 interface FreeTogetherModalProps {
   visible: boolean;
+  /** [libres-juntos] Las propuestas destacadas (hasta 3). */
+  proposals: FreeWindow[];
   days: Day[];
-  onPick: (slot: FreeSlot) => void;
+  onPick: (window: FreeWindow) => void;
   onClose: () => void;
 }
 
-/** Figma E4: horarios libres de los dos por dia; al tocar uno se crea un evento con esa hora. */
-export function FreeTogetherModal({ visible, days, onPick, onClose }: FreeTogetherModalProps) {
+/**
+ * Figma E4 / [libres-juntos] K2: arriba las propuestas de Nexus; abajo «Todos sus horarios» por dia
+ * (el primero abierto, los demas con «Ver los demás días»). Tocar cualquiera abre la hoja K3.
+ */
+export function FreeTogetherModal({ visible, proposals, days, onPick, onClose }: FreeTogetherModalProps) {
+  const [allDays, setAllDays] = useState(false);
+  const now = new Date();
+  const shown = allDays ? days : days.slice(0, 1);
   return (
     <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
       <View style={styles.overlay}>
@@ -44,10 +55,28 @@ export function FreeTogetherModal({ visible, days, onPick, onClose }: FreeTogeth
           <Text style={styles.title} accessibilityRole="header">
             Libres juntos
           </Text>
-          <Text style={styles.subtitle}>Toca un horario para planear una cita.</Text>
+          <Text style={styles.subtitle}>Les proponemos estos horarios.</Text>
 
           <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
-            {days.map((day) => (
+            <View style={styles.proposals}>
+              {proposals.map((w) => {
+                const { when, length } = proposalLabel(w, now);
+                return (
+                  <ProposalCard
+                    key={`${w.date}-${w.start}`}
+                    title={when}
+                    subtitle={`${w.start} – ${w.end} · ${length}`}
+                    accessibilityLabel={`${when}, de ${w.start} a ${w.end}, ${length}`}
+                    onPress={() => onPick(w)}
+                  />
+                );
+              })}
+            </View>
+
+            <Text style={styles.allTitle} accessibilityRole="header">
+              Todos sus horarios
+            </Text>
+            {shown.map((day) => (
               <View key={day.date}>
                 <Text style={styles.dayTitle}>{day.title}</Text>
                 <View style={styles.chips}>
@@ -55,7 +84,7 @@ export function FreeTogetherModal({ visible, days, onPick, onClose }: FreeTogeth
                     <TouchableOpacity
                       key={slot.label}
                       style={styles.chip}
-                      onPress={() => onPick(slot)}
+                      onPress={() => onPick(toWindow(slot.date, slot.startTime, slot.endTime))}
                       accessibilityRole="button"
                       accessibilityLabel={`${day.title}, ${slot.label}`}
                     >
@@ -65,6 +94,11 @@ export function FreeTogetherModal({ visible, days, onPick, onClose }: FreeTogeth
                 </View>
               </View>
             ))}
+            {!allDays && days.length > 1 && (
+              <TouchableOpacity onPress={() => setAllDays(true)} accessibilityRole="button" style={styles.moreDays}>
+                <Text style={styles.moreDaysText}>Ver los demás días</Text>
+              </TouchableOpacity>
+            )}
           </ScrollView>
 
           <TouchableOpacity style={styles.close} onPress={onClose} accessibilityRole="button">
@@ -147,6 +181,25 @@ const styles = StyleSheet.create({
   },
   listContent: {
     gap: 16,
+  },
+  proposals: {
+    gap: 8,
+  },
+  allTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: palette.text,
+    marginTop: 4,
+  },
+  moreDays: {
+    alignSelf: 'flex-start',
+    minHeight: 44,
+    justifyContent: 'center',
+  },
+  moreDaysText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: palette.textAccent,
   },
   dayTitle: {
     fontSize: 14,

@@ -61,6 +61,12 @@ export function cleanWindows(days: MutualAvailableDay[], now: Date, split = true
   return out.sort((a, b) => (a.date === b.date ? a.start.localeCompare(b.start) : a.date.localeCompare(b.date)));
 }
 
+/** La ventana de un horario ya limpio (un chip de la lista o un bloque de la vista Dia). */
+export function toWindow(date: string, start: string, end: string): FreeWindow {
+  const from = toMinutes(start);
+  return { date, start, end, part: partOf(from), minutes: toMinutes(end) - from };
+}
+
 /** Una por dia: la mas larga de tarde o noche (si no hay, la de la manana); los primeros `max` dias. */
 export function proposalsOf(windows: FreeWindow[], max = 3): FreeWindow[] {
   const byDay = new Map<string, FreeWindow[]>();
