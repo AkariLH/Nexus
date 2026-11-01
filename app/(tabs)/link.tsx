@@ -7,9 +7,9 @@ import { useRouter, useFocusEffect } from "expo-router";
 import eventService from "../../services/event.service";
 import { Card, ListCard, ListRow, TabTitle } from "../../components/ui/Surface";
 import linkService from "../../services/link.service";
-import { ActionModal } from "../components/ActionModal";
 import { ErrorModal } from "../components/ErrorModal";
 import { SuccessModal } from "../components/SuccessModal";
+import { GradientButton } from "../components/ui/GradientButton";
 import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
 import { profileService } from "../../services/profile.service";
 import { palette, gradients } from "../../constants/colors";
@@ -35,8 +35,6 @@ export default function LinkScreen() {
   const [linkStatus, setLinkStatus] = useState<LinkStatusData | null>(null);
   const [userPhoto, setUserPhoto] = useState<string | null>(null);
   const [partnerPhoto, setPartnerPhoto] = useState<string | null>(null);
-  const [showUnlinkModal, setShowUnlinkModal] = useState(false);
-  const [isUnlinking, setIsUnlinking] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [sharedEvents, setSharedEvents] = useState(0);
@@ -85,42 +83,6 @@ export default function LinkScreen() {
 
   const handleEnterCode = () => {
     router.push('/(link)/enter-link-code');
-  };
-
-  const handleUnlink = () => {
-    setShowUnlinkModal(true);
-  };
-
-  const confirmUnlink = async () => {
-    if (!user?.userId) return;
-    
-    setShowUnlinkModal(false);
-    setIsUnlinking(true);
-
-    try {
-      const response = await linkService.deleteLink(user.userId);
-      
-      if (response.success) {
-        const partnerName = response.partnerName || linkStatus?.partner?.displayName || 'tu pareja';
-        let message = `Te has desvinculado de ${partnerName}`;
-        
-        // Agregar nota si la notificación no se envió
-        if (!response.notificationSent) {
-          message += `.\n\nNota: ${partnerName} verá el cambio cuando abra o recargue la app.`;
-        }
-        
-        setSuccessMessage(message);
-        // Actualizar el estado del vínculo
-        await checkLinkStatus();
-      } else {
-        setErrorMessage(response.message || 'No se pudo eliminar el vínculo');
-      }
-    } catch (error: any) {
-      console.error('Error al desvincular:', error);
-      setErrorMessage(error.message || 'Ocurrió un error al intentar desvincular');
-    } finally {
-      setIsUnlinking(false);
-    }
   };
 
   const getDaysTogether = () => {
@@ -212,10 +174,18 @@ export default function LinkScreen() {
           <Text style={styles.statNumber}>{getDaysTogether()}</Text>
           <Text style={styles.statLabel}>Días juntos</Text>
         </Card>
-        <Card style={styles.stat}>
-          <Text style={styles.statNumber}>{sharedEvents}</Text>
-          <Text style={styles.statLabel}>Eventos compartidos</Text>
-        </Card>
+        {/* [pulido-critica] D5 (Figma M5): un "0" se leia como reproche; sin eventos, invita a planear. */}
+        {sharedEvents > 0 ? (
+          <Card style={styles.stat}>
+            <Text style={styles.statNumber}>{sharedEvents}</Text>
+            <Text style={styles.statLabel}>Eventos compartidos</Text>
+          </Card>
+        ) : (
+          <Card style={styles.stat}>
+            <Text style={styles.firstDate}>Su primera cita</Text>
+            <GradientButton title="Planear" compact onPress={() => router.push("/(recommend)/mode")} style={styles.firstDateButton} />
+          </Card>
+        )}
       </View>
 
       <ListCard>
@@ -232,33 +202,6 @@ export default function LinkScreen() {
           onPress={() => router.push("/(recommend)/mode")}
         />
       </ListCard>
-
-      <TouchableOpacity
-        style={styles.unlink}
-        onPress={handleUnlink}
-        disabled={isUnlinking}
-        accessibilityRole="button"
-      >
-        {isUnlinking ? (
-          <ActivityIndicator size="small" color={palette.error} />
-        ) : (
-          <Text style={styles.unlinkText}>Desvincular</Text>
-        )}
-      </TouchableOpacity>
-
-      <ActionModal
-        visible={showUnlinkModal}
-        onClose={() => setShowUnlinkModal(false)}
-        title={`¿Desvincular de ${partnerName}?`}
-        actions={[
-          {
-            label: "Desvincular",
-            icon: "unlink-outline",
-            onPress: confirmUnlink,
-            destructive: true,
-          },
-        ]}
-      />
 
       <ErrorModal visible={!!errorMessage} message={errorMessage || ""} onClose={() => setErrorMessage(null)} />
 
@@ -294,14 +237,6 @@ const styles = StyleSheet.create({
   stat: { flex: 1, alignItems: "center", gap: 4 },
   statNumber: { fontSize: 24, fontWeight: "700", color: palette.textAccent },
   statLabel: { fontSize: 12, color: palette.textSecondary },
-  unlink: {
-    height: 48,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: palette.errorBorder,
-    backgroundColor: palette.surface,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  unlinkText: { fontSize: 16, fontWeight: "700", color: palette.error },
+  firstDate: { fontSize: 16, fontWeight: "600", color: palette.textAccent },
+  firstDateButton: { alignSelf: "stretch" },
 });

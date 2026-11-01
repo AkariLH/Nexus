@@ -398,7 +398,16 @@ const styles = StyleSheet.create({
   calendarName: { fontSize: 15, fontWeight: '600', color: palette.text },
   meta: { fontSize: 12, color: palette.textSecondary },
   divider: { height: 1, backgroundColor: palette.divider, marginVertical: 12 },
-  unlink: { alignSelf: 'flex-start', marginTop: 12, paddingVertical: 4 },
+  // [pulido-critica] D4 (Figma M5b): boton con borde rojo suave, no texto suelto.
+  unlink: {
+    marginTop: 12,
+    minHeight: 44,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: palette.errorBorder,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   unlinkText: { fontSize: 14, fontWeight: '600', color: palette.error },
   availableRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   linkButton: {

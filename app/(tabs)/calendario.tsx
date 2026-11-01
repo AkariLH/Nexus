@@ -355,6 +355,10 @@ export default function CalendarioScreen() {
             firstHour={firstHour}
             freeSlots={shownDays.flatMap((day) => freeSlotsOn(mutual, day, now))}
             now={now}
+            onPressDay={(day) => {
+              setSelected(day);
+              setMode("day");
+            }}
             onPressItem={openItem}
             onPressFree={(slot) => setPicked(toWindow(slot.date, slot.startTime, slot.endTime))}
           />
@@ -488,8 +492,9 @@ const styles = StyleSheet.create({
   allDayWeekLabel: {
     width: 48,
     paddingLeft: 6,
-    fontSize: 10,
-    lineHeight: 12,
+    // [pulido-critica] D3: 12 px como minimo (estaba en 10).
+    fontSize: 12,
+    lineHeight: 14,
     color: palette.textSecondary,
   },
   allDayCell: {

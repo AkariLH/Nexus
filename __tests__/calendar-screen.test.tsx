@@ -136,11 +136,12 @@ describe('CalendarioScreen', () => {
     fireEvent.press(screen.getByText('Día'));
     fireEvent.press(screen.getByRole('button', { name: 'Siguiente' }));
 
-    expect(screen.getByText('Libres los dos')).toBeTruthy();
-    fireEvent.press(screen.getByText('Libres los dos'));
+    // [pulido-critica] D1: el hueco 11:00–14:00 sale partido como en Inicio (11–13 mañana, 13–14 tarde).
+    expect(screen.getAllByText('Libres los dos')).toHaveLength(2);
+    fireEvent.press(screen.getAllByText('Libres los dos')[0]);
     fireEvent.press(screen.getByText('Agregar un plan nuestro'));
     expect(mockPush).toHaveBeenCalledWith(
-      expect.objectContaining({ params: expect.objectContaining({ suggestedStart: '11:00', suggestedEnd: '14:00' }) }),
+      expect.objectContaining({ params: expect.objectContaining({ suggestedStart: '11:00', suggestedEnd: '13:00' }) }),
     );
   });
 });

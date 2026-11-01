@@ -12,6 +12,10 @@ const MODES: { mode: CalendarMode; label: string }[] = [
   { mode: 'day', label: 'Día' },
 ];
 
+// "Hoy" mide 32 de alto y las flechas 36x36: el area de toque llega a 44.
+const TODAY_SLOP = { top: 6, bottom: 6 };
+const ARROW_SLOP = { top: 4, bottom: 4, left: 4, right: 4 };
+
 interface CalendarTopProps {
   title: string;
   mode: CalendarMode;
@@ -30,13 +34,14 @@ export function CalendarTop({ title, mode, onMode, onToday, onPrevious, onNext }
         <Text style={styles.title} accessibilityRole="header">
           {title}
         </Text>
-        <TouchableOpacity style={styles.today} onPress={onToday} accessibilityRole="button">
+        {/* [pulido-critica] D3 (Figma M3): mismo tamaño a la vista, area de toque de 44 px. */}
+        <TouchableOpacity style={styles.today} onPress={onToday} accessibilityRole="button" hitSlop={TODAY_SLOP}>
           <Text style={styles.todayText}>Hoy</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.arrow} onPress={onPrevious} accessibilityRole="button" accessibilityLabel="Anterior">
+        <TouchableOpacity style={styles.arrow} onPress={onPrevious} accessibilityRole="button" accessibilityLabel="Anterior" hitSlop={ARROW_SLOP}>
           <Ionicons name="arrow-back" size={20} color={palette.text} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.arrow} onPress={onNext} accessibilityRole="button" accessibilityLabel="Siguiente">
+        <TouchableOpacity style={styles.arrow} onPress={onNext} accessibilityRole="button" accessibilityLabel="Siguiente" hitSlop={ARROW_SLOP}>
           <Ionicons name="arrow-forward" size={20} color={palette.text} />
         </TouchableOpacity>
       </View>

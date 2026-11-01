@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ScreenHeader } from "../components/layout/ScreenHeader";
@@ -9,6 +9,7 @@ import { SuccessModal } from "../components/SuccessModal";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { PasswordConfirmModal } from "../components/PasswordConfirmModal";
 import { profileService } from "../../services/profile.service";
+import linkService from "../../services/link.service";
 import { useAuth } from "../../context/AuthContext";
 import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
 import { palette } from "../../constants/colors";
@@ -23,6 +24,52 @@ export default function ConfiguracionesScreen() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+  // [pulido-critica] D4: "Desvincular" vive aqui (antes al final de Vinculo).
+  const [partnerName, setPartnerName] = useState<string | null>(null);
+  const [showUnlinkConfirm, setShowUnlinkConfirm] = useState(false);
+  const [isUnlinking, setIsUnlinking] = useState(false);
+  const [unlinkMessage, setUnlinkMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user?.userId) return;
+    linkService
+      .getLinkStatus(user.userId)
+      .then((s) =>
+        setPartnerName(s.hasActiveLink ? s.partner?.displayName || s.partner?.nickname || "tu pareja" : null),
+      )
+      .catch(() => setPartnerName(null));
+  }, [user?.userId]);
+
+  const confirmUnlink = async () => {
+    if (!user?.userId) return;
+
+    setShowUnlinkConfirm(false);
+    setIsUnlinking(true);
+
+    try {
+      const response = await linkService.deleteLink(user.userId);
+
+      if (response.success) {
+        const name = response.partnerName || partnerName || "tu pareja";
+        let message = `Te has desvinculado de ${name}`;
+
+        // Agregar nota si la notificación no se envió
+        if (!response.notificationSent) {
+          message += `.\n\nNota: ${name} verá el cambio cuando abra o recargue la app.`;
+        }
+
+        setPartnerName(null);
+        setUnlinkMessage(message);
+      } else {
+        setErrorModal({ visible: true, message: response.message || "No se pudo eliminar el vínculo" });
+      }
+    } catch (error: any) {
+      console.error("Error al desvincular:", error);
+      setErrorModal({ visible: true, message: error.message || "Ocurrió un error al intentar desvincular" });
+    } finally {
+      setIsUnlinking(false);
+    }
+  };
 
   // CU06 - Cerrar sesión
   const handleLogout = async () => {
@@ -149,6 +196,22 @@ export default function ConfiguracionesScreen() {
             trailing={isLoading ? <ActivityIndicator size="small" color={palette.primary} /> : undefined}
           />
         </ListCard>
+
+        {/* [pulido-critica] D4 (Figma M4): lo que no se puede deshacer va junto y al final. */}
+        <SectionLabel muted>Zona delicada</SectionLabel>
+        {partnerName && (
+          <ListCard>
+            <ListRow
+              icon="unlink-outline"
+              title="Desvincular"
+              subtitle={`Termina el vínculo con ${partnerName}`}
+              danger
+              onPress={() => setShowUnlinkConfirm(true)}
+              disabled={isLoading || isUnlinking}
+              trailing={isUnlinking ? <ActivityIndicator size="small" color={palette.error} /> : undefined}
+            />
+          </ListCard>
+        )}
         <ListCard>
           <ListRow
             icon="trash-outline"
@@ -187,6 +250,27 @@ export default function ConfiguracionesScreen() {
         confirmText="Eliminar mi cuenta"
         cancelText="Cancelar"
         isLoading={isLoading}
+      />
+
+      {/* Figma M4b: dice lo que pasa (RN-11 borra los eventos de los dos; RN-12 avisa a la pareja). */}
+      <ConfirmModal
+        visible={showUnlinkConfirm}
+        type="error"
+        title={`¿Desvincular de ${partnerName}?`}
+        message={`Se borran los eventos que tienen juntos y ${partnerName} recibe un aviso. No se puede deshacer.`}
+        confirmText="Desvincular"
+        cancelText="Cancelar"
+        onConfirm={confirmUnlink}
+        onCancel={() => setShowUnlinkConfirm(false)}
+      />
+
+      <SuccessModal
+        visible={!!unlinkMessage}
+        message={unlinkMessage ?? ""}
+        onClose={() => {
+          setUnlinkMessage(null);
+          router.replace("/(tabs)/link");
+        }}
       />
 
       <ConfirmModal

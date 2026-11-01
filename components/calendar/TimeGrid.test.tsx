@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 import { TimeGrid } from './TimeGrid';
 import type { CalendarItem, FreeSlot } from '../../utils/calendarLayout';
 
@@ -52,6 +52,17 @@ describe('TimeGrid', () => {
 
     rerender(<TimeGrid days={[new Date(2026, 10, 1)]} items={[]} now={NOW} onPressItem={() => {}} />);
     expect(screen.queryByTestId('now-line')).toBeNull();
+  });
+
+  it('[pulido-critica] D3: en Semana, tocar la columna abre ese día', () => {
+    const onPressDay = jest.fn();
+    const onPressItem = jest.fn();
+    render(<TimeGrid days={week} items={[cena]} compact onPressItem={onPressItem} onPressDay={onPressDay} />);
+
+    fireEvent.press(screen.getByLabelText('Ver jueves 29 de octubre'));
+
+    expect(onPressDay).toHaveBeenCalledWith(new Date(2026, 9, 29));
+    expect(onPressItem).not.toHaveBeenCalled();
   });
 
   it('en Día los bloques conservan su título', () => {

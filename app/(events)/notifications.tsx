@@ -20,7 +20,7 @@ import { externalCalendarIntegration } from "../../services/externalCalendar.int
 import { palette, gradients } from "../../constants/colors";
 import { ScreenHeader } from "../components/layout/ScreenHeader";
 import { MetaLine, Pill } from "../../components/ui/Surface";
-import { groupNotices, isPastInvite } from "../../utils/noticeFormat";
+import { groupNotices, splitInvites } from "../../utils/noticeFormat";
 import { ResultModal } from "../components/ResultModal";
 import { PlanSummaryCard } from "../components/PlanSummaryCard";
 import { slotLabel } from "../../utils/recommendationFormat";
@@ -55,7 +55,8 @@ export default function NotificationsScreen() {
   const [notices, setNotices] = useState<AppNotification[]>([]);
   const [showClearModal, setShowClearModal] = useState(false);
   const now = new Date();
-  const openInvites = pendingEvents.filter((e) => !isPastInvite(e, now)).length;
+  const { open, past } = splitInvites(pendingEvents, now);
+  const openInvites = open.length;
   const inviterName = outcome?.event?.creatorName || outcome?.event?.creatorNickname || "tu pareja";
 
   useFocusEffect(
@@ -203,6 +204,69 @@ export default function NotificationsScreen() {
     return `Hace ${diffDays} días`;
   };
 
+  // [pulido-critica] D2: la misma tarjeta para las abiertas y para las que ya pasaron ("Anteriores").
+  const renderInvite = (event: EventResponse, past: boolean) => {
+    const inviter = event.creatorName || event.creatorNickname || "Tu pareja";
+    const busy = processingEventId === event.id;
+    return (
+      <View key={event.id} style={styles.notificationCard}>
+        <View style={styles.notificationHeader}>
+          <LinearGradient colors={gradients.onText} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.avatar}>
+            <Text style={styles.avatarText}>{inviter.charAt(0).toUpperCase()}</Text>
+          </LinearGradient>
+          <View style={styles.notificationInfo}>
+            <Text style={styles.notificationName}>{inviter} te invita a una cita</Text>
+            <Text style={styles.notificationTime}>{getTimeAgo(event.createdAt)}</Text>
+          </View>
+          {past && <Pill label="Ya pasó" />}
+        </View>
+
+        <Text style={styles.eventTitle}>{event.title}</Text>
+        <MetaLine
+          icon="calendar-outline"
+          text={`${formatDate(event.startDateTime)} · ${formatTime(event.startDateTime)} – ${formatTime(event.endDateTime)}`}
+        />
+        {event.location ? <MetaLine icon="location-outline" text={event.location} /> : null}
+        {event.description && !past ? <Text style={styles.descriptionText}>{event.description}</Text> : null}
+
+        {past ? (
+          <TouchableOpacity
+            style={[styles.rejectButton, styles.proposeButton]}
+            onPress={() => proposeAgain(event)}
+            accessibilityRole="button"
+          >
+            <Text style={styles.rejectButtonText}>Proponer otra fecha</Text>
+          </TouchableOpacity>
+        ) : (
+        <View style={styles.actionButtons}>
+          <TouchableOpacity
+            style={[styles.rejectButton, busy && styles.actionButtonDisabled]}
+            onPress={() => handleReject(event)}
+            disabled={busy}
+            accessibilityRole="button"
+          >
+            <Text style={styles.rejectButtonText}>Rechazar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.approveButton, busy && styles.actionButtonDisabled]}
+            onPress={() => handleApprove(event)}
+            disabled={busy}
+            accessibilityRole="button"
+          >
+            <LinearGradient colors={gradients.onText} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.approveButtonGradient}>
+              {busy ? (
+                <ActivityIndicator size="small" color={palette.onPrimary} />
+              ) : (
+                <Text style={styles.approveButtonText}>Aceptar</Text>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+        )}
+      </View>
+    );
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container} edges={["left", "right", "bottom"]}>
@@ -257,69 +321,8 @@ export default function NotificationsScreen() {
           </View>
         ) : (
           <>
-            {pendingEvents.length > 0 && <Text style={styles.sectionTitle}>Eventos pendientes</Text>}
-            {pendingEvents.map((event) => {
-              const inviter = event.creatorName || event.creatorNickname || "Tu pareja";
-              const busy = processingEventId === event.id;
-              const past = isPastInvite(event, now);
-              return (
-                <View key={event.id} style={styles.notificationCard}>
-                  <View style={styles.notificationHeader}>
-                    <LinearGradient colors={gradients.onText} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.avatar}>
-                      <Text style={styles.avatarText}>{inviter.charAt(0).toUpperCase()}</Text>
-                    </LinearGradient>
-                    <View style={styles.notificationInfo}>
-                      <Text style={styles.notificationName}>{inviter} te invita a una cita</Text>
-                      <Text style={styles.notificationTime}>{getTimeAgo(event.createdAt)}</Text>
-                    </View>
-                    {past && <Pill label="Ya pasó" />}
-                  </View>
-
-                  <Text style={styles.eventTitle}>{event.title}</Text>
-                  <MetaLine
-                    icon="calendar-outline"
-                    text={`${formatDate(event.startDateTime)} · ${formatTime(event.startDateTime)} – ${formatTime(event.endDateTime)}`}
-                  />
-                  {event.location ? <MetaLine icon="location-outline" text={event.location} /> : null}
-                  {event.description && !past ? <Text style={styles.descriptionText}>{event.description}</Text> : null}
-
-                  {past ? (
-                    <TouchableOpacity
-                      style={[styles.rejectButton, styles.proposeButton]}
-                      onPress={() => proposeAgain(event)}
-                      accessibilityRole="button"
-                    >
-                      <Text style={styles.rejectButtonText}>Proponer otra fecha</Text>
-                    </TouchableOpacity>
-                  ) : (
-                  <View style={styles.actionButtons}>
-                    <TouchableOpacity
-                      style={[styles.rejectButton, busy && styles.actionButtonDisabled]}
-                      onPress={() => handleReject(event)}
-                      disabled={busy}
-                      accessibilityRole="button"
-                    >
-                      <Text style={styles.rejectButtonText}>Rechazar</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.approveButton, busy && styles.actionButtonDisabled]}
-                      onPress={() => handleApprove(event)}
-                      disabled={busy}
-                      accessibilityRole="button"
-                    >
-                      <LinearGradient colors={gradients.onText} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.approveButtonGradient}>
-                        {busy ? (
-                          <ActivityIndicator size="small" color={palette.onPrimary} />
-                        ) : (
-                          <Text style={styles.approveButtonText}>Aceptar</Text>
-                        )}
-                      </LinearGradient>
-                    </TouchableOpacity>
-                  </View>
-                  )}
-                </View>
-              );
-            })}
+            {open.length > 0 && <Text style={styles.sectionTitle}>Eventos pendientes</Text>}
+            {open.map((event) => renderInvite(event, false))}
 
             {notices.length > 0 && (
               <View style={styles.noticesHeader}>
@@ -362,6 +365,8 @@ export default function NotificationsScreen() {
                 })}
               </View>
             )}
+            {past.length > 0 && <Text style={styles.sectionTitle}>Anteriores</Text>}
+            {past.map((event) => renderInvite(event, true))}
           </>
         )}
       </ScrollView>

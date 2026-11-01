@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useRef } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { palette } from '../../constants/colors';
-import { belowBusy, CalendarItem, FreeSlot, hm, itemsOnDay, layoutLanes, sameDay } from '../../utils/calendarLayout';
+import { belowBusy, CalendarItem, dayTitle, FreeSlot, hm, itemsOnDay, layoutLanes, sameDay } from '../../utils/calendarLayout';
 import { barColor, tint } from './calendarColors';
 
 const HOURS = Array.from({ length: 24 }, (_, h) => h);
@@ -20,14 +20,17 @@ interface TimeGridProps {
   now?: Date;
   onPressItem: (item: CalendarItem) => void;
   onPressFree?: (slot: FreeSlot) => void;
+  /** [pulido-critica] Semana: tocar la columna de un dia lo abre (en lugar de cada bloque). */
+  onPressDay?: (day: Date) => void;
 }
 
 /**
  * Figma E2/E3 y L3: horario con bloques en color claro y barra del color del evento. Los eventos que
  * se enciman se reparten en columnas; los huecos libres de los dos van punteados.
  */
-export function TimeGrid({ days, items, freeSlots = [], compact, firstHour = 8, now, onPressItem, onPressFree }: TimeGridProps) {
+export function TimeGrid({ days, items, freeSlots = [], compact, firstHour = 8, now, onPressItem, onPressFree, onPressDay }: TimeGridProps) {
   const hourHeight = compact ? 44 : 56;
+  const byDay = !!compact && !!onPressDay;
   const scroll = useRef<ScrollView>(null);
 
   useEffect(() => {
@@ -60,26 +63,38 @@ export function TimeGrid({ days, items, freeSlots = [], compact, firstHour = 8, 
           {days.map((day) => {
             const timed = itemsOnDay(items, day).filter((i) => !i.allDay);
             const busy = timed.map((i) => position(i.start, i.end, day));
+            // [pulido-critica] D3 (Figma M3): en Semana la columna entera abre ese dia; los bloques
+            // de adentro ya no reciben el toque (median 21-41 px).
+            const Column = byDay ? TouchableOpacity : View;
+            const columnProps = byDay
+              ? { onPress: () => onPressDay?.(day), accessibilityRole: 'button' as const, accessibilityLabel: `Ver ${dayTitle(day).toLowerCase()}` }
+              : {};
             return (
-              <View key={day.toISOString()} style={[styles.column, days.length > 1 && styles.columnDivider]}>
+              <Column key={day.toISOString()} style={[styles.column, days.length > 1 && styles.columnDivider]} {...columnProps}>
                 {freeSlots
                   .filter((slot) => sameDay(slot.start, day))
-                  .map((slot) => (
-                    <TouchableOpacity
-                      key={`${slot.date}-${slot.label}`}
-                      style={[styles.free, belowBusy(position(slot.start, slot.end, day), busy)]}
-                      onPress={() => onPressFree?.(slot)}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Libres los dos de ${slot.label}. Toca para planear`}
-                    >
-                      {!compact && (
-                        <>
-                          <Text style={styles.freeTitle}>Libres los dos</Text>
-                          <Text style={styles.subtitle}>{slot.label} · Toca para planear</Text>
-                        </>
-                      )}
-                    </TouchableOpacity>
-                  ))}
+                  .map((slot) => {
+                    const box = belowBusy(position(slot.start, slot.end, day), busy);
+                    return (
+                      <TouchableOpacity
+                        key={`${slot.date}-${slot.label}`}
+                        style={[styles.free, compact && styles.freeWeek, box]}
+                        onPress={() => onPressFree?.(slot)}
+                        disabled={byDay}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Libres los dos de ${slot.label}. Toca para planear`}
+                      >
+                        {compact ? (
+                          box.height >= 20 && <Ionicons name="heart" size={12} color={palette.textAccent} style={styles.freeHeart} />
+                        ) : (
+                          <>
+                            <Text style={styles.freeTitle}>Libres los dos</Text>
+                            <Text style={styles.subtitle}>{slot.label} · Toca para planear</Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
                 {layoutLanes(timed).map(({ item, lane, lanes }) => {
                   const color = barColor(item);
                   return (
@@ -96,6 +111,7 @@ export function TimeGrid({ days, items, freeSlots = [], compact, firstHour = 8, 
                         },
                       ]}
                       onPress={() => onPressItem(item)}
+                      disabled={byDay}
                       accessibilityRole="button"
                       accessibilityLabel={`${item.title}, ${hm(item.start)} a ${hm(item.end)}`}
                     >
@@ -126,7 +142,7 @@ export function TimeGrid({ days, items, freeSlots = [], compact, firstHour = 8, 
                     <View style={styles.nowDot} />
                   </View>
                 )}
-              </View>
+              </Column>
             );
           })}
         </View>
@@ -224,6 +240,19 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
     borderColor: palette.primary,
     backgroundColor: palette.primarySoft,
+  },
+  // Semana (Figma M3): relleno lila con borde liso, para no confundirse con un evento.
+  freeWeek: {
+    left: 1,
+    right: 1,
+    paddingHorizontal: 0,
+    alignItems: 'center',
+    borderStyle: 'solid',
+    borderColor: palette.secondaryBorder,
+    backgroundColor: palette.secondarySoft,
+  },
+  freeHeart: {
+    marginTop: 2,
   },
   freeTitle: {
     fontSize: 13,
