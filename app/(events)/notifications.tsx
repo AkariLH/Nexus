@@ -501,7 +501,8 @@ const styles = StyleSheet.create({
   approveButtonGradient: { height: 40, justifyContent: "center", alignItems: "center" },
   approveButtonText: { fontSize: 14, fontWeight: "600", color: palette.onPrimary },
   actionButtonDisabled: { opacity: 0.5 },
-  proposeButton: { flex: 0, marginTop: 4 },
+  // En la columna de la tarjeta no debe estirarse ni encogerse (con flex: 0 la web lo dejaba sin alto).
+  proposeButton: { flexGrow: 0, flexShrink: 0, flexBasis: "auto", marginTop: 4 },
   noticesHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   noticesTitle: { flex: 1 },
   clearText: { fontSize: 14, fontWeight: "600", color: palette.textAccent, marginBottom: 12, marginTop: 8 },

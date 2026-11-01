@@ -35,7 +35,8 @@ export default function TabLayout() {
         tabBarActiveTintColor: palette.textAccent,
         tabBarInactiveTintColor: palette.textSecondary,
         // [ux-ajustes] D5: etiquetas a 12 px (la letra por defecto es de 10).
-        tabBarLabelStyle: { fontSize: 12 },
+        // lineHeight 12 deja la barra del mismo alto: con el interlineado por defecto se cortaba abajo.
+        tabBarLabelStyle: { fontSize: 12, lineHeight: 12 },
         tabBarStyle: {
           backgroundColor: palette.surface,
           borderTopWidth: 0,
