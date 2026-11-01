@@ -30,6 +30,7 @@ import ratingService from "../../services/rating.service";
 import { markSeen, PlanningNotice, wasSeen } from "../../utils/planningSeen";
 import { closedNotice, remainingLabel } from "../../utils/planningFormat";
 import { NOTICES_EVENT } from "../../utils/pushRoute";
+import { bellCount } from "../../utils/noticeFormat";
 
 const OPEN_PHASES = ["INVITED", "FILTERS", "OPTIONS", "PROPOSAL"];
 
@@ -62,7 +63,7 @@ export default function HomeScreen() {
   const { questionnaire, linked } = useLocalSearchParams<{ questionnaire?: string; linked?: string }>();
   const [linkStatus, setLinkStatus] = useState<LinkStatus | null>(null);
   const [loading, setLoading] = useState(true);
-  const [pendingCount, setPendingCount] = useState(0);
+  const [pendingInvites, setPendingInvites] = useState<EventResponse[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<EventResponse[]>([]);
 
   const fetchLinkStatus = useCallback(async () => {
@@ -83,10 +84,10 @@ export default function HomeScreen() {
 
     try {
       const pendingEvents = await eventService.getPendingApprovalEvents(user.userId);
-      setPendingCount(pendingEvents.length);
+      setPendingInvites(pendingEvents);
     } catch (error: any) {
       // Si hay error (por ejemplo, sin vínculo activo), establecer contador en 0
-      setPendingCount(0);
+      setPendingInvites([]);
     }
   }, [user?.userId]);
 
@@ -309,7 +310,8 @@ export default function HomeScreen() {
   };
 
   const displayName = user?.displayName || user?.nickname || "Usuario";
-  const badgeCount = pendingCount + unreadNotices;
+  // [ux-ajustes] D1: las invitaciones que ya pasaron no cuentan.
+  const badgeCount = bellCount(pendingInvites, unreadNotices, now);
   const quickActions: { icon: keyof typeof Ionicons.glyphMap; label: string; route: Href; needsLink: boolean }[] = [
     { icon: "list-outline", label: "Mis eventos", route: "/(events)/my-events", needsLink: true },
     { icon: "add", label: "Crear evento", route: "/(events)/create-event", needsLink: true },
@@ -364,7 +366,7 @@ export default function HomeScreen() {
               accessibilityRole="button"
               style={styles.heroWrap}
             >
-              <LinearGradient colors={gradients.primaryReversed} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.hero}>
+              <LinearGradient colors={gradients.onTextReversed} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.hero}>
                 <View style={styles.heroIcon}>
                   <Ionicons name="sparkles-outline" size={24} color={palette.onPrimary} />
                 </View>
@@ -675,7 +677,7 @@ export default function HomeScreen() {
 function LinkedAvatars({ me, partner }: { me: string; partner: string }) {
   const avatar = (name: string) => (
     <View>
-      <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.avatar}>
+      <LinearGradient colors={gradients.onText} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.avatar}>
         <Text style={styles.avatarText}>{name.charAt(0).toUpperCase()}</Text>
       </LinearGradient>
       <View style={styles.avatarDot} />

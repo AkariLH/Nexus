@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Switch, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { calendarService, ExternalCalendar } from '../../services/calendar.service';
+import linkService from '../../services/link.service';
 import { syncDoneMessage } from '../../utils/syncFormat';
 import { externalCalendarIntegration, LinkedCalendar } from '../../services/externalCalendar.integration.service';
 import { useAuth } from '../../context/AuthContext';
@@ -30,9 +31,17 @@ export default function LinkExternalCalendarsScreen() {
   const [errorModal, setErrorModal] = useState({ visible: false, message: "" });
   const [successModal, setSuccessModal] = useState({ visible: false, message: "" });
   const [confirmModal, setConfirmModal] = useState({ visible: false, message: "", onConfirm: () => {} });
+  // [ux-ajustes] D4 (Figma L2b): pasar a "Los detalles" se confirma antes.
+  const [detailsFor, setDetailsFor] = useState<LinkedCalendar | null>(null);
+  const [partnerName, setPartnerName] = useState('Tu pareja');
 
   useEffect(() => {
     loadCalendars();
+    if (user) {
+      linkService.getLinkStatus(user.userId)
+        .then((s) => setPartnerName(s.partner?.displayName || s.partner?.nickname || 'Tu pareja'))
+        .catch(() => undefined);
+    }
   }, []);
 
   const loadCalendars = async () => {
@@ -113,10 +122,9 @@ export default function LinkExternalCalendarsScreen() {
     }
   };
 
-  const handleTogglePrivacy = async (calendar: LinkedCalendar) => {
-    if (!user) return;
-
-    const newMode = calendar.privacyMode === 'FULL_DETAILS' ? 'BUSY_ONLY' : 'FULL_DETAILS';
+  /** [ux-ajustes] D4: "Solo ocupado" se aplica directo; "Los detalles" pasa antes por la confirmación. */
+  const handlePrivacy = async (calendar: LinkedCalendar, newMode: 'BUSY_ONLY' | 'FULL_DETAILS') => {
+    if (!user || calendar.privacyMode === newMode) return;
     try {
       await externalCalendarIntegration.updateCalendarSettings(user.userId, calendar.deviceCalendarId, undefined, newMode);
       await loadCalendars();
@@ -221,10 +229,30 @@ export default function LinkExternalCalendarsScreen() {
                   <ListRow
                     icon="eye-outline"
                     title="Tu pareja ve"
-                    subtitle="Toca para cambiar"
-                    onPress={() => handleTogglePrivacy(calendar)}
-                    trailing={<Pill label={calendar.privacyMode === 'FULL_DETAILS' ? 'Los detalles' : 'Solo ocupado'} />}
+                    subtitle={`Elige qué ve ${partnerName} de tus eventos`}
+                    trailing={<View />}
                   />
+                  <View style={[styles.chips, styles.privacyChips]} accessibilityRole="radiogroup">
+                    <View style={styles.privacyChip}>
+                      <OptionChip
+                        label="Solo ocupado"
+                        selected={calendar.privacyMode !== 'FULL_DETAILS'}
+                        onPress={() => handlePrivacy(calendar, 'BUSY_ONLY')}
+                      />
+                    </View>
+                    <View style={styles.privacyChip}>
+                      <OptionChip
+                        label="Los detalles"
+                        selected={calendar.privacyMode === 'FULL_DETAILS'}
+                        onPress={() => calendar.privacyMode !== 'FULL_DETAILS' && setDetailsFor(calendar)}
+                      />
+                    </View>
+                  </View>
+                  <Text style={[styles.meta, styles.privacyNote]}>
+                    {calendar.privacyMode === 'FULL_DETAILS'
+                      ? `${partnerName} ve el título, la hora y el lugar.`
+                      : `${partnerName} ve tus horarios ocupados, sin títulos.`}
+                  </Text>
                   <TouchableOpacity
                     onPress={() => handleUnlinkCalendar(calendar)}
                     style={styles.unlink}
@@ -334,6 +362,20 @@ export default function LinkExternalCalendarsScreen() {
         }}
         onCancel={() => setConfirmModal({ visible: false, message: "", onConfirm: () => {} })}
       />
+      <ConfirmModal
+        visible={detailsFor !== null}
+        title={`¿Mostrarle los detalles a ${partnerName}?`}
+        message={`${partnerName} verá el título, la hora y el lugar de tus eventos. Puedes volver a «Solo ocupado» cuando quieras.`}
+        confirmText="Sí, mostrárselos"
+        cancelText="Cancelar"
+        type="confirm"
+        onConfirm={() => {
+          const calendar = detailsFor;
+          setDetailsFor(null);
+          if (calendar) handlePrivacy(calendar, 'FULL_DETAILS');
+        }}
+        onCancel={() => setDetailsFor(null)}
+      />
     </View>
   );
 }
@@ -347,6 +389,9 @@ const styles = StyleSheet.create({
   card: { gap: 0 },
   exportCard: { gap: 12 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  privacyChips: { flexWrap: 'nowrap', marginTop: 8 },
+  privacyChip: { flex: 1 },
+  privacyNote: { marginTop: 8 },
   calendarHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   colorDot: { width: 14, height: 14, borderRadius: 7 },
   calendarInfo: { flex: 1, gap: 2 },

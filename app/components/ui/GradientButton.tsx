@@ -18,7 +18,7 @@ export function GradientButton({
   title,
   disabled = false,
   loading = false,
-  colors = gradients.primary,
+  colors = gradients.onText,
   style,
   compact = false,
 }: GradientButtonProps) {

@@ -19,7 +19,8 @@ import { ConfirmModal } from "../components/ConfirmModal";
 import { externalCalendarIntegration } from "../../services/externalCalendar.integration.service";
 import { palette, gradients } from "../../constants/colors";
 import { ScreenHeader } from "../components/layout/ScreenHeader";
-import { MetaLine } from "../../components/ui/Surface";
+import { MetaLine, Pill } from "../../components/ui/Surface";
+import { groupNotices, isPastInvite } from "../../utils/noticeFormat";
 import { ResultModal } from "../components/ResultModal";
 import { PlanSummaryCard } from "../components/PlanSummaryCard";
 import { slotLabel } from "../../utils/recommendationFormat";
@@ -52,6 +53,9 @@ export default function NotificationsScreen() {
   const [modalMessage, setModalMessage] = useState({ title: "", message: "" });
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [notices, setNotices] = useState<AppNotification[]>([]);
+  const [showClearModal, setShowClearModal] = useState(false);
+  const now = new Date();
+  const openInvites = pendingEvents.filter((e) => !isPastInvite(e, now)).length;
   const inviterName = outcome?.event?.creatorName || outcome?.event?.creatorNickname || "tu pareja";
 
   useFocusEffect(
@@ -146,6 +150,26 @@ export default function NotificationsScreen() {
     }
   };
 
+  // [ux-ajustes] D8 (Figma L1b): borra los avisos ya leidos y recarga la lista.
+  const confirmClear = async () => {
+    setShowClearModal(false);
+    if (!user?.userId) return;
+    try {
+      await appNotificationService.clearRead(user.userId);
+      loadPendingEvents();
+    } catch (error: any) {
+      setModalMessage({ title: "Error", message: error.message || "No se pudieron borrar los avisos" });
+      setShowErrorModal(true);
+    }
+  };
+
+  // [ux-ajustes] D1: una invitacion que ya paso se propone de nuevo con su titulo y lugar.
+  const proposeAgain = (event: EventResponse) =>
+    router.push({
+      pathname: "/(events)/create-event",
+      params: { suggestedTitle: event.title, suggestedLocation: event.location ?? "" },
+    });
+
   const formatDate = (dateStr: string): string => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('es-MX', {
@@ -197,9 +221,9 @@ export default function NotificationsScreen() {
         title="Notificaciones"
         onBack={() => router.back()}
         right={
-          pendingEvents.length > 0 ? (
+          openInvites > 0 ? (
             <View style={styles.badge}>
-              <Text style={styles.badgeText}>{pendingEvents.length}</Text>
+              <Text style={styles.badgeText}>{openInvites}</Text>
             </View>
           ) : undefined
         }
@@ -237,16 +261,18 @@ export default function NotificationsScreen() {
             {pendingEvents.map((event) => {
               const inviter = event.creatorName || event.creatorNickname || "Tu pareja";
               const busy = processingEventId === event.id;
+              const past = isPastInvite(event, now);
               return (
                 <View key={event.id} style={styles.notificationCard}>
                   <View style={styles.notificationHeader}>
-                    <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.avatar}>
+                    <LinearGradient colors={gradients.onText} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.avatar}>
                       <Text style={styles.avatarText}>{inviter.charAt(0).toUpperCase()}</Text>
                     </LinearGradient>
                     <View style={styles.notificationInfo}>
                       <Text style={styles.notificationName}>{inviter} te invita a una cita</Text>
                       <Text style={styles.notificationTime}>{getTimeAgo(event.createdAt)}</Text>
                     </View>
+                    {past && <Pill label="Ya pasó" />}
                   </View>
 
                   <Text style={styles.eventTitle}>{event.title}</Text>
@@ -255,8 +281,17 @@ export default function NotificationsScreen() {
                     text={`${formatDate(event.startDateTime)} · ${formatTime(event.startDateTime)} – ${formatTime(event.endDateTime)}`}
                   />
                   {event.location ? <MetaLine icon="location-outline" text={event.location} /> : null}
-                  {event.description ? <Text style={styles.descriptionText}>{event.description}</Text> : null}
+                  {event.description && !past ? <Text style={styles.descriptionText}>{event.description}</Text> : null}
 
+                  {past ? (
+                    <TouchableOpacity
+                      style={[styles.rejectButton, styles.proposeButton]}
+                      onPress={() => proposeAgain(event)}
+                      accessibilityRole="button"
+                    >
+                      <Text style={styles.rejectButtonText}>Proponer otra fecha</Text>
+                    </TouchableOpacity>
+                  ) : (
                   <View style={styles.actionButtons}>
                     <TouchableOpacity
                       style={[styles.rejectButton, busy && styles.actionButtonDisabled]}
@@ -272,7 +307,7 @@ export default function NotificationsScreen() {
                       disabled={busy}
                       accessibilityRole="button"
                     >
-                      <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.approveButtonGradient}>
+                      <LinearGradient colors={gradients.onText} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.approveButtonGradient}>
                         {busy ? (
                           <ActivityIndicator size="small" color={palette.onPrimary} />
                         ) : (
@@ -281,14 +316,26 @@ export default function NotificationsScreen() {
                       </LinearGradient>
                     </TouchableOpacity>
                   </View>
+                  )}
                 </View>
               );
             })}
 
-            {notices.length > 0 && <Text style={styles.sectionTitle}>Avisos</Text>}
+            {notices.length > 0 && (
+              <View style={styles.noticesHeader}>
+                <Text style={[styles.sectionTitle, styles.noticesTitle]}>Avisos</Text>
+                <TouchableOpacity
+                  onPress={() => setShowClearModal(true)}
+                  accessibilityRole="button"
+                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                >
+                  <Text style={styles.clearText}>Limpiar</Text>
+                </TouchableOpacity>
+              </View>
+            )}
             {notices.length > 0 && (
               <View style={styles.noticeList}>
-                {notices.map((n) => {
+                {groupNotices(notices).map(({ notice: n, count }) => {
                   // [avisos-calendario] El de libres juntos abre "Libres juntos"; los demas solo se leen.
                   const target = routeForNotice(n.type);
                   return (
@@ -305,7 +352,8 @@ export default function NotificationsScreen() {
                     <View style={styles.noticeText}>
                       <View style={styles.noticeHeader}>
                         <Text style={styles.noticeTitle}>{n.title}</Text>
-                        <Text style={styles.noticeTime}>{noticeTime(n.createdAt, new Date())}</Text>
+                        <Text style={styles.noticeTime}>{noticeTime(n.createdAt, now)}</Text>
+                        {count > 1 && <Text style={styles.noticeCount}>×{count}</Text>}
                       </View>
                       <Text style={styles.noticeBody}>{n.body}</Text>
                     </View>
@@ -341,6 +389,17 @@ export default function NotificationsScreen() {
         onCancel={() => setShowRejectModal(false)}
       />
       
+      <ConfirmModal
+        visible={showClearModal}
+        type="confirm"
+        title="¿Borrar los avisos que ya leíste?"
+        message="Solo se van los que ya viste. Las invitaciones pendientes se quedan."
+        confirmText="Borrar"
+        cancelText="Cancelar"
+        onConfirm={confirmClear}
+        onCancel={() => setShowClearModal(false)}
+      />
+
       <ConfirmModal
         visible={showSuccessModal}
         type="success"
@@ -442,6 +501,11 @@ const styles = StyleSheet.create({
   approveButtonGradient: { height: 40, justifyContent: "center", alignItems: "center" },
   approveButtonText: { fontSize: 14, fontWeight: "600", color: palette.onPrimary },
   actionButtonDisabled: { opacity: 0.5 },
+  proposeButton: { flex: 0, marginTop: 4 },
+  noticesHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  noticesTitle: { flex: 1 },
+  clearText: { fontSize: 14, fontWeight: "600", color: palette.textAccent, marginBottom: 12, marginTop: 8 },
+  noticeCount: { fontSize: 12, fontWeight: "600", color: palette.textAccent },
 
   noticeList: {
     gap: 12,

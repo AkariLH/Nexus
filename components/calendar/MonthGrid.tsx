@@ -40,7 +40,7 @@ export function MonthGrid({ month, selected, today, items, onSelect }: MonthGrid
                 accessibilityState={{ selected: sameDay(day, selected) }}
               >
                 {isToday ? (
-                  <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.number}>
+                  <LinearGradient colors={gradients.onText} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.number}>
                     <Text style={styles.todayText}>{day.getDate()}</Text>
                   </LinearGradient>
                 ) : (

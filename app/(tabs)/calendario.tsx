@@ -23,6 +23,7 @@ import {
   isoDate,
   itemsOnDay,
   monthTitle,
+  openingHour,
   sameDay,
   shortDay,
   weekOf,
@@ -249,12 +250,8 @@ export default function CalendarioScreen() {
       .filter((i) => i.allDay)
       .map((item) => ({ day, item })),
   );
-  const timedHours = shownDays.flatMap((day) =>
-    itemsOnDay(items, day)
-      .filter((i) => !i.allDay)
-      .map((i) => (sameDay(i.start, day) ? i.start.getHours() : 0)),
-  );
-  const firstHour = Math.min(8, ...timedHours);
+  // [ux-ajustes] D6: abre en la hora de ahora (o en lo primero que empieza), sin lo del dia anterior.
+  const firstHour = openingHour(items, shownDays, now);
 
   return (
     <View style={styles.container}>
@@ -356,7 +353,8 @@ export default function CalendarioScreen() {
             items={items}
             compact={mode === "week"}
             firstHour={firstHour}
-            freeSlots={mode === "day" ? freeSlotsOn(mutual, selected, now) : []}
+            freeSlots={shownDays.flatMap((day) => freeSlotsOn(mutual, day, now))}
+            now={now}
             onPressItem={openItem}
             onPressFree={(slot) => setPicked(toWindow(slot.date, slot.startTime, slot.endTime))}
           />

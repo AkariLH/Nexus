@@ -53,7 +53,7 @@ export function CalendarTop({ title, mode, onMode, onToday, onPrevious, onNext }
               accessibilityState={{ selected: active }}
             >
               {active ? (
-                <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.switchActive}>
+                <LinearGradient colors={gradients.onText} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.switchActive}>
                   <Text style={styles.switchTextActive}>{m.label}</Text>
                 </LinearGradient>
               ) : (

@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useRef } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { palette } from '../../constants/colors';
-import { belowBusy, CalendarItem, FreeSlot, hm, itemsOnDay, layoutLanes } from '../../utils/calendarLayout';
+import { belowBusy, CalendarItem, FreeSlot, hm, itemsOnDay, layoutLanes, sameDay } from '../../utils/calendarLayout';
 import { barColor, tint } from './calendarColors';
 
 const HOURS = Array.from({ length: 24 }, (_, h) => h);
@@ -10,21 +10,23 @@ const HOURS = Array.from({ length: 24 }, (_, h) => h);
 interface TimeGridProps {
   days: Date[];
   items: CalendarItem[];
-  /** Huecos libres de los dos (solo en la vista Dia, Figma E3). */
+  /** Huecos libres de los dos; cada uno sale solo en la columna de su dia. */
   freeSlots?: FreeSlot[];
-  /** Semana: bloques angostos solo con titulo. */
+  /** Semana (Figma L3): bloques como barras de color sin texto; el detalle sale al tocarlos. */
   compact?: boolean;
   /** Hora a la que abre desplazado. */
   firstHour?: number;
+  /** [ux-ajustes] Dibuja la linea de "ahora" en la columna de hoy. */
+  now?: Date;
   onPressItem: (item: CalendarItem) => void;
   onPressFree?: (slot: FreeSlot) => void;
 }
 
 /**
- * Figma E2/E3: horario con bloques en color claro y barra del color del evento. Los eventos que
+ * Figma E2/E3 y L3: horario con bloques en color claro y barra del color del evento. Los eventos que
  * se enciman se reparten en columnas; los huecos libres de los dos van punteados.
  */
-export function TimeGrid({ days, items, freeSlots = [], compact, firstHour = 8, onPressItem, onPressFree }: TimeGridProps) {
+export function TimeGrid({ days, items, freeSlots = [], compact, firstHour = 8, now, onPressItem, onPressFree }: TimeGridProps) {
   const hourHeight = compact ? 44 : 56;
   const scroll = useRef<ScrollView>(null);
 
@@ -60,18 +62,24 @@ export function TimeGrid({ days, items, freeSlots = [], compact, firstHour = 8, 
             const busy = timed.map((i) => position(i.start, i.end, day));
             return (
               <View key={day.toISOString()} style={[styles.column, days.length > 1 && styles.columnDivider]}>
-                {freeSlots.map((slot) => (
-                  <TouchableOpacity
-                    key={slot.label}
-                    style={[styles.free, belowBusy(position(slot.start, slot.end, day), busy)]}
-                    onPress={() => onPressFree?.(slot)}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Libres los dos de ${slot.label}. Toca para planear`}
-                  >
-                    <Text style={styles.freeTitle}>Libres los dos</Text>
-                    <Text style={styles.subtitle}>{slot.label} · Toca para planear</Text>
-                  </TouchableOpacity>
-                ))}
+                {freeSlots
+                  .filter((slot) => sameDay(slot.start, day))
+                  .map((slot) => (
+                    <TouchableOpacity
+                      key={`${slot.date}-${slot.label}`}
+                      style={[styles.free, belowBusy(position(slot.start, slot.end, day), busy)]}
+                      onPress={() => onPressFree?.(slot)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Libres los dos de ${slot.label}. Toca para planear`}
+                    >
+                      {!compact && (
+                        <>
+                          <Text style={styles.freeTitle}>Libres los dos</Text>
+                          <Text style={styles.subtitle}>{slot.label} · Toca para planear</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  ))}
                 {layoutLanes(timed).map(({ item, lane, lanes }) => {
                   const color = barColor(item);
                   return (
@@ -91,24 +99,33 @@ export function TimeGrid({ days, items, freeSlots = [], compact, firstHour = 8, 
                       accessibilityRole="button"
                       accessibilityLabel={`${item.title}, ${hm(item.start)} a ${hm(item.end)}`}
                     >
-                      <View style={styles.blockHeader}>
-                        {/* Una linea con "…": en Semana la columna es angosta y partia palabras ("Ocup/ado"). */}
-                        <Text style={[styles.title, compact && styles.titleCompact]} numberOfLines={1} ellipsizeMode="tail">
-                          {item.title}
-                        </Text>
-                        {!compact && item.source === 'partner' && (
-                          <Ionicons name="lock-closed-outline" size={16} color={palette.text} />
-                        )}
-                        {!compact && item.source === 'couple' && <Ionicons name="heart-outline" size={16} color={palette.text} />}
-                      </View>
+                      {/* Semana: barra de color sin texto (los titulos quedaban en "Dor…", "V"). */}
                       {!compact && (
-                        <Text style={styles.subtitle} numberOfLines={1}>
-                          {[`${hm(item.start)} – ${hm(item.end)}`, item.subtitle].filter(Boolean).join(' · ')}
-                        </Text>
+                        <>
+                          <View style={styles.blockHeader}>
+                            <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
+                              {item.title}
+                            </Text>
+                            {item.source === 'partner' && <Ionicons name="lock-closed-outline" size={16} color={palette.text} />}
+                            {item.source === 'couple' && <Ionicons name="heart-outline" size={16} color={palette.text} />}
+                          </View>
+                          <Text style={styles.subtitle} numberOfLines={1}>
+                            {[`${hm(item.start)} – ${hm(item.end)}`, item.subtitle].filter(Boolean).join(' · ')}
+                          </Text>
+                        </>
                       )}
                     </TouchableOpacity>
                   );
                 })}
+                {now && sameDay(day, now) && (
+                  <View
+                    testID="now-line"
+                    pointerEvents="none"
+                    style={[styles.now, { top: ((now.getHours() * 60 + now.getMinutes()) / 60) * hourHeight - 1 }]}
+                  >
+                    <View style={styles.nowDot} />
+                  </View>
+                )}
               </View>
             );
           })}
@@ -135,8 +152,24 @@ const styles = StyleSheet.create({
   hour: {
     position: 'absolute',
     left: 6,
-    fontSize: 11,
+    fontSize: 12,
     color: palette.textSecondary,
+  },
+  now: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    height: 2,
+    backgroundColor: palette.primaryStrong,
+  },
+  nowDot: {
+    position: 'absolute',
+    left: -4,
+    top: -3,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: palette.primaryStrong,
   },
   columns: {
     flex: 1,
@@ -175,12 +208,9 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: palette.text,
   },
-  titleCompact: {
-    fontSize: 10,
-  },
   subtitle: {
     marginTop: 2,
-    fontSize: 11,
+    fontSize: 12,
     color: palette.textSecondary,
   },
   free: {

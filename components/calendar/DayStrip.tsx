@@ -34,7 +34,7 @@ export function DayStrip({ days, today, selected, onSelect }: DayStripProps) {
             accessibilityState={{ selected: !!selected && sameDay(day, selected) }}
           >
             {isToday ? (
-              <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.box}>
+              <LinearGradient colors={gradients.onText} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.box}>
                 {content(palette.onPrimary)}
               </LinearGradient>
             ) : (
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
     borderColor: palette.primary,
   },
   initial: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '500',
   },
   number: {

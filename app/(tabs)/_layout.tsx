@@ -34,6 +34,8 @@ export default function TabLayout() {
         headerShown: false,
         tabBarActiveTintColor: palette.textAccent,
         tabBarInactiveTintColor: palette.textSecondary,
+        // [ux-ajustes] D5: etiquetas a 12 px (la letra por defecto es de 10).
+        tabBarLabelStyle: { fontSize: 12 },
         tabBarStyle: {
           backgroundColor: palette.surface,
           borderTopWidth: 0,
