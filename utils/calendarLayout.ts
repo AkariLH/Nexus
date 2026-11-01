@@ -355,3 +355,25 @@ export function parseSuggestion(date?: string, start?: string, end?: string) {
   };
   return { day: new Date(y, m - 1, d), start: at(start), end: at(end) };
 }
+
+/** [ux-ajustes] D1 - Titulo y lugar de "Proponer otra fecha" (una invitacion que ya paso). */
+export function suggestedText(title?: string, location?: string) {
+  return { title: title?.trim() ?? '', location: location?.trim() ?? '' };
+}
+
+const DEFAULT_OPENING_HOUR = 8;
+
+/**
+ * [ux-ajustes] D6 - Hora a la que abren Semana y Dia: si hoy esta en la vista, una hora antes de
+ * ahora; si no, la primera hora de lo que empieza en esos dias (lo que viene del dia anterior no
+ * cuenta), con 8 como maximo.
+ *
+ * @complexity T: O(d * n), S: O(n), d = dias, n = eventos
+ */
+export function openingHour(items: CalendarItem[], days: Date[], now: Date): number {
+  if (days.some((day) => sameDay(day, now))) return Math.max(0, now.getHours() - 1);
+  const starts = items
+    .filter((i) => !i.allDay && days.some((day) => sameDay(i.start, day)))
+    .map((i) => i.start.getHours());
+  return Math.min(DEFAULT_OPENING_HOUR, ...starts);
+}

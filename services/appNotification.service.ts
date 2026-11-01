@@ -25,6 +25,10 @@ const appNotificationService = {
   markAllRead: async (userId: number): Promise<void> => {
     await apiClient.post(paths.READ.replace(':userId', String(userId)));
   },
+
+  /** [ux-ajustes] D8 - Borra los avisos ya leidos; devuelve cuantos se fueron. */
+  clearRead: async (userId: number): Promise<number> =>
+    (await apiClient.delete(paths.READ.replace(':userId', String(userId)))).data.removed,
 };
 
 export default appNotificationService;

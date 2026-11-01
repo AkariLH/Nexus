@@ -4,7 +4,8 @@
  * usan estos nombres.
  *
  * Contraste (WCAG AA): el rosa solo alcanza 3:1 sobre blanco, asi que se usa en rellenos, bordes e
- * iconos; el texto de acento va en morado (`textAccent`, 6:1). Los grises llevan un tinte morado
+ * iconos; el texto de acento va en morado (`textAccent`, 6:1). Detras de texto blanco va el rosa
+ * fuerte (`primaryStrong`, `gradients.onText`). Los grises llevan un tinte morado
  * leve y todos los de texto pasan 4.5:1 sobre `surface` y `surfaceMuted`.
  */
 import { Platform } from 'react-native';
@@ -12,6 +13,8 @@ import { Platform } from 'react-native';
 export const palette = {
   // Marca
   primary: '#FF4F81',
+  /** [ux-ajustes] D5 - Rosa fuerte detras de texto o iconos blancos: blanco encima = 4.9:1. */
+  primaryStrong: '#D81B60',
   secondary: '#8A2BE2',
   textAccent: '#8A2BE2',
   onPrimary: '#FFFFFF',
@@ -77,6 +80,9 @@ export const eventColors = [
 export const gradients = {
   primary: [palette.primary, palette.secondary],
   primaryReversed: [palette.secondary, palette.primary],
+  /** [ux-ajustes] D5 - Fondos con texto blanco encima (botones, pestana activa, dia elegido). */
+  onText: [palette.primaryStrong, palette.secondary],
+  onTextReversed: [palette.secondary, palette.primaryStrong],
   soft: [palette.primarySoft, palette.secondarySoft],
   disabled: [palette.primaryDisabled, palette.secondaryDisabled],
   danger: ['#EF4444', palette.error],

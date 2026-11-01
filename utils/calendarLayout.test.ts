@@ -9,11 +9,14 @@ import {
   layoutLanes,
   monthGrid,
   monthTitle,
+  openingHour,
   parseSuggestion,
+  suggestedText,
   dayTitle,
   sourcesOn,
   weekOf,
 } from './calendarLayout';
+import type { CalendarItem } from './calendarLayout';
 import type { EventResponse } from '../services/event.service';
 import type { ExternalEventDTO } from '../services/externalCalendar.integration.service';
 
@@ -248,5 +251,47 @@ describe('belowBusy', () => {
 
   it('sin bloques encima, no se mueve', () => {
     expect(belowBusy({ top: 100, height: 200 }, [{ top: 400, height: 28 }])).toEqual({ top: 100, height: 200 });
+  });
+});
+
+describe('suggestedText ([ux-ajustes] D1)', () => {
+  it('lee el título y el lugar de «Proponer otra fecha», sin espacios de más', () => {
+    expect(suggestedText(' Noche de boliche ', 'Bol Polanco')).toEqual({ title: 'Noche de boliche', location: 'Bol Polanco' });
+  });
+
+  it('sin datos, vacíos', () => {
+    expect(suggestedText(undefined, undefined)).toEqual({ title: '', location: '' });
+  });
+});
+
+describe('openingHour ([ux-ajustes] D6)', () => {
+  const item = (start: Date, end: Date, allDay = false) =>
+    ({ id: String(start.getTime()), title: 'x', start, end, allDay }) as CalendarItem;
+  // Semana del domingo 25 al sábado 31 de octubre de 2026.
+  const week = Array.from({ length: 7 }, (_, i) => new Date(2026, 9, 25 + i));
+  const nextWeek = Array.from({ length: 7 }, (_, i) => new Date(2026, 10, 1 + i));
+
+  it('si hoy está en la vista, abre una hora antes de ahora', () => {
+    expect(openingHour([item(new Date(2026, 9, 27, 6, 0), new Date(2026, 9, 27, 7, 0))], week, new Date(2026, 9, 31, 15, 20))).toBe(14);
+    expect(openingHour([], week, new Date(2026, 9, 31, 0, 10))).toBe(0);
+  });
+
+  it('otro día: la primera hora de lo que empieza ese día, 8 como máximo', () => {
+    const now = new Date(2026, 9, 31, 15, 20);
+    expect(openingHour([item(new Date(2026, 10, 3, 10, 0), new Date(2026, 10, 3, 11, 0))], nextWeek, now)).toBe(8);
+    expect(openingHour([item(new Date(2026, 10, 4, 6, 30), new Date(2026, 10, 4, 7, 30))], nextWeek, now)).toBe(6);
+  });
+
+  it('lo que viene del día anterior («Dormir» 23:00–05:00) no cuenta', () => {
+    const now = new Date(2026, 9, 31, 15, 20);
+    const sleep = item(new Date(2026, 9, 31, 23, 0), new Date(2026, 10, 1, 5, 0));
+    expect(openingHour([sleep], nextWeek, now)).toBe(8);
+    expect(openingHour([sleep], [new Date(2026, 10, 1)], now)).toBe(8);
+  });
+
+  it('los de todo el día no cuentan; sin eventos, 8', () => {
+    const now = new Date(2026, 9, 31, 15, 20);
+    expect(openingHour([item(new Date(2026, 10, 2), new Date(2026, 10, 2, 23, 59), true)], nextWeek, now)).toBe(8);
+    expect(openingHour([], nextWeek, now)).toBe(8);
   });
 });

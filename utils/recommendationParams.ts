@@ -5,12 +5,12 @@
 import type { MutualAvailableDay } from '../services/availabilityService';
 import type { RecommendationParams, Scope, ZoneType } from '../services/recommendation.service';
 import { formatMxn } from './recommendationFormat';
+import { cleanWindows } from './freeProposals';
 
 /** CDMX no cambia de horario desde 2022. */
 const CDMX_OFFSET = '-06:00';
 const CDMX_OFFSET_MS = -6 * 60 * 60_000;
 const MIN_SLOT_MINUTES = 60;
-const QUARTER_MS = 15 * 60_000;
 
 export const MAX_COST_MXN = 15_000;
 
@@ -44,36 +44,28 @@ export interface RequestForm {
 
 const toInstant = (date: string, time: string): Date => new Date(`${date}T${time}:00${CDMX_OFFSET}`);
 
-const cdmxClock = (instant: Date): string => {
+/** El reloj de CDMX como fecha local, para la regla de [libres-juntos] (que lee horas locales). */
+const cdmxWallClock = (instant: Date): Date => {
   const shifted = new Date(instant.getTime() + CDMX_OFFSET_MS);
-  return `${String(shifted.getUTCHours()).padStart(2, '0')}:${String(shifted.getUTCMinutes()).padStart(2, '0')}`;
+  return new Date(
+    shifted.getUTCFullYear(), shifted.getUTCMonth(), shifted.getUTCDate(),
+    shifted.getUTCHours(), shifted.getUTCMinutes(),
+  );
 };
 
-const nextQuarter = (now: Date): Date => new Date(Math.ceil(now.getTime() / QUARTER_MS) * QUARTER_MS);
-
 /**
- * F1 - Huecos que sirven para pedir: futuros y de 60 minutos o mas. El de hoy empieza en el
- * siguiente cuarto de hora para que el servidor no lo rechace por estar en el pasado.
+ * F1 - Huecos que sirven para pedir. [ux-ajustes] D7: con la misma regla limpia de [libres-juntos]
+ * (desde ahora, inicio y fin a :00/:30, de 60 minutos o mas) y sin partir en manana/tarde/noche.
  *
  * @complexity T: O(n log n) por el orden, S: O(n), n = huecos
  */
 export function eligibleSlots(days: MutualAvailableDay[], now: Date): SlotOption[] {
-  const earliest = nextQuarter(now);
-
-  return days
-    .flatMap((day) =>
-      day.mutualFreeSlots.map((slot) => {
-        const freeFrom = toInstant(day.date, slot.start);
-        const start = freeFrom < earliest ? earliest : freeFrom;
-        return { date: day.date, start, end: toInstant(day.date, slot.end) };
-      }),
-    )
-    .filter(({ start, end }) => end.getTime() - start.getTime() >= MIN_SLOT_MINUTES * 60_000)
-    .sort((a, b) => a.start.getTime() - b.start.getTime())
-    .map(({ date, start, end }) => {
-      const from = cdmxClock(start);
-      return { key: `${date}T${from}`, date, start: from, end: cdmxClock(end) };
-    });
+  return cleanWindows(days, cdmxWallClock(now), false).map(({ date, start, end }) => ({
+    key: `${date}T${start}`,
+    date,
+    start,
+    end,
+  }));
 }
 
 export function slotToInstants(slot: SlotOption): { slotStart: string; slotEnd: string } {

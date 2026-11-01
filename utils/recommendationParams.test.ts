@@ -45,7 +45,15 @@ describe('eligibleSlots (F1)', () => {
       NOW,
     );
 
-    expect(slots.map((s) => [s.start, s.end])).toEqual([['17:15', '21:00']]);
+    expect(slots.map((s) => [s.start, s.end])).toEqual([['17:30', '21:00']]);
+  });
+
+  it('[ux-ajustes] D7: limpia los horarios como en Libres juntos (09:05 -> 09:30, fin a :00/:30, sin partir)', () => {
+    // Sabado 17, 08:00 en CDMX.
+    const morning = new Date('2026-10-17T14:00:00.000Z');
+    const slots = eligibleSlots([day('2026-10-17', [['09:05', '22:10']])], morning);
+
+    expect(slots.map((s) => [s.date, s.start, s.end])).toEqual([['2026-10-17', '09:30', '22:00']]);
   });
 
   it('ordena por fecha y hora y da una clave unica', () => {

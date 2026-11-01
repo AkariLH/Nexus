@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { parseSuggestion } from "../../utils/calendarLayout";
+import { parseSuggestion, suggestedText } from "../../utils/calendarLayout";
 import {
   ScrollView,
   StyleSheet,
@@ -30,19 +30,25 @@ export default function CreateEventScreen() {
   const router = useRouter();
   const { user } = useAuth();
   // RF-35: al proponer una idea del banco, llega prellenado (ver utils/ideaFormat.proposalParams).
-  const { ideaTitle, ideaDescription, ideaDuration, suggestedDate, suggestedStart, suggestedEnd } = useLocalSearchParams<{
+  const {
+    ideaTitle, ideaDescription, ideaDuration, suggestedDate, suggestedStart, suggestedEnd, suggestedTitle, suggestedLocation,
+  } = useLocalSearchParams<{
     ideaTitle?: string;
     ideaDescription?: string;
     ideaDuration?: string;
     suggestedDate?: string;
     suggestedStart?: string;
     suggestedEnd?: string;
+    suggestedTitle?: string;
+    suggestedLocation?: string;
   }>();
   // Figma E: desde el calendario llega el dia elegido o un horario libre de los dos.
   const suggestion = parseSuggestion(suggestedDate, suggestedStart, suggestedEnd);
+  // [ux-ajustes] D1: "Proponer otra fecha" de una invitacion que ya paso trae su titulo y lugar.
+  const proposed = suggestedText(suggestedTitle, suggestedLocation);
 
   // Estados del formulario
-  const [title, setTitle] = useState(ideaTitle ?? '');
+  const [title, setTitle] = useState(ideaTitle ?? proposed.title);
   const [startDate, setStartDate] = useState<Date>(suggestion?.day ?? new Date());
   const [endDate, setEndDate] = useState<Date>(suggestion?.day ?? new Date());
   const [startTime, setStartTime] = useState<Date>(suggestion?.start ?? new Date());
@@ -51,7 +57,7 @@ export default function CreateEventScreen() {
   const [isRecurring, setIsRecurring] = useState(false);
   const [showRecurrenceModal, setShowRecurrenceModal] = useState(false);
   const [recurrenceConfig, setRecurrenceConfig] = useState<any>(null);
-  const [location, setLocation] = useState('');
+  const [location, setLocation] = useState(proposed.location);
   const [category, setCategory] = useState('');
   // Color, categoría, descripción y recordatorios van en "Más opciones" para no mostrar 10 campos a la vez.
   const [showMore, setShowMore] = useState(!!ideaDescription);
