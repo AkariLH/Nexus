@@ -53,16 +53,16 @@ export function closedNotice(
   partnerName: string,
   now: Date,
 ): ClosedNotice {
-  if (!leftover) return { subtitle: 'No llegaron a un acuerdo a tiempo.', canInvite: false, note: undefined };
+  if (!leftover) return { subtitle: 'Esta vez no decidieron. ¿Lo intentan otro día?', canInvite: false, note: undefined };
   const subtitle = {
-    MY_PROPOSAL: `${partnerName} no alcanzó a responder tu propuesta.`,
-    THEIR_PROPOSAL: `No alcanzaste a responder la propuesta de ${partnerName}.`,
-    MATCH: 'Coincidieron en una opción, pero nadie la propuso.',
+    MY_PROPOSAL: `${partnerName} no alcanzó a ver tu propuesta.`,
+    THEIR_PROPOSAL: `Se te pasó la propuesta de ${partnerName}.`,
+    MATCH: 'Coincidieron en una opción, pero a nadie se le ocurrió proponerla.',
   }[leftover.kind];
   // El aviso de "ya paso" va en el subtitulo: la nota del modal se pinta como confirmacion (palomita).
   const upcoming = new Date(leftover.startsAt).getTime() > now.getTime();
   return {
-    subtitle: upcoming ? subtitle : `${subtitle} El horario de esa opción ya pasó.`,
+    subtitle: upcoming ? subtitle : `${subtitle} Y ese horario ya pasó.`,
     canInvite: upcoming,
     note: undefined,
   };

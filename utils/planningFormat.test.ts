@@ -46,7 +46,7 @@ describe('closedNotice', () => {
 
   it('sin opcion que conservar: el texto de siempre y solo planear de nuevo', () => {
     expect(closedNotice(null, 'Suzu', NOW)).toEqual({
-      subtitle: 'No llegaron a un acuerdo a tiempo.',
+      subtitle: 'Esta vez no decidieron. ¿Lo intentan otro día?',
       canInvite: false,
       note: undefined,
     });
@@ -54,7 +54,7 @@ describe('closedNotice', () => {
 
   it('mi propuesta sin respuesta, aun a tiempo: se puede mandar como invitacion', () => {
     expect(closedNotice({ kind: 'MY_PROPOSAL', startsAt: later }, 'Suzu', NOW)).toEqual({
-      subtitle: 'Suzu no alcanzó a responder tu propuesta.',
+      subtitle: 'Suzu no alcanzó a ver tu propuesta.',
       canInvite: true,
       note: undefined,
     });
@@ -62,14 +62,14 @@ describe('closedNotice', () => {
 
   it('propuesta de la pareja y coincidencia sin proponer', () => {
     expect(closedNotice({ kind: 'THEIR_PROPOSAL', startsAt: later }, 'Suzu', NOW).subtitle)
-      .toBe('No alcanzaste a responder la propuesta de Suzu.');
+      .toBe('Se te pasó la propuesta de Suzu.');
     expect(closedNotice({ kind: 'MATCH', startsAt: later }, 'Suzu', NOW).subtitle)
-      .toBe('Coincidieron en una opción, pero nadie la propuso.');
+      .toBe('Coincidieron en una opción, pero a nadie se le ocurrió proponerla.');
   });
 
   it('si el horario ya paso, no se ofrece mandarla y se dice por que', () => {
     expect(closedNotice({ kind: 'MY_PROPOSAL', startsAt: earlier }, 'Suzu', NOW)).toEqual({
-      subtitle: 'Suzu no alcanzó a responder tu propuesta. El horario de esa opción ya pasó.',
+      subtitle: 'Suzu no alcanzó a ver tu propuesta. Y ese horario ya pasó.',
       canInvite: false,
       note: undefined,
     });

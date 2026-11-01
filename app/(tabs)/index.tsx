@@ -632,7 +632,7 @@ export default function HomeScreen() {
         visible={planningNotice === 'CLOSED'}
         icon="hourglass-outline"
         tone="warning"
-        title="Se acabó el tiempo"
+        title="Se les fue el tiempo"
         subtitle={closed?.subtitle}
         note={leftoverError ?? closed?.note}
         primary={closed?.canInvite
