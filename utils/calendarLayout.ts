@@ -317,10 +317,13 @@ function slotsOfDay(day: MutualAvailabilityResponse['mutualAvailability'][number
   }));
 }
 
-/** Huecos libres de los dos en un dia (para los bloques punteados de la vista Dia). */
+/**
+ * Huecos libres de los dos en un dia (bloques de Dia y Semana). [pulido-critica] D1: partidos en
+ * manana / tarde / noche, la misma regla que Inicio y la lista, para que los horarios coincidan.
+ */
 export function freeSlotsOn(mutual: MutualAvailabilityResponse | null, day: Date, now: Date): FreeSlot[] {
   const found = mutual?.mutualAvailability.find((d) => d.date === isoDate(day));
-  return found ? slotsOfDay(found, now, false) : [];
+  return found ? slotsOfDay(found, now) : [];
 }
 
 /** Dias con huecos libres de los dos (modal E4): "Hoy, viernes 16", "Sábado 17". */

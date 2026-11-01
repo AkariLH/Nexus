@@ -186,7 +186,8 @@ describe('calendarLayout', () => {
     const now = new Date(2026, 9, 16, 13, 0);
 
     // La vista Dia: cada hueco entero.
-    expect(freeSlotsOn(mutual, new Date(2026, 9, 16), now).map((s) => s.label)).toEqual(['18:00 – 21:00']);
+    // [pulido-critica] D1: Dia parte el hueco igual que Inicio y la lista.
+    expect(freeSlotsOn(mutual, new Date(2026, 9, 16), now).map((s) => s.label)).toEqual(['18:00 – 19:00', '19:00 – 21:00']);
     // [libres-juntos] La lista: partidos en manana / tarde / noche.
     const days = freeTogetherDays(mutual, now);
     expect(days.map((d) => [d.title, d.slots.map((s) => s.label)])).toEqual([
@@ -211,7 +212,7 @@ describe('calendarLayout', () => {
     };
     const now = new Date(2026, 9, 31, 17, 10);
 
-    expect(freeSlotsOn(mutual, new Date(2026, 9, 31), now).map((s) => s.label)).toEqual(['17:30 – 22:00']);
+    expect(freeSlotsOn(mutual, new Date(2026, 9, 31), now).map((s) => s.label)).toEqual(['17:30 – 19:00', '19:00 – 22:00']);
     expect(freeTogetherDays(mutual, now)[0].slots.map((s) => s.label)).toEqual(['17:30 – 19:00', '19:00 – 22:00']);
   });
 

@@ -15,12 +15,15 @@ export interface NoticeGroup {
   count: number;
 }
 
+/** [pulido-critica] D2 - Tipos en los que el aviso nuevo reemplaza al anterior aunque cambie el texto. */
+const REPLACEABLE = ['FREE_TIME', 'REMINDER'];
+
 const sameNotice = (a: AppNotification, b: AppNotification) =>
-  a.type === b.type && a.title === b.title && a.body === b.body;
+  a.type === b.type && (REPLACEABLE.includes(a.type) || (a.title === b.title && a.body === b.body));
 
 /**
- * D2 - Avisos iguales (tipo, titulo y texto) y seguidos en uno con su cuenta. La lista viene del
- * mas reciente al mas viejo, asi que se queda el primero (la hora del mas reciente).
+ * D2 - Avisos seguidos en uno con su cuenta: iguales (tipo, titulo y texto) o del mismo tipo si ese
+ * tipo se reemplaza. La lista viene del mas reciente al mas viejo, asi que se queda el primero.
  *
  * @complexity T: O(n), S: O(n), n = avisos
  */
@@ -32,6 +35,14 @@ export function groupNotices(list: AppNotification[]): NoticeGroup[] {
     else out.push({ notice, count: 1 });
   }
   return out;
+}
+
+/** [pulido-critica] D2 - Invitaciones que todavia se pueden contestar y las que ya pasaron ("Anteriores"). */
+export function splitInvites<T extends Pick<EventResponse, 'endDateTime'>>(pending: T[], now: Date): { open: T[]; past: T[] } {
+  return {
+    open: pending.filter((e) => !isPastInvite(e, now)),
+    past: pending.filter((e) => isPastInvite(e, now)),
+  };
 }
 
 /** D1 - Numero de la campanita: invitaciones que todavia se pueden contestar mas avisos sin leer. */
