@@ -139,8 +139,7 @@ export default function RegisterScreen() {
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         {step === 1 ? (
           <>
-            <Text style={styles.title} accessibilityRole="header">Crea tu cuenta</Text>
-            <Text style={styles.subtitle}>Con tu correo inicias sesión en cualquier teléfono.</Text>
+            <Text style={[styles.title, styles.titleAlone]} accessibilityRole="header">Crea tu cuenta</Text>
 
             <Input
               label="Correo electrónico"
@@ -296,6 +295,7 @@ const styles = StyleSheet.create({
   bar: { paddingHorizontal: 16, paddingBottom: 8 },
   scroll: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 24 },
   title: { fontSize: 26, fontWeight: "700", color: palette.text },
+  titleAlone: { marginBottom: 24 },
   subtitle: { marginTop: 6, marginBottom: 24, fontSize: 14, color: palette.textSecondary },
   field: { marginBottom: 20 },
   label: { color: palette.text, marginBottom: 8, fontSize: 14, fontWeight: "600" },
