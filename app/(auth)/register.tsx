@@ -18,7 +18,8 @@ import { palette, gradients } from "../../constants/colors";
 import { authService } from "../../services/auth.service";
 import type { RegisterRequest } from "../../types/auth.types";
 import { birthDateLabel } from "../../utils/profileFormat";
-import { emailProblem, isAdult, nicknameOrName, passwordProblem, toBackendDate } from "../../utils/registerForm";
+import { emailProblem, fromBackendDate, isAdult, nicknameOrName, passwordProblem, toBackendDate } from "../../utils/registerForm";
+import { WebDateInput } from "../../components/ui/WebDateInput";
 import { ErrorModal } from "../components/ErrorModal";
 import { Header } from "../components/layout/Header";
 import { GradientButton } from "../components/ui/GradientButton";
@@ -199,6 +200,16 @@ export default function RegisterScreen() {
 
             <View style={styles.field}>
               <Text style={styles.label}>Fecha de nacimiento</Text>
+              {Platform.OS === "web" ? (
+                <WebDateInput
+                  value={birthDate ? toBackendDate(birthDate) : ""}
+                  onChange={(iso) => onDateChange(null, fromBackendDate(iso) ?? undefined)}
+                  min="1900-01-01"
+                  max={toBackendDate(new Date())}
+                  invalid={!!birthDateError}
+                  accessibilityLabel="Fecha de nacimiento"
+                />
+              ) : (
               <TouchableOpacity
                 style={[styles.dateField, !!birthDateError && styles.dateFieldError]}
                 onPress={() => setShowDatePicker(true)}
@@ -210,12 +221,13 @@ export default function RegisterScreen() {
                   {birthDate ? birthDateLabel(toBackendDate(birthDate)) : "Elige tu fecha"}
                 </Text>
               </TouchableOpacity>
+              )}
               <Text style={birthDateError ? styles.fieldError : styles.fieldHelp}>
                 {birthDateError || "Nexus es para mayores de 18 años."}
               </Text>
             </View>
 
-            {showDatePicker && (
+            {showDatePicker && Platform.OS !== "web" && (
               <DateTimePicker
                 value={birthDate || new Date(2000, 0, 1)}
                 mode="date"

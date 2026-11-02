@@ -1,4 +1,4 @@
-import { emailProblem, isAdult, nicknameOrName, passwordProblem, toBackendDate } from './registerForm';
+import { emailProblem, fromBackendDate, isAdult, nicknameOrName, passwordProblem, toBackendDate } from './registerForm';
 
 describe('emailProblem', () => {
   it('acepta correos de proveedores conocidos', () => {
@@ -51,5 +51,18 @@ describe('nicknameOrName', () => {
   it('si el apodo queda vacío, usa el nombre (Figma H3)', () => {
     expect(nicknameOrName('  ', 'Ana López')).toBe('Ana López');
     expect(nicknameOrName(' Ani ', 'Ana López')).toBe('Ani');
+  });
+});
+
+describe('fromBackendDate', () => {
+  it('lee la fecha del campo de fecha de la web como dia local', () => {
+    const date = fromBackendDate('2001-03-14');
+    expect(date && toBackendDate(date)).toBe('2001-03-14');
+  });
+
+  it('devuelve null si el campo esta vacio o la fecha no existe', () => {
+    expect(fromBackendDate('')).toBeNull();
+    expect(fromBackendDate('2001-02-30')).toBeNull();
+    expect(fromBackendDate('14/03/2001')).toBeNull();
   });
 });

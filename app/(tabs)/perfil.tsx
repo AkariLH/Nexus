@@ -17,6 +17,8 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 import { processProfilePhoto } from '@/utils/imageProcessor';
 import { birthDateLabel } from '@/utils/profileFormat';
+import { toBackendDate } from '@/utils/registerForm';
+import { WebDateInput } from '@/components/ui/WebDateInput';
 import { LinearGradient } from "expo-linear-gradient";
 import { Card, ListCard, ListRow, TabTitle } from "../../components/ui/Surface";
 import { GradientButton } from "../components/ui/GradientButton";
@@ -500,13 +502,24 @@ export default function PerfilScreen() {
             "calendar-outline",
             "Fecha de nacimiento",
             birthDateLabel(birthDate),
-            <TouchableOpacity accessibilityRole="button" style={styles.dateInput} onPress={() => setShowDatePicker(true)} disabled={isLoading}>
-              <Text style={styles.inputText}>{birthDateLabel(editBirthDate)}</Text>
-              <Ionicons name="chevron-down" size={18} color={palette.icon} />
-            </TouchableOpacity>,
+            Platform.OS === "web" ? (
+              <WebDateInput
+                value={editBirthDate}
+                onChange={(iso) => iso && setEditBirthDate(iso)}
+                min="1900-01-01"
+                max={toBackendDate(new Date())}
+                disabled={isLoading}
+                accessibilityLabel="Fecha de nacimiento"
+              />
+            ) : (
+              <TouchableOpacity accessibilityRole="button" style={styles.dateInput} onPress={() => setShowDatePicker(true)} disabled={isLoading}>
+                <Text style={styles.inputText}>{birthDateLabel(editBirthDate)}</Text>
+                <Ionicons name="chevron-down" size={18} color={palette.icon} />
+              </TouchableOpacity>
+            ),
           )}
           {isEditing && <Text style={styles.fieldHint}>Debes ser mayor de 18 años.</Text>}
-          {isEditing && showDatePicker && (
+          {isEditing && showDatePicker && Platform.OS !== "web" && (
             <DateTimePicker
               value={editBirthDate ? new Date(editBirthDate) : new Date(2000, 0, 1)}
               mode="date"

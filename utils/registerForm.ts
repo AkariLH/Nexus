@@ -53,6 +53,14 @@ export function toBackendDate(date: Date): string {
   return `${date.getFullYear()}-${month}-${day}`;
 }
 
+/** Lo contrario de toBackendDate, en hora local (el campo de fecha de la web da "2001-03-14"). */
+export function fromBackendDate(iso: string): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!match) return null;
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  return toBackendDate(date) === iso ? date : null;
+}
+
 /** Figma H3: "Si lo dejas vacío, usamos tu nombre." */
 export function nicknameOrName(nickname: string, name: string): string {
   return nickname.trim() || name.trim();
