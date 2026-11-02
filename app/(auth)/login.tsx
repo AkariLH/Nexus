@@ -24,7 +24,7 @@ interface LoginError {
   action?: { text: string; onPress: () => void };
 }
 
-/** Figma H5: "Hola de nuevo". */
+/** Figma H5: "Iniciar sesión". */
 export default function LoginScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -91,7 +91,7 @@ export default function LoginScreen() {
       <Header onBack={() => (router.canGoBack() ? router.back() : router.replace("/(auth)/welcome"))} />
 
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title} accessibilityRole="header">Hola de nuevo</Text>
+        <Text style={styles.title} accessibilityRole="header">Iniciar sesión</Text>
         <Text style={styles.subtitle}>Entra con tu correo y tu contraseña.</Text>
 
         <Input
