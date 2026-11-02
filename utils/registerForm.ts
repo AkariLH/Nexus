@@ -39,6 +39,19 @@ export function passwordProblem(password: string): string | null {
   return null;
 }
 
+const SYMBOL = /[!@#$%^&*()_+\-[\]{};':"\\|,.<>/?]/;
+
+/** Figma H2 (requisitos): cada regla de RN-01 con si ya se cumple, en el orden de la lista. */
+export function passwordChecks(password: string): { label: string; met: boolean }[] {
+  return [
+    { label: 'Mínimo 8 caracteres', met: password.length >= 8 },
+    { label: 'Una mayúscula', met: /[A-Z]/.test(password) },
+    { label: 'Una minúscula', met: /[a-z]/.test(password) },
+    { label: 'Un número', met: /[0-9]/.test(password) },
+    { label: 'Un símbolo (por ejemplo ! o #)', met: SYMBOL.test(password) },
+  ];
+}
+
 /** FA03: tiene 18 años cumplidos en `today`. */
 export function isAdult(birthDate: Date, today: Date = new Date()): boolean {
   const eighteenth = new Date(birthDate.getFullYear() + 18, birthDate.getMonth(), birthDate.getDate());

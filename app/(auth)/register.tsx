@@ -20,13 +20,14 @@ import type { RegisterRequest } from "../../types/auth.types";
 import { birthDateLabel } from "../../utils/profileFormat";
 import { emailProblem, fromBackendDate, isAdult, nicknameOrName, passwordProblem, toBackendDate } from "../../utils/registerForm";
 import { WebDateInput } from "../../components/ui/WebDateInput";
+import { PasswordRules } from "../../components/ui/PasswordRules";
 import { ErrorModal } from "../components/ErrorModal";
 import { Header } from "../components/layout/Header";
 import { GradientButton } from "../components/ui/GradientButton";
 import { Input } from "../components/ui/Input";
 import { StepBar } from "../components/ui/StepBar";
 
-const PASSWORD_RULES = "Mínimo 8 caracteres, con mayúscula, minúscula, número y símbolo.";
+const RULES_ERROR = "Revisa los requisitos de abajo.";
 
 /** Figma H2 (correo y contrasena) y H3 (datos de la persona): crear cuenta en 2 pasos. */
 export default function RegisterScreen() {
@@ -65,7 +66,8 @@ export default function RegisterScreen() {
     const emailIssue = emailProblem(email);
     const passwordIssue = passwordProblem(password);
     setEmailError(emailIssue ?? "");
-    setPasswordError(passwordIssue ?? "");
+    // Con texto, la lista de requisitos dice cuál falta; el campo solo se pone en rojo.
+    setPasswordError(passwordIssue && password ? RULES_ERROR : passwordIssue ?? "");
     if (!emailIssue && !passwordIssue) setStep(2);
   };
 
@@ -165,12 +167,12 @@ export default function RegisterScreen() {
                 if (passwordError) setPasswordError("");
               }}
               isPassword
-              help={PASSWORD_RULES}
               error={passwordError}
               autoComplete="new-password"
               returnKeyType="done"
               onSubmitEditing={continueToDetails}
             />
+            <PasswordRules password={password} />
           </>
         ) : (
           <>

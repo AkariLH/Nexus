@@ -20,9 +20,10 @@ import { SuccessModal } from "../components/SuccessModal";
 import { authService } from "../../services/auth.service";
 import { passwordProblem } from "../../utils/registerForm";
 import { Input } from "../components/ui/Input";
+import { PasswordRules } from "../../components/ui/PasswordRules";
 import { palette } from "../../constants/colors";
 
-const PASSWORD_RULES = "Mínimo 8 caracteres, con mayúscula, minúscula, número y símbolo.";
+const RULES_ERROR = "Revisa los requisitos de abajo.";
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
@@ -176,8 +177,8 @@ export default function ResetPasswordScreen() {
   };
 
   const handleResetPassword = async () => {
-    // E14 (RN-01): la primera regla que le falta, debajo del campo.
-    const issue = newPassword ? passwordProblem(newPassword) : "Escribe tu nueva contraseña.";
+    // E14 (RN-01): la lista de requisitos dice qué falta; el campo se pone en rojo.
+    const issue = newPassword ? (passwordProblem(newPassword) && RULES_ERROR) : "Escribe tu nueva contraseña.";
     setPasswordError(issue ?? "");
     if (issue) return;
 
@@ -314,13 +315,13 @@ export default function ResetPasswordScreen() {
                   if (passwordError) setPasswordError("");
                 }}
                 isPassword
-                help={PASSWORD_RULES}
                 error={passwordError}
                 autoComplete="new-password"
                 editable={!isLoading}
                 returnKeyType="done"
                 onSubmitEditing={handleResetPassword}
               />
+              <PasswordRules password={newPassword} />
 
               {/* Botón restablecer */}
               <View style={styles.buttonContainer}>

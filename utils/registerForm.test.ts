@@ -1,4 +1,4 @@
-import { emailProblem, fromBackendDate, isAdult, nicknameOrName, passwordProblem, toBackendDate } from './registerForm';
+import { emailProblem, fromBackendDate, passwordChecks, isAdult, nicknameOrName, passwordProblem, toBackendDate } from './registerForm';
 
 describe('emailProblem', () => {
   it('acepta correos de proveedores conocidos', () => {
@@ -64,5 +64,23 @@ describe('fromBackendDate', () => {
     expect(fromBackendDate('')).toBeNull();
     expect(fromBackendDate('2001-02-30')).toBeNull();
     expect(fromBackendDate('14/03/2001')).toBeNull();
+  });
+});
+
+describe('passwordChecks', () => {
+  it('marca cada regla de RN-01 por separado, en el orden de la lista', () => {
+    expect(passwordChecks('Nexus2026')).toEqual([
+      { label: 'Mínimo 8 caracteres', met: true },
+      { label: 'Una mayúscula', met: true },
+      { label: 'Una minúscula', met: true },
+      { label: 'Un número', met: true },
+      { label: 'Un símbolo (por ejemplo ! o #)', met: false },
+    ]);
+  });
+
+  it('coincide con passwordProblem: todas cumplen solo si no hay problema', () => {
+    for (const pw of ['Secreto123!', 'Ab1!', 'secreto123!', 'Secreto1234', '']) {
+      expect(passwordChecks(pw).every((c) => c.met)).toBe(passwordProblem(pw) === null);
+    }
   });
 });
