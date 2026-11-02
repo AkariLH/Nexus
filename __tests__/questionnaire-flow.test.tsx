@@ -54,8 +54,10 @@ describe('QuestionnaireFlow', () => {
   it('empieza con la bienvenida y "Siguiente" se activa al elegir algo', async () => {
     await renderFlow();
 
-    expect(screen.getByText('Cuéntanos qué te gusta')).toBeTruthy();
-    fireEvent.press(screen.getByText('Empezar'));
+    expect(screen.getByText('Bienestar en pareja')).toBeTruthy();
+    expect(screen.getByText('Diseñemos citas que les hagan bien')).toBeTruthy();
+    expect(screen.getByText(/7 preguntas breves sobre su bienestar/)).toBeTruthy();
+    fireEvent.press(screen.getByText('Comenzar'));
 
     expect(screen.getByText('Paso 1 de 7')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Siguiente' })).toBeDisabled();
@@ -66,7 +68,7 @@ describe('QuestionnaireFlow', () => {
 
   it('guarda cada paso y "Nada de esto me interesa" cuenta como respuesta', async () => {
     await renderFlow();
-    fireEvent.press(screen.getByText('Empezar'));
+    fireEvent.press(screen.getByText('Comenzar'));
 
     fireEvent.press(screen.getByText('Nada de esto me interesa'));
     await act(async () => {
@@ -96,7 +98,8 @@ describe('QuestionnaireFlow', () => {
     service.getUserPreferences.mockResolvedValue({ data: saved(QUESTIONNAIRE_STEPS.map((s) => s.categoryName)) });
     await renderFlow({ mode: 'edit' });
 
-    expect(screen.queryByText('Empezar')).toBeNull();
+    expect(screen.queryByText('Comenzar')).toBeNull();
+    expect(screen.getByText('Tus preferencias')).toBeTruthy();
     expect(screen.getByText('Paso 1 de 7')).toBeTruthy();
     expect(screen.getByRole('checkbox', { name: 'Opción 1' })).toBeChecked();
     expect(screen.getByRole('button', { name: 'Siguiente' })).toBeEnabled();
@@ -105,7 +108,7 @@ describe('QuestionnaireFlow', () => {
   it('si no se puede guardar, se queda en el paso y avisa', async () => {
     service.savePreferences.mockResolvedValue({ error: { status: 500 } as any });
     await renderFlow();
-    fireEvent.press(screen.getByText('Empezar'));
+    fireEvent.press(screen.getByText('Comenzar'));
     fireEvent.press(screen.getByText('Opción 1'));
 
     await act(async () => {

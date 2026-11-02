@@ -120,11 +120,12 @@ export function QuestionnaireFlow({ userId, mode, onFinish, onExit }: Questionna
   };
 
   const last = stepIndex === TOTAL - 1;
-  const buttonTitle = stepIndex === WELCOME ? 'Empezar' : last ? (mode === 'edit' ? 'Guardar' : 'Terminar') : 'Siguiente';
+  const buttonTitle = stepIndex === WELCOME ? 'Comenzar' : last ? (mode === 'edit' ? 'Guardar' : 'Terminar') : 'Siguiente';
 
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
-      <ScreenHeader title="Tus preferencias" onBack={goBack} backDisabled={!canGoBack} />
+      {/* La primera vez es el cuestionario de bienestar; desde Perfil son "Tus preferencias". */}
+      <ScreenHeader title={mode === 'edit' ? 'Tus preferencias' : 'Bienestar en pareja'} onBack={goBack} backDisabled={!canGoBack} />
 
       {loading ? (
         <View style={styles.center}>
@@ -140,8 +141,10 @@ export function QuestionnaireFlow({ userId, mode, onFinish, onExit }: Questionna
       ) : stepIndex === WELCOME ? (
         <View style={styles.center}>
           <GradientIcon name="sparkles-outline" size={80} radius={40} />
-          <Text style={styles.welcomeTitle}>Cuéntanos qué te gusta</Text>
-          <Text style={styles.welcomeSubtitle}>Son 7 pasos cortos.</Text>
+          <Text style={styles.welcomeTitle}>Diseñemos citas que les hagan bien</Text>
+          <Text style={styles.welcomeSubtitle}>
+            7 preguntas breves sobre su bienestar para que el asistente encuentre planes que conecten con lo que ambos necesitan hoy.
+          </Text>
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.content}>
@@ -239,6 +242,8 @@ const styles = StyleSheet.create({
   },
   welcomeSubtitle: {
     fontSize: 14,
+    lineHeight: 20,
+    maxWidth: 320,
     color: palette.textSecondary,
     textAlign: 'center',
   },
