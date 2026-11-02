@@ -18,7 +18,11 @@ import { GradientButton } from "../components/ui/GradientButton";
 import { ErrorModal } from "../components/ErrorModal";
 import { SuccessModal } from "../components/SuccessModal";
 import { authService } from "../../services/auth.service";
+import { passwordProblem } from "../../utils/registerForm";
+import { Input } from "../components/ui/Input";
 import { palette } from "../../constants/colors";
+
+const PASSWORD_RULES = "Mínimo 8 caracteres, con mayúscula, minúscula, número y símbolo.";
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
@@ -29,9 +33,7 @@ export default function ResetPasswordScreen() {
   const [code, setCode] = useState(["", "", "", "", "", ""]);
   const [verifiedCode, setVerifiedCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [errorModal, setErrorModal] = useState({ visible: false, message: "" });
@@ -76,12 +78,6 @@ export default function ResetPasswordScreen() {
     }
   };
 
-  const validatePassword = (password: string): boolean => {
-    // RN-01: Política de contraseña segura
-    const passwordPolicy = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-\[\]{};':"\\|,.<>/?]).{8,}$/;
-    return passwordPolicy.test(password);
-  };
-
   const handleVerifyCode = async () => {
     const verificationCode = code.join("");
 
@@ -89,7 +85,7 @@ export default function ResetPasswordScreen() {
     if (!verificationCode || verificationCode.length < 6) {
       setErrorModal({
         visible: true,
-        message: "Por favor ingresa el código de 6 dígitos",
+        message: "Ingresa el código de 6 dígitos.",
       });
       return;
     }
@@ -106,14 +102,15 @@ export default function ResetPasswordScreen() {
       if (result.error) {
         setErrorModal({
           visible: true,
-          message: result.error.message || "Error al verificar el código",
+          message: result.error.message || "Algo salió mal de nuestro lado. Intenta de nuevo en unos momentos.",
         });
       } else {
         // Verificar si el código estaba expirado y se envió uno nuevo
-        if (result.data?.message?.includes("expirado")) {
+        const expiredMessage = result.data?.message ?? "";
+        if (/venci/i.test(expiredMessage)) {
           setInfoModal({
             visible: true,
-            message: result.data.message,
+            message: expiredMessage,
           });
           // Limpiar el código para que ingrese el nuevo
           setCode(["", "", "", "", "", ""]);
@@ -142,7 +139,7 @@ export default function ResetPasswordScreen() {
     } catch (error) {
       setErrorModal({
         visible: true,
-        message: "Ocurrió un error inesperado. Intenta nuevamente.",
+        message: "Algo salió mal de nuestro lado. Intenta de nuevo en unos momentos.",
       });
     } finally {
       setIsLoading(false);
@@ -158,12 +155,12 @@ export default function ResetPasswordScreen() {
       if (result.error) {
         setErrorModal({
           visible: true,
-          message: result.error.message || "Error al reenviar el código",
+          message: result.error.message || "Algo salió mal de nuestro lado. Intenta de nuevo en unos momentos.",
         });
       } else {
         setInfoModal({
           visible: true,
-          message: "Se ha enviado un nuevo código a tu correo",
+          message: "Te enviamos un código nuevo. Revisa tu bandeja de entrada.",
         });
         // Limpiar el código
         setCode(["", "", "", "", "", ""]);
@@ -171,7 +168,7 @@ export default function ResetPasswordScreen() {
     } catch (error) {
       setErrorModal({
         visible: true,
-        message: "Ocurrió un error inesperado. Intenta nuevamente.",
+        message: "Algo salió mal de nuestro lado. Intenta de nuevo en unos momentos.",
       });
     } finally {
       setIsResending(false);
@@ -179,31 +176,10 @@ export default function ResetPasswordScreen() {
   };
 
   const handleResetPassword = async () => {
-    // Validaciones
-    if (!newPassword) {
-      setErrorModal({
-        visible: true,
-        message: "Por favor ingresa tu nueva contraseña",
-      });
-      return;
-    }
-
-    // RN-01: Validar política de contraseña
-    if (!validatePassword(newPassword)) {
-      setErrorModal({
-        visible: true,
-        message: "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial",
-      });
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      setErrorModal({
-        visible: true,
-        message: "Las contraseñas no coinciden",
-      });
-      return;
-    }
+    // E14 (RN-01): la primera regla que le falta, debajo del campo.
+    const issue = newPassword ? passwordProblem(newPassword) : "Escribe tu nueva contraseña.";
+    setPasswordError(issue ?? "");
+    if (issue) return;
 
     setIsLoading(true);
 
@@ -212,24 +188,24 @@ export default function ResetPasswordScreen() {
         email,
         code: verifiedCode,
         newPassword,
-        confirmPassword,
+        confirmPassword: newPassword,
       });
 
       if (result.error) {
         setErrorModal({
           visible: true,
-          message: result.error.message || "Error al restablecer la contraseña",
+          message: result.error.message || "Algo salió mal de nuestro lado. Intenta de nuevo en unos momentos.",
         });
       } else {
         setSuccessModal({
           visible: true,
-          message: "Contraseña restablecida exitosamente",
+          message: "Tu contraseña se actualizó. Ya puedes iniciar sesión.",
         });
       }
     } catch (error) {
       setErrorModal({
         visible: true,
-        message: "Ocurrió un error inesperado. Intenta nuevamente.",
+        message: "Algo salió mal de nuestro lado. Intenta de nuevo en unos momentos.",
       });
     } finally {
       setIsLoading(false);
@@ -271,9 +247,9 @@ export default function ResetPasswordScreen() {
           {step === "verify" ? (
             <>
               {/* PASO 1: Verificar código */}
-              <Text style={styles.title}>Verifica tu código</Text>
+              <Text style={styles.title}>Revisa tu correo</Text>
               <Text style={styles.subtitle}>
-                Ingresa el código que enviamos a{"\n"}
+                Ingresa el código que te enviamos a{"\n"}
                 <Text style={styles.emailHighlight}>{email || "tu correo"}</Text>
               </Text>
 
@@ -304,7 +280,7 @@ export default function ResetPasswordScreen() {
               {/* Botón verificar código */}
               <View style={styles.buttonContainer}>
                 <GradientButton
-                  title={isLoading ? "Verificando..." : "Verificar código"}
+                  title={isLoading ? "Verificando…" : "Verificar código"}
                   disabled={!isCodeComplete || isLoading}
                   onPress={handleVerifyCode}
                 />
@@ -317,7 +293,7 @@ export default function ResetPasswordScreen() {
                   style={[styles.resendLink, isResending && styles.resendLinkDisabled]}
                   onPress={isResending ? undefined : handleResendCode}
                 >
-                  {isResending ? "Enviando..." : "Reenviar código"}
+                  {isResending ? "Enviando…" : "Reenviar código"}
                 </Text>
               </View>
             </>
@@ -326,77 +302,31 @@ export default function ResetPasswordScreen() {
               {/* PASO 2: Nueva contraseña */}
               <Text style={styles.title}>Nueva contraseña</Text>
               <Text style={styles.subtitle}>
-                Crea una contraseña segura para tu cuenta
+                Elige una contraseña nueva para tu cuenta.
               </Text>
 
-              {/* Nueva contraseña */}
-              <View style={styles.field}>
-                <Text style={styles.label}>Nueva contraseña</Text>
-                <View style={styles.inputWrapper}>
-                  <Ionicons
-                    name="lock-closed-outline"
-                    size={20}
-                    color={palette.icon}
-                    style={styles.iconLeft}
-                  />
-                  <TextInput
-                    placeholder="••••••••"
-                    placeholderTextColor={palette.textMuted}
-                    value={newPassword}
-                    onChangeText={setNewPassword}
-                    secureTextEntry={!showNewPassword}
-                    style={styles.input}
-                    editable={!isLoading}
-                  />
-                  <Ionicons
-                    name={showNewPassword ? "eye-off-outline" : "eye-outline"}
-                    size={20}
-                    color={palette.icon}
-                    style={styles.iconRight}
-                    onPress={() => setShowNewPassword(!showNewPassword)}
-                  />
-                </View>
-              </View>
-
-              {/* Confirmar contraseña */}
-              <View style={styles.field}>
-                <Text style={styles.label}>Confirmar contraseña</Text>
-                <View style={styles.inputWrapper}>
-                  <Ionicons
-                    name="lock-closed-outline"
-                    size={20}
-                    color={palette.icon}
-                    style={styles.iconLeft}
-                  />
-                  <TextInput
-                    placeholder="••••••••"
-                    placeholderTextColor={palette.textMuted}
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                    secureTextEntry={!showConfirmPassword}
-                    style={styles.input}
-                    editable={!isLoading}
-                  />
-                  <Ionicons
-                    name={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
-                    size={20}
-                    color={palette.icon}
-                    style={styles.iconRight}
-                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                  />
-                </View>
-              </View>
-
-              {/* Hint de contraseña */}
-              <Text style={styles.passwordHint}>
-                La contraseña debe tener al menos 8 caracteres, incluir mayúsculas, minúsculas, números y caracteres especiales
-              </Text>
+              {/* D3: una sola contraseña con el ojo, igual que al crear la cuenta. */}
+              <Input
+                label="Nueva contraseña"
+                value={newPassword}
+                onChangeText={(text) => {
+                  setNewPassword(text);
+                  if (passwordError) setPasswordError("");
+                }}
+                isPassword
+                help={PASSWORD_RULES}
+                error={passwordError}
+                autoComplete="new-password"
+                editable={!isLoading}
+                returnKeyType="done"
+                onSubmitEditing={handleResetPassword}
+              />
 
               {/* Botón restablecer */}
               <View style={styles.buttonContainer}>
                 <GradientButton
-                  title={isLoading ? "Restableciendo..." : "Restablecer contraseña"}
-                  disabled={!newPassword || !confirmPassword || isLoading}
+                  title={isLoading ? "Guardando…" : "Guardar contraseña"}
+                  disabled={!newPassword || isLoading}
                   onPress={handleResetPassword}
                 />
                 {isLoading && (
@@ -421,13 +351,15 @@ export default function ResetPasswordScreen() {
 
       <SuccessModal
         visible={successModal.visible}
+        title="¡Todo listo!"
         message={successModal.message}
+        buttonText="Iniciar sesión"
         onClose={handleSuccessClose}
       />
 
       <SuccessModal
         visible={infoModal.visible}
-        title="Información"
+        title="Revisa tu correo"
         message={infoModal.message}
         buttonText="Entendido"
         onClose={() => setInfoModal({ visible: false, message: "" })}
@@ -497,38 +429,6 @@ const styles = StyleSheet.create({
   codeInputFilled: {
     borderColor: palette.primary,
     backgroundColor: palette.surface,
-  },
-  field: {
-    marginBottom: 20,
-  },
-  label: {
-    color: palette.text,
-    marginBottom: 8,
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  inputWrapper: {
-    position: "relative",
-    backgroundColor: palette.surfaceMuted,
-    borderRadius: 20,
-    height: 56,
-    justifyContent: "center",
-  },
-  iconLeft: { position: "absolute", left: 16 },
-  iconRight: { position: "absolute", right: 16 },
-  input: {
-    height: "100%",
-    paddingLeft: 44,
-    paddingRight: 44,
-    fontSize: 16,
-    color: palette.text,
-  },
-  passwordHint: {
-    fontSize: 12,
-    color: palette.text,
-    opacity: 0.6,
-    marginBottom: 24,
-    lineHeight: 16,
   },
   buttonContainer: {
     position: "relative",

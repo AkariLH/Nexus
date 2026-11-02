@@ -99,7 +99,7 @@ export default function VerifyEmailScreen() {
       return;
     }
     setCode(EMPTY_CODE);
-    setInfo("Te enviamos un código nuevo.");
+    setInfo("Te enviamos un código nuevo. Revisa tu bandeja de entrada.");
     setSecondsLeft(RESEND_SECONDS);
   };
 

@@ -52,7 +52,7 @@ export default function LoginScreen() {
     if (result.error || !result.data?.token) {
       const message = result.error?.message || result.data?.message || "No se pudo iniciar sesión.";
       // FA03: cuenta sin verificar (RN-02).
-      if (/verificar tu correo/i.test(message)) {
+      if (/confirma tu correo|verificar tu correo/i.test(message)) {
         setModal({
           message,
           action: {

@@ -60,7 +60,7 @@ export default function ForgotPasswordScreen() {
     if (!email.trim()) {
       setErrorModal({
         visible: true,
-        message: "Por favor ingresa tu correo electrónico",
+        message: "Escribe tu correo.",
       });
       return;
     }
@@ -68,7 +68,7 @@ export default function ForgotPasswordScreen() {
     if (!validateEmail(email)) {
       setErrorModal({
         visible: true,
-        message: "El formato del correo electrónico no es válido",
+        message: "Ingresa un correo electrónico válido.",
       });
       return;
     }
@@ -78,21 +78,21 @@ export default function ForgotPasswordScreen() {
     try {
       const result = await authService.forgotPassword({ email: email.trim() });
 
-      if (result.error) {
+      if (result.error && !result.error.message?.startsWith("Si el correo está registrado")) {
         setErrorModal({
           visible: true,
-          message: result.error.message || "Error al solicitar recuperación de contraseña",
+          message: result.error.message || "Algo salió mal de nuestro lado. Intenta de nuevo en unos momentos.",
         });
       } else {
         setSuccessModal({
           visible: true,
-          message: "Si el correo está registrado, recibirás un código de recuperación",
+          message: "Si el correo está registrado, te enviamos un código. Revisa también la carpeta de spam.",
         });
       }
     } catch (error) {
       setErrorModal({
         visible: true,
-        message: "Ocurrió un error inesperado. Intenta nuevamente.",
+        message: "Algo salió mal de nuestro lado. Intenta de nuevo en unos momentos.",
       });
     } finally {
       setIsLoading(false);
@@ -138,7 +138,7 @@ export default function ForgotPasswordScreen() {
           <Text style={styles.subtitle}>
             {fromProfile
               ? "Te enviaremos un código a tu correo para que elijas una contraseña nueva."
-              : "Ingresa tu correo electrónico y te enviaremos un código para recuperar tu contraseña"}
+              : "Ingresa tu correo y te enviaremos un código para crear una nueva."}
           </Text>
 
           <View style={styles.formContainer}>
@@ -146,7 +146,7 @@ export default function ForgotPasswordScreen() {
             <Input
               label="Correo electrónico"
               icon="mail-outline"
-              placeholder="tu@email.com"
+              placeholder="tu@correo.com"
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -158,7 +158,7 @@ export default function ForgotPasswordScreen() {
             {/* Submit button */}
             <View style={styles.buttonContainer}>
               <GradientButton
-                title={isLoading ? "Enviando..." : "Enviar código"}
+                title={isLoading ? "Enviando…" : "Enviar código"}
                 disabled={!email.trim() || isLoading}
                 onPress={handleSubmit}
                 style={{ marginTop: 12 }}
