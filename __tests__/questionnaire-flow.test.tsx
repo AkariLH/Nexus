@@ -56,7 +56,7 @@ describe('QuestionnaireFlow', () => {
 
     expect(screen.getByText('Bienestar en pareja')).toBeTruthy();
     expect(screen.getByText('Diseñemos citas que les hagan bien')).toBeTruthy();
-    expect(screen.getByText(/7 preguntas breves sobre su bienestar/)).toBeTruthy();
+    expect(screen.getByText(/Elige lo que te gusta en las 7 áreas del bienestar/)).toBeTruthy();
     fireEvent.press(screen.getByText('Comenzar'));
 
     expect(screen.getByText('Paso 1 de 7')).toBeTruthy();
