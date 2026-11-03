@@ -444,13 +444,13 @@ export default function HomeScreen() {
                   </Text>
                 </View>
               </View>
-              <GradientButton compact title="Compartir mi código" onPress={() => router.push("/(link)/my-link-code")} />
+              <GradientButton compact title="Invitar a mi pareja" onPress={() => router.push("/(link)/my-link-code")} />
               <TouchableOpacity
                 style={styles.connectSecondary}
                 onPress={() => router.push("/(link)/enter-link-code")}
                 accessibilityRole="button"
               >
-                <Text style={styles.connectSecondaryText}>Tengo un código</Text>
+                <Text style={styles.connectSecondaryText}>Mi pareja me invitó</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -524,9 +524,9 @@ export default function HomeScreen() {
         visible={expiredScan}
         icon="time-outline"
         tone="warning"
-        title="El código ya venció"
-        subtitle="El código que escaneaste dura 15 minutos. Pídele a tu pareja uno nuevo."
-        primary={{ label: 'Escribir un código', onPress: () => { setExpiredScan(false); router.push('/(link)/enter-link-code'); } }}
+        title="La invitación venció"
+        subtitle="Las invitaciones duran 15 minutos. Pídele a tu pareja una nueva."
+        primary={{ label: 'Unirme a mi pareja', onPress: () => { setExpiredScan(false); router.push('/(link)/enter-link-code'); } }}
         secondary={{ label: 'Cerrar', onPress: () => setExpiredScan(false) }}
         onRequestClose={() => setExpiredScan(false)}
       />

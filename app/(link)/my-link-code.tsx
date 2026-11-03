@@ -149,7 +149,7 @@ export default function MyLinkCodeScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <ScreenHeader title="Mi código de vínculo" onBack={() => router.back()} />
+      <ScreenHeader title="Invita a tu pareja" onBack={() => router.back()} />
 
       {loading ? (
         <View style={styles.loadingContainer}>
@@ -212,7 +212,7 @@ export default function MyLinkCodeScreen() {
               activeOpacity={0.7}
             >
               <Ionicons name="refresh-outline" size={18} color={palette.primary} />
-              <Text style={styles.regenerateText}>Generar nuevo código</Text>
+              <Text style={styles.regenerateText}>Crear otro</Text>
             </TouchableOpacity>
           ) : (
             <View style={styles.timerContainer}>
@@ -235,7 +235,7 @@ export default function MyLinkCodeScreen() {
                 style={styles.primaryButton}
               >
                 <Ionicons name="copy-outline" size={20} color={palette.onPrimary} />
-                <Text style={styles.primaryButtonText}>Copiar código</Text>
+                <Text style={styles.primaryButtonText}>Copiar</Text>
               </LinearGradient>
             </TouchableOpacity>
 
@@ -251,9 +251,9 @@ export default function MyLinkCodeScreen() {
 
           {/* Alternative option */}
           <View style={styles.alternativeContainer}>
-            <Text style={styles.alternativeLabel}>¿Tu pareja ya tiene código?</Text>
+            <Text style={styles.alternativeLabel}>¿Tu pareja ya te invitó?</Text>
             <TouchableOpacity accessibilityRole="button" onPress={() => router.push("/(link)/enter-link-code")}>
-              <Text style={styles.alternativeLink}>Ingresar código de pareja</Text>
+              <Text style={styles.alternativeLink}>Unirme</Text>
             </TouchableOpacity>
           </View>
         </View>

@@ -116,7 +116,7 @@ export default function ConnectScreen() {
       const status = await linkService.establishLink(user.userId, partnerCode);
       goLinked(status.partner?.displayName || status.partner?.nickname || "tu pareja");
     } catch (error: any) {
-      setConnectError(error?.message || "No se pudo conectar. Revisa el código.");
+      setConnectError(error?.message || "No se pudo conectar. Revisa las 6 letras y números.");
     } finally {
       setConnecting(false);
     }
@@ -135,7 +135,7 @@ export default function ConnectScreen() {
         <Text style={styles.subtitle}>Nexus funciona de a dos: el calendario y las citas se comparten.</Text>
 
         <View style={styles.card}>
-          <Text style={styles.cardLabel}>Comparte tu código</Text>
+          <Text style={styles.cardLabel}>Invita a tu pareja</Text>
           <View style={styles.codeBox}>
             {myCode ? (
               <Text style={[styles.code, expired && styles.codeExpired]} selectable accessibilityLabel={`Tu código: ${fullCode}`}>
@@ -151,7 +151,7 @@ export default function ConnectScreen() {
           {expired || codeError ? (
             <TouchableOpacity onPress={generate} accessibilityRole="button" style={styles.regenerate} hitSlop={8}>
               <Ionicons name="refresh-outline" size={18} color={palette.textAccent} />
-              <Text style={styles.regenerateText}>{expired ? "Tu código venció. Crear otro" : "Intentar de nuevo"}</Text>
+              <Text style={styles.regenerateText}>{expired ? "La invitación venció. Crear otra" : "Intentar de nuevo"}</Text>
             </TouchableOpacity>
           ) : (
             <>
@@ -181,7 +181,7 @@ export default function ConnectScreen() {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardQuestion}>¿Tu pareja ya te dio su código?</Text>
+          <Text style={styles.cardQuestion}>¿Tu pareja ya te invitó?</Text>
           <Input
             accessibilityLabel="Código de tu pareja"
             value={`${PREFIX}${partnerCode}`}

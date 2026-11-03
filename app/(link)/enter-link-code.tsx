@@ -30,7 +30,7 @@ export default function EnterLinkCodeScreen() {
     const cleanCode = code.replace(/^NEXUS-/i, "").trim();
     
     if (!cleanCode || cleanCode.length < 6) {
-      setError("Por favor ingresa un código válido");
+      setError("Revisa las 6 letras y números.");
       setShowError(true);
       return;
     }
@@ -60,7 +60,7 @@ export default function EnterLinkCodeScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <ScreenHeader title="Ingresar código" onBack={() => router.back()} />
+      <ScreenHeader title="Únete a tu pareja" onBack={() => router.back()} />
 
       {/* Content */}
       <MotiView
@@ -130,7 +130,7 @@ export default function EnterLinkCodeScreen() {
 
         {/* Alternative option */}
         <View style={styles.alternativeContainer}>
-          <Text style={styles.alternativeLabel}>¿No tienes el código aún?</Text>
+          <Text style={styles.alternativeLabel}>¿Todavía no te invita?</Text>
           <TouchableOpacity accessibilityRole="button" onPress={() => router.push("/(link)/my-link-code")}>
             <Text style={styles.alternativeLink}>Comparte el tuyo primero</Text>
           </TouchableOpacity>
@@ -139,7 +139,7 @@ export default function EnterLinkCodeScreen() {
         {/* Help text */}
         <View style={styles.helpBox}>
           <Text style={styles.helpText}>
-            💡 Pídele a tu pareja que vaya a "Vínculo" → "Ver mi código" para obtener su código único
+            Pídele que entre a Pareja → Invitar a mi pareja.
           </Text>
         </View>
       </MotiView>

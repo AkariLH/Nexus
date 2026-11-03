@@ -125,13 +125,13 @@ export default function LinkScreen() {
             <Ionicons name="link-outline" size={40} color={palette.onPrimary} />
           </LinearGradient>
           <Text style={styles.emptyTitle}>Aún no estás vinculado</Text>
-          <Text style={styles.emptyText}>Conecta con tu pareja con un código.</Text>
+          <Text style={styles.emptyText}>Conecta con tu pareja para planear juntos.</Text>
         </View>
         <Card>
-          <ListRow icon="qr-code-outline" title="Generar mi código" subtitle="Compártelo con tu pareja" onPress={handleGenerateCode} />
+          <ListRow icon="qr-code-outline" title="Invitar a mi pareja" subtitle="Le compartes un QR para que lo escanee" onPress={handleGenerateCode} />
         </Card>
         <Card>
-          <ListRow icon="keypad-outline" title="Ingresar código" subtitle="Escribe el código de tu pareja" onPress={handleEnterCode} />
+          <ListRow icon="keypad-outline" title="Unirme a mi pareja" subtitle="Escanea su QR o escribe lo que te compartió" onPress={handleEnterCode} />
         </Card>
       </ScrollView>
     );
