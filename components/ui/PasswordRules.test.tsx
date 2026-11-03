@@ -11,6 +11,6 @@ describe('PasswordRules', () => {
   it('al escribir, marca las que cumple y las que faltan', () => {
     render(<PasswordRules password="Nexus2026" />);
     expect(screen.getAllByLabelText(/cumple$/)).toHaveLength(4);
-    expect(screen.getByLabelText('Un símbolo (por ejemplo ! o #): falta')).toBeTruthy();
+    expect(screen.getByLabelText(/^Un símbolo: .*: falta$/)).toBeTruthy();
   });
 });

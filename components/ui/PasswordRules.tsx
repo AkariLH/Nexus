@@ -31,6 +31,6 @@ export function PasswordRules({ password }: { password: string }) {
 const styles = StyleSheet.create({
   list: { gap: 6, marginTop: -4, marginBottom: 8 },
   row: { flexDirection: "row", alignItems: "center", gap: 8 },
-  text: { fontSize: 13, lineHeight: 18, color: palette.textSecondary },
+  text: { flexShrink: 1, fontSize: 13, lineHeight: 18, color: palette.textSecondary },
   textMet: { color: palette.text },
 });

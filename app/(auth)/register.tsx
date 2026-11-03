@@ -20,6 +20,7 @@ import type { RegisterRequest } from "../../types/auth.types";
 import { birthDateLabel } from "../../utils/profileFormat";
 import { emailProblem, fromBackendDate, isAdult, nicknameOrName, passwordProblem, toBackendDate } from "../../utils/registerForm";
 import { WebDateInput } from "../../components/ui/WebDateInput";
+import { keepRegisterDraft, readRegisterDraft } from "../../utils/registerDraft";
 import { PasswordRules } from "../../components/ui/PasswordRules";
 import { ErrorModal } from "../components/ErrorModal";
 import { Header } from "../components/layout/Header";
@@ -35,15 +36,17 @@ export default function RegisterScreen() {
   const insets = useSafeAreaInsets();
   // "¿Escribiste mal tu correo? Cámbialo" (H4) regresa aqui con el correo escrito.
   const params = useLocalSearchParams<{ email?: string }>();
+  // Al volver con "Cámbialo" se conserva lo demás que ya se había escrito.
+  const [draft] = useState(() => (params.email ? readRegisterDraft() : null));
 
   const [step, setStep] = useState<1 | 2>(1);
   const [email, setEmail] = useState(params.email ?? "");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [nickname, setNickname] = useState("");
-  const [birthDate, setBirthDate] = useState<Date | null>(null);
+  const [password, setPassword] = useState(draft?.password ?? "");
+  const [name, setName] = useState(draft?.name ?? "");
+  const [nickname, setNickname] = useState(draft?.nickname ?? "");
+  const [birthDate, setBirthDate] = useState<Date | null>(draft?.birthDate ?? null);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(draft?.termsAccepted ?? false);
   const [loading, setLoading] = useState(false);
 
   const [emailError, setEmailError] = useState("");
@@ -102,6 +105,7 @@ export default function RegisterScreen() {
     setLoading(false);
 
     if (result.data) {
+      keepRegisterDraft({ password, name, nickname, birthDate, termsAccepted: true });
       router.replace({ pathname: "/(auth)/verify-email", params: { email: request.email } });
       return;
     }
@@ -176,8 +180,7 @@ export default function RegisterScreen() {
           </>
         ) : (
           <>
-            <Text style={styles.title} accessibilityRole="header">Cuéntanos de ti</Text>
-            <Text style={styles.subtitle}>Así te verá tu pareja en Nexus.</Text>
+            <Text style={[styles.title, styles.titleAlone]} accessibilityRole="header">Cuéntanos de ti</Text>
 
             <Input
               label="Nombre"
@@ -298,7 +301,6 @@ const styles = StyleSheet.create({
   scroll: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 24 },
   title: { fontSize: 26, fontWeight: "700", color: palette.text },
   titleAlone: { marginBottom: 24 },
-  subtitle: { marginTop: 6, marginBottom: 24, fontSize: 14, color: palette.textSecondary },
   field: { marginBottom: 20 },
   label: { color: palette.text, marginBottom: 8, fontSize: 14, fontWeight: "600" },
   dateField: {

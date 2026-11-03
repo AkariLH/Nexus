@@ -48,7 +48,7 @@ export function passwordChecks(password: string): { label: string; met: boolean 
     { label: 'Una mayúscula', met: /[A-Z]/.test(password) },
     { label: 'Una minúscula', met: /[a-z]/.test(password) },
     { label: 'Un número', met: /[0-9]/.test(password) },
-    { label: 'Un símbolo (por ejemplo ! o #)', met: SYMBOL.test(password) },
+    { label: 'Un símbolo: ! @ # $ % ^ & * ( ) _ + - [ ] { } ; \' : " \\ | , . < > / ?', met: SYMBOL.test(password) },
   ];
 }
 

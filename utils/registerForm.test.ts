@@ -74,7 +74,7 @@ describe('passwordChecks', () => {
       { label: 'Una mayúscula', met: true },
       { label: 'Una minúscula', met: true },
       { label: 'Un número', met: true },
-      { label: 'Un símbolo (por ejemplo ! o #)', met: false },
+      { label: 'Un símbolo: ! @ # $ % ^ & * ( ) _ + - [ ] { } ; \' : " \\ | , . < > / ?', met: false },
     ]);
   });
 

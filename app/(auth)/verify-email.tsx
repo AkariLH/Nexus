@@ -11,6 +11,7 @@ import { countdownLabel } from "../../utils/countdown";
 import { Header } from "../components/layout/Header";
 import { CodeDigits } from "../components/ui/CodeDigits";
 import { GradientButton } from "../components/ui/GradientButton";
+import { clearRegisterDraft } from "../../utils/registerDraft";
 
 const CODE_LENGTH = 6;
 /** Segundos antes de poder pedir otro codigo. */
@@ -67,6 +68,7 @@ export default function VerifyEmailScreen() {
       return;
     }
 
+    clearRegisterDraft(); // el correo ya quedó verificado: "Cámbialo" ya no hace falta
     if (!data.token) {
       // Backend sin la sesion en verify-email: el correo ya quedo verificado, solo falta entrar.
       router.replace("/(auth)/login");
