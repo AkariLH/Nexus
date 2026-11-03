@@ -124,7 +124,7 @@ export default function LinkScreen() {
           <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.emptyIcon}>
             <Ionicons name="link-outline" size={40} color={palette.onPrimary} />
           </LinearGradient>
-          <Text style={styles.emptyTitle}>Aún no estás vinculado</Text>
+          <Text style={styles.emptyTitle}>Aún no tienes un vínculo</Text>
           <Text style={styles.emptyText}>Conecta con tu pareja para planear juntos.</Text>
         </View>
         <Card>

@@ -20,6 +20,7 @@ import { useAuth } from "../../context/AuthContext";
 import linkService, { LinkCodeResponse } from "../../services/link.service";
 import { GradientButton } from "../components/ui/GradientButton";
 import { Input } from "../components/ui/Input";
+import { inviteMessage } from "../../utils/pendingLinkCode";
 
 const PREFIX = "NEXUS-";
 const CODE_LENGTH = 6;
@@ -101,7 +102,7 @@ export default function ConnectScreen() {
     if (!myCode) return;
     try {
       await Share.share({
-        message: `Conectemos en Nexus. Mi código es ${fullCode} (vence en ${myCode.validityMinutes} minutos).`,
+        message: inviteMessage(myCode.code, myCode.validityMinutes, process.env.EXPO_PUBLIC_INVITE_URL),
       });
     } catch {
       // La persona cerro el menu de compartir.

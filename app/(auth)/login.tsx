@@ -92,7 +92,7 @@ export default function LoginScreen() {
 
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <Text style={styles.title} accessibilityRole="header">Iniciar sesión</Text>
-        <Text style={styles.subtitle}>Entra con tu correo y tu contraseña.</Text>
+        <Text style={styles.subtitle}>Ingresa tu correo y contraseña.</Text>
 
         <Input
           label="Correo electrónico"
