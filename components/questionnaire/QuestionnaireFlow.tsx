@@ -143,7 +143,7 @@ export function QuestionnaireFlow({ userId, mode, onFinish, onExit }: Questionna
           <GradientIcon name="sparkles-outline" size={80} radius={40} />
           <Text style={styles.welcomeTitle}>Diseñemos citas que les hagan bien</Text>
           <Text style={styles.welcomeSubtitle}>
-            Elige lo que te gusta en 7 áreas de su bienestar para que el asistente encuentre planes que conecten con lo que ambos necesitan hoy.
+            Elige lo que te gusta en las 7 áreas del bienestar para que el asistente encuentre planes que conecten con lo que ambos necesitan hoy.
           </Text>
         </View>
       ) : (
