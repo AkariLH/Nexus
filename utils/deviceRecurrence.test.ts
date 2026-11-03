@@ -1,4 +1,4 @@
-import { toDeviceRecurrence } from './deviceRecurrence';
+import { toDeviceRecurrence, withoutEmptyRecurrence } from './deviceRecurrence';
 
 describe('toDeviceRecurrence ([sync-calendario] RF-22)', () => {
   it('diaria', () => {
@@ -37,5 +37,17 @@ describe('toDeviceRecurrence ([sync-calendario] RF-22)', () => {
     expect(toDeviceRecurrence('')).toBeNull();
     expect(toDeviceRecurrence('FREQ=HOURLY')).toBeNull();
     expect(toDeviceRecurrence('esto no es una regla')).toBeNull();
+  });
+});
+
+describe('withoutEmptyRecurrence (Android cierra la app con recurrenceRule: null)', () => {
+  it('quita la repetición vacía para no mandarle null al calendario', () => {
+    expect(withoutEmptyRecurrence({ title: 'Cena', recurrenceRule: null })).toEqual({ title: 'Cena' });
+    expect('recurrenceRule' in withoutEmptyRecurrence({ title: 'Cena', recurrenceRule: undefined })).toBe(false);
+  });
+
+  it('deja la repetición cuando sí hay', () => {
+    const rule = { frequency: 'weekly', interval: 1 } as never;
+    expect(withoutEmptyRecurrence({ title: 'Clase', recurrenceRule: rule })).toEqual({ title: 'Clase', recurrenceRule: rule });
   });
 });

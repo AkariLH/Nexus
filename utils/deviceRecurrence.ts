@@ -31,3 +31,14 @@ export function toDeviceRecurrence(rrule?: string | null): Calendar.RecurrenceRu
   if (until) rule.endDate = new Date(Number(until[1]), Number(until[2]) - 1, Number(until[3]), 23, 59, 59);
   return rule;
 }
+
+/**
+ * El calendario de Android (expo-calendar) cierra la app si recibe `recurrenceRule: null`: lee la
+ * llave y luego usa el valor sin revisar. Sin repetición, la llave no se manda.
+ */
+export function withoutEmptyRecurrence<T extends { recurrenceRule?: Calendar.RecurrenceRule | null }>(
+  details: T,
+): Omit<T, 'recurrenceRule'> & { recurrenceRule?: Calendar.RecurrenceRule } {
+  const { recurrenceRule, ...rest } = details;
+  return recurrenceRule ? { ...rest, recurrenceRule } : rest;
+}

@@ -1,5 +1,6 @@
 import * as Calendar from 'expo-calendar';
 import { Platform } from 'react-native';
+import { withoutEmptyRecurrence } from '../utils/deviceRecurrence';
 
 export interface CalendarSource {
   id: string;
@@ -188,7 +189,7 @@ class CalendarService {
         throw new Error('No se tienen permisos de calendario');
       }
 
-      const eventId = await Calendar.createEventAsync(calendarId, {
+      const eventId = await Calendar.createEventAsync(calendarId, withoutEmptyRecurrence({
         title: eventData.title,
         startDate: eventData.startDate,
         endDate: eventData.endDate,
@@ -196,8 +197,8 @@ class CalendarService {
         notes: eventData.notes,
         allDay: eventData.allDay || false,
         timeZone: 'GMT',
-        recurrenceRule: eventData.recurrenceRule ?? null,
-      });
+        recurrenceRule: eventData.recurrenceRule,
+      }));
 
       console.log('✅ Evento creado en calendario externo:', eventId);
       return eventId;
@@ -219,7 +220,7 @@ class CalendarService {
       location?: string;
       notes?: string;
       allDay?: boolean;
-      /** [sync-calendario] RF-22: `null` quita la repeticion. */
+      /** [sync-calendario] RF-22: `null` o sin valor deja la repeticion como esta. */
       recurrenceRule?: Calendar.RecurrenceRule | null;
     }
   ): Promise<void> {
@@ -229,7 +230,9 @@ class CalendarService {
         throw new Error('No se tienen permisos de calendario');
       }
 
-      await Calendar.updateEventAsync(eventId, eventData);
+      // Sin repetición no se manda la llave (Android se cierra con null); una copia que deja de
+      // repetirse conserva la repetición en el teléfono hasta que se vuelva a crear.
+      await Calendar.updateEventAsync(eventId, withoutEmptyRecurrence(eventData));
       console.log('✅ Evento actualizado en calendario externo');
     } catch (error) {
       console.error('❌ Error actualizando evento en calendario externo:', error);
