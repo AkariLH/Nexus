@@ -18,6 +18,10 @@ rem       scripts\build-apk.bat install                  compila contra la IP ac
 rem       scripts\build-apk.bat 192.168.0.197            compila contra http://192.168.0.197:8080/api
 rem       scripts\build-apk.bat 192.168.0.197 install    compila e instala por USB
 rem "install" instala en todos los telefonos conectados (los que adb devices muestra como device).
+rem
+rem Backend en Docker (entra por Caddy, puerto 80):  set "API_PORT=80" && scripts\build-apk.bat install
+rem Servidor con nombre (AWS):  set "NEXUS_API_URL=https://nexus-pareja.duckdns.org/api" && scripts\build-apk.bat
+rem NEXUS_API_URL manda sobre la IP y el puerto.
 
 setlocal
 set "TARGET_IP=%~1"
@@ -31,7 +35,9 @@ if not defined TARGET_IP (
   call set "TARGET_IP=%%LAN_IP%%"
 )
 for %%I in ("%~dp0..") do set "PROJECT=%%~fI"
-set "API_URL=http://%TARGET_IP%:8080/api"
+if not defined API_PORT set "API_PORT=8080"
+set "API_URL=http://%TARGET_IP%:%API_PORT%/api"
+if defined NEXUS_API_URL set "API_URL=%NEXUS_API_URL%"
 set "SDK=%LOCALAPPDATA%\Android\Sdk"
 set "SDK_DRIVE=S:"
 set "BUILD_DIR=C:\nx"
