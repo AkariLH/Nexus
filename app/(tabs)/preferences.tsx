@@ -28,7 +28,7 @@ export default function PreferencesScreen() {
         icon="checkmark-circle-outline"
         animateIcon
         title="Preferencias guardadas"
-        subtitle="Nexus usará tus gustos en las próximas recomendaciones."
+        subtitle="Nexus usará tus elecciones en las próximas recomendaciones."
         primary={{ label: 'Listo', onPress: back }}
         onRequestClose={back}
       />
