@@ -15,6 +15,8 @@ import { linkedSubtitle, listLabel } from "../../utils/linkFormat";
 import { GradientButton } from "../components/ui/GradientButton";
 import { useAuth } from "../../context/AuthContext";
 import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
+import { useQuestionnaire } from "../../context/QuestionnaireContext";
+import { takePendingLinkCode } from "../../utils/pendingLinkCode";
 import eventService, { EventResponse } from "../../services/event.service";
 import linkService from "../../services/link.service";
 import { syncEventReminders } from "../../services/localReminders";
@@ -223,6 +225,19 @@ export default function HomeScreen() {
     });
     return () => subscription.remove();
   }, [loadPendingCount, checkPlanning]);
+
+  // QR de vínculo escaneado sin sesión: ya con el cuestionario hecho y sin pareja, se abre
+  // "Escribir el código" con el código puesto; si pasaron 15 min (RN-09), se avisa que venció.
+  const { isCompleted: questionnaireDone, isLoading: questionnaireLoading } = useQuestionnaire();
+  const [expiredScan, setExpiredScan] = useState(false);
+  useEffect(() => {
+    if (!linkStatus || questionnaireLoading || questionnaireDone !== true) return;
+    takePendingLinkCode().then((pending) => {
+      if (!pending || linkStatus.hasActiveLink) return;
+      if (pending.expired) setExpiredScan(true);
+      else router.push({ pathname: "/(link)/enter-link-code", params: { code: pending.code } });
+    });
+  }, [linkStatus, questionnaireDone, questionnaireLoading]);
 
   const isLinked = linkStatus?.hasActiveLink || false;
   const partnerName = linkStatus?.partner?.displayName || linkStatus?.partner?.nickname || "";
@@ -504,6 +519,17 @@ export default function HomeScreen() {
           )}
         </>
       )}
+
+      <ResultModal
+        visible={expiredScan}
+        icon="time-outline"
+        tone="warning"
+        title="El código ya venció"
+        subtitle="El código que escaneaste dura 15 minutos. Pídele a tu pareja uno nuevo."
+        primary={{ label: 'Escribir un código', onPress: () => { setExpiredScan(false); router.push('/(link)/enter-link-code'); } }}
+        secondary={{ label: 'Cerrar', onPress: () => setExpiredScan(false) }}
+        onRequestClose={() => setExpiredScan(false)}
+      />
 
       <ResultModal
         visible={inviteNotice?.kind === 'sent'}

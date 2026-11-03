@@ -11,6 +11,7 @@ import { SuccessModal } from "../components/SuccessModal";
 import linkService from "../../services/link.service";
 import { palette, gradients } from "../../constants/colors";
 import { ScreenHeader } from "../components/layout/ScreenHeader";
+import { linkCodeUrl } from "../../utils/pendingLinkCode";
 
 interface LinkCodeData {
   code: string;
@@ -171,7 +172,7 @@ export default function MyLinkCodeScreen() {
           >
             <View style={styles.qrGradient}>
               <QRCode
-                value={linkCode.code}
+                value={linkCodeUrl(linkCode.code)}
                 size={200}
                 color={palette.primary}
                 backgroundColor="transparent"

@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { MotiView } from "moti";
 import { useState } from "react";
 import { StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator } from "react-native";
@@ -10,11 +10,14 @@ import { SuccessModal } from "../components/SuccessModal";
 import linkService from "../../services/link.service";
 import { palette, gradients } from "../../constants/colors";
 import { ScreenHeader } from "../components/layout/ScreenHeader";
+import { codeFromLink } from "../../utils/pendingLinkCode";
 
 export default function EnterLinkCodeScreen() {
   const router = useRouter();
   const { user } = useAuth();
-  const [code, setCode] = useState("");
+  // Llega con ?code=… desde el QR de la pareja (nexus://enter-link-code?code=…) o desde Inicio.
+  const params = useLocalSearchParams<{ code?: string }>();
+  const [code, setCode] = useState(() => codeFromLink(params.code));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showError, setShowError] = useState(false);

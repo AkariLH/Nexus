@@ -1,6 +1,6 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
-import { Href, Stack, useRouter, useSegments } from "expo-router";
+import { Href, Stack, useGlobalSearchParams, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { AuthProvider, useAuth } from "../context/AuthContext";
@@ -10,6 +10,7 @@ import notificationService from "../services/firebase.service";
 import { useCalendarAutoSync } from "../hooks/useCalendarAutoSync";
 import { DeviceEventEmitter } from "react-native";
 import { NOTICES_EVENT } from "../utils/pushRoute";
+import { codeFromLink, savePendingLinkCode } from "../utils/pendingLinkCode";
 
 const CHANGE_PASSWORD_ROUTES = ["forgot-password", "reset-password"];
 
@@ -17,6 +18,7 @@ function RootNavigator() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const segments = useSegments();
+  const searchParams = useGlobalSearchParams<{ code?: string }>();
   const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
 
   // Manejar autenticación y redirección inicial
@@ -32,6 +34,9 @@ function RootNavigator() {
     if (route.length === 0 || route[1] === "splash") return;
 
     if (!user && !inAuthGroup) {
+      // QR de vínculo escaneado sin sesión: se guarda el código e Inicio lo retoma al entrar.
+      const scanned = route[1] === "enter-link-code" ? codeFromLink(searchParams.code) : "";
+      if (scanned) savePendingLinkCode(scanned);
       // No autenticado, enviar a login
       router.replace("/(auth)/login");
     } else if (user && inAuthGroup && hasCheckedAuth && !CHANGE_PASSWORD_ROUTES.includes(route[1])) {
