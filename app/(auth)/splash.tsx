@@ -8,8 +8,8 @@ import { palette, gradients } from "../../constants/colors";
 import { decorativeLoop, motionMs } from "../../utils/motion";
 import { useAuth } from "../../context/AuthContext";
 
-/** Figma H0: el splash dura 1.2 s en total. */
-const SPLASH_MS = 1200;
+/** Figma H0: el splash dura 2 s en total (antes 1.2 s; ella lo pidió más largo el 2026-11-03). */
+const SPLASH_MS = 2000;
 
 /** Corazones tenues de fondo (posicion, tamano y cuanto flotan). */
 const HEARTS = [
