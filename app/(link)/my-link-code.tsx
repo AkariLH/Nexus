@@ -11,7 +11,7 @@ import { SuccessModal } from "../components/SuccessModal";
 import linkService from "../../services/link.service";
 import { palette, gradients } from "../../constants/colors";
 import { ScreenHeader } from "../components/layout/ScreenHeader";
-import { linkCodeUrl } from "../../utils/pendingLinkCode";
+import { inviteMessage, linkCodeUrl } from "../../utils/pendingLinkCode";
 
 interface LinkCodeData {
   code: string;
@@ -138,7 +138,7 @@ export default function MyLinkCodeScreen() {
     if (linkCode) {
       try {
         await Share.share({
-          message: `¡Únete a mí en Nexus! Mi código es: ${linkCode.code}\n\nEl código expira en ${linkCode.validityMinutes} minutos.`,
+          message: inviteMessage(linkCode.code, linkCode.validityMinutes, process.env.EXPO_PUBLIC_INVITE_URL),
         });
       } catch (error) {
         console.error("Error al compartir:", error);

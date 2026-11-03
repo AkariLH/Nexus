@@ -3,7 +3,7 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 );
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { codeFromLink, linkCodeUrl, savePendingLinkCode, takePendingLinkCode } from './pendingLinkCode';
+import { codeFromLink, inviteMessage, linkCodeUrl, savePendingLinkCode, takePendingLinkCode } from './pendingLinkCode';
 
 const AT = new Date('2026-11-03T12:00:00Z');
 const minutesLater = (m: number) => new Date(AT.getTime() + m * 60_000);
@@ -43,5 +43,25 @@ describe('código pendiente (escaneado sin sesión)', () => {
     expect(await takePendingLinkCode(AT)).toBeNull();
     await AsyncStorage.setItem('@nexus_pending_link_code', 'esto-no-es-json');
     expect(await takePendingLinkCode(AT)).toBeNull();
+  });
+});
+
+describe('inviteMessage (botón Compartir)', () => {
+  it('sin dirección web explica dónde escribir el código', () => {
+    expect(inviteMessage('AB12CD', 15)).toBe(
+      '¡Únete a mí en Nexus! Abre la app → Pareja → Unirme a mi pareja y escribe AB12CD. Vence en 15 minutos.',
+    );
+  });
+
+  it('con dirección https agrega un link tocable que abre Nexus con el código', () => {
+    expect(inviteMessage('AB12CD', 15, 'https://nexus.app/')).toBe(
+      '¡Únete a mí en Nexus! Toca para unirte: https://nexus.app/unirme?code=AB12CD\n\n' +
+        'O abre la app → Pareja → Unirme a mi pareja y escribe AB12CD. Vence en 15 minutos.',
+    );
+  });
+
+  it('ignora una dirección que no es https (WhatsApp no la vuelve tocable)', () => {
+    expect(inviteMessage('AB12CD', 15, 'http://192.168.0.197:8081')).toBe(inviteMessage('AB12CD', 15));
+    expect(inviteMessage('AB12CD', 15, '  ')).toBe(inviteMessage('AB12CD', 15));
   });
 });
