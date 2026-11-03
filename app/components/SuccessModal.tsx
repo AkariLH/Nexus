@@ -14,7 +14,7 @@ interface SuccessModalProps {
 export function SuccessModal({ 
   visible, 
   onClose, 
-  title = "¡Éxito!", 
+  title = "Listo", 
   message,
   buttonText = "Continuar"
 }: SuccessModalProps) {

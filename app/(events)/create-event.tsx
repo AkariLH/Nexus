@@ -92,7 +92,7 @@ export default function CreateEventScreen() {
     const newErrors: Record<string, string> = {};
     
     if (!title.trim()) {
-      newErrors.title = 'El título es obligatorio';
+      newErrors.title = 'Ponle un título.';
     } else if (title.length > 255) {
       newErrors.title = 'El título no puede exceder 255 caracteres';
     }
@@ -127,7 +127,7 @@ export default function CreateEventScreen() {
     
     if (isRecurring) {
       if (!recurrenceConfig) {
-        newErrors.recurrence = 'Debes configurar la recurrencia';
+        newErrors.recurrence = 'Elige cada cuánto se repite.';
       }
     }
     
@@ -141,7 +141,7 @@ export default function CreateEventScreen() {
     }
 
     if (!user?.userId) {
-      setErrorMessage('No se pudo identificar el usuario');
+      setErrorMessage('Tu sesión venció. Inicia sesión otra vez.');
       setShowErrorModal(true);
       return;
     }
@@ -266,12 +266,12 @@ export default function CreateEventScreen() {
 
       const response = await eventService.createEvent(user.userId, eventData);
       
-      setSuccessMessage(response.message || 'El evento ha sido creado exitosamente y está pendiente de aprobación de tu pareja.');
+      setSuccessMessage(response.message || 'Creaste el evento. Falta que tu pareja lo acepte.');
       setShowSuccessModal(true);
       
     } catch (error: any) {
       console.error('Error creando evento:', error);
-      const errMsg = error.message || 'Error al crear el evento. Inténtalo de nuevo.';
+      const errMsg = error.message || 'No se pudo crear el evento. Inténtalo de nuevo.';
       setErrorMessage(errMsg);
       setShowErrorModal(true);
     } finally {
@@ -371,7 +371,7 @@ export default function CreateEventScreen() {
             style={[styles.input, errors.title && styles.inputError]}
             value={title}
             onChangeText={setTitle}
-            placeholder="Cita romántica, Aniversario..."
+            placeholder="Cita romántica, Aniversario…"
             placeholderTextColor={palette.textMuted}
             maxLength={255}
             editable={!loading}
@@ -591,7 +591,7 @@ export default function CreateEventScreen() {
             style={[styles.textArea, errors.description && styles.inputError]}
             value={description}
             onChangeText={setDescription}
-            placeholder="Añade detalles sobre el evento..."
+            placeholder="Añade detalles sobre el evento…"
             placeholderTextColor={palette.textMuted}
             maxLength={2000}
             multiline
@@ -737,7 +737,7 @@ export default function CreateEventScreen() {
       <ConfirmModal
         visible={showErrorModal}
         type="error"
-        title="Error"
+        title="Algo salió mal"
         message={errorMessage}
         confirmText="OK"
         showCancel={false}

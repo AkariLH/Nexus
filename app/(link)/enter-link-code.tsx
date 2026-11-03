@@ -152,7 +152,7 @@ export default function EnterLinkCodeScreen() {
       />
       <SuccessModal
         visible={showSuccess}
-        message="¡Vínculo establecido exitosamente!"
+        message="¡Ya están vinculados!"
         onClose={() => setShowSuccess(false)}
       />
     </View>

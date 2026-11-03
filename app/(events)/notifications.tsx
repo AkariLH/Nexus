@@ -83,7 +83,7 @@ export default function NotificationsScreen() {
     } catch (error: any) {
       console.error('Error cargando eventos pendientes:', error);
       setModalMessage({
-        title: "Error",
+        title: "Algo salió mal",
         message: "No se pudieron cargar las notificaciones"
       });
       setShowErrorModal(true);
@@ -115,7 +115,7 @@ export default function NotificationsScreen() {
     } catch (error: any) {
       console.error('Error aprobando evento:', error);
       setModalMessage({
-        title: "Error",
+        title: "Algo salió mal",
         message: error.message || "No se pudo aprobar el evento"
       });
       setShowErrorModal(true);
@@ -142,7 +142,7 @@ export default function NotificationsScreen() {
     } catch (error: any) {
       console.error('Error rechazando evento:', error);
       setModalMessage({
-        title: "Error",
+        title: "Algo salió mal",
         message: error.message || "No se pudo rechazar el evento"
       });
       setShowErrorModal(true);
@@ -159,7 +159,7 @@ export default function NotificationsScreen() {
       await appNotificationService.clearRead(user.userId);
       loadPendingEvents();
     } catch (error: any) {
-      setModalMessage({ title: "Error", message: error.message || "No se pudieron borrar los avisos" });
+      setModalMessage({ title: "Algo salió mal", message: error.message || "No se pudieron borrar los avisos" });
       setShowErrorModal(true);
     }
   };

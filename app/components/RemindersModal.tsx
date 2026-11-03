@@ -69,7 +69,7 @@ export function RemindersModal({
       if (eventStartDate) {
         const reminderTime = new Date(eventStartDate.getTime() - minutesBefore * 60000);
         if (reminderTime < new Date()) {
-          setErrorModal({visible: true, message: "El recordatorio ocurriría antes de la hora actual. Por favor selecciona otro."});
+          setErrorModal({visible: true, message: "Ese recordatorio ya pasó. Elige otro."});
           return;
         }
       }
@@ -87,7 +87,7 @@ export function RemindersModal({
     const minutes = parseInt(customMinutes);
     
     if (isNaN(minutes) || minutes < 0) {
-      setErrorModal({visible: true, message: "Por favor ingresa un número válido de minutos"});
+      setErrorModal({visible: true, message: "Escribe cuántos minutos antes."});
       return;
     }
 
@@ -284,7 +284,7 @@ export function RemindersModal({
       <ConfirmModal
         visible={errorModal.visible}
         type="error"
-        title="Error"
+        title="Algo salió mal"
         message={errorModal.message}
         confirmText="Entendido"
         showCancel={false}

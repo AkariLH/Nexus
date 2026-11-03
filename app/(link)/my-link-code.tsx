@@ -154,7 +154,7 @@ export default function MyLinkCodeScreen() {
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={palette.primary} />
-          <Text style={styles.loadingText}>Generando código...</Text>
+          <Text style={styles.loadingText}>Generando código…</Text>
         </View>
       ) : linkCode ? (
         <View style={styles.content}>

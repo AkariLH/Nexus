@@ -14,7 +14,7 @@ interface ErrorModalProps {
   };
 }
 
-export function ErrorModal({ visible, onClose, title = "Error", message, actionButton }: ErrorModalProps) {
+export function ErrorModal({ visible, onClose, title = "Algo salió mal", message, actionButton }: ErrorModalProps) {
   return (
     <Modal
       visible={visible}

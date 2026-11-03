@@ -218,7 +218,7 @@ export default function MyEventsScreen() {
       <ConfirmModal
         visible={errorModal.visible}
         type="error"
-        title="Error"
+        title="Algo salió mal"
         message={errorModal.message}
         confirmText="Entendido"
         showCancel={false}
@@ -228,7 +228,7 @@ export default function MyEventsScreen() {
       <ConfirmModal
         visible={successModal.visible}
         type="success"
-        title="Éxito"
+        title="Listo"
         message={successModal.message}
         confirmText="Continuar"
         showCancel={false}

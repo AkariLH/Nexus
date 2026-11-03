@@ -83,10 +83,10 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, o
     const label = recurrenceLabel(pattern);
     if (label) return label;
 
-    if (pattern.includes('FREQ=DAILY')) return 'Se repite diariamente';
-    if (pattern.includes('FREQ=WEEKLY')) return 'Se repite semanalmente';
-    if (pattern.includes('FREQ=MONTHLY')) return 'Se repite mensualmente';
-    if (pattern.includes('FREQ=YEARLY')) return 'Se repite anualmente';
+    if (pattern.includes('FREQ=DAILY')) return 'Se repite cada día';
+    if (pattern.includes('FREQ=WEEKLY')) return 'Se repite cada semana';
+    if (pattern.includes('FREQ=MONTHLY')) return 'Se repite cada mes';
+    if (pattern.includes('FREQ=YEARLY')) return 'Se repite cada año';
     
     return 'Evento recurrente';
   };
@@ -137,7 +137,7 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, o
         // Es una instancia específica de un evento recurrente
         if (!event.id.toString().includes('-')) {
           console.error('ERROR: Event ID no tiene formato de instancia (eventId-timestamp)');
-          throw new Error('No se puede eliminar instancia: ID inválido');
+          throw new Error('No se pudo eliminar el evento.');
         }
         
         // El ID tiene el formato "eventId-timestamp"
@@ -186,7 +186,7 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, o
       onClose();
     } catch (error) {
       console.error('❌ Error eliminando evento:', error);
-      alert('Error al eliminar el evento: ' + (error as Error).message);
+      alert('No se pudo eliminar el evento.');
     } finally {
       setDeleting(false);
     }

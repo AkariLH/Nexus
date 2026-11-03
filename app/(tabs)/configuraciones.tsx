@@ -65,7 +65,7 @@ export default function ConfiguracionesScreen() {
       }
     } catch (error: any) {
       console.error("Error al desvincular:", error);
-      setErrorModal({ visible: true, message: error.message || "Ocurrió un error al intentar desvincular" });
+      setErrorModal({ visible: true, message: error.message || "No se pudo desvincular. Inténtalo de nuevo." });
     } finally {
       setIsUnlinking(false);
     }
@@ -83,7 +83,7 @@ export default function ConfiguracionesScreen() {
       // Mostrar mensaje de éxito
       setSuccessModal({ 
         visible: true, 
-        message: "Sesión cerrada correctamente" 
+        message: "Cerraste sesión." 
       });
       
       // Redirigir a la pantalla de login después de cerrar el modal
@@ -97,7 +97,7 @@ export default function ConfiguracionesScreen() {
       setIsLoading(false);
       setErrorModal({
         visible: true,
-        message: "No fue posible cerrar sesión. Por favor, intenta nuevamente."
+        message: "No se pudo cerrar sesión. Inténtalo de nuevo."
       });
     }
   };
@@ -113,7 +113,7 @@ export default function ConfiguracionesScreen() {
     if (!user) {
       setErrorModal({
         visible: true,
-        message: "No se pudo identificar al usuario. Por favor, inicia sesión nuevamente."
+        message: "Tu sesión venció. Inicia sesión otra vez."
       });
       return;
     }
@@ -129,7 +129,7 @@ export default function ConfiguracionesScreen() {
         setIsLoading(false);
         setErrorModal({
           visible: true,
-          message: result.error.message || "La contraseña es incorrecta. Por favor, intenta nuevamente."
+          message: result.error.message || "La contraseña no coincide. Inténtalo de nuevo."
         });
         return;
       }
@@ -143,7 +143,7 @@ export default function ConfiguracionesScreen() {
       // Mostrar mensaje de éxito
       setSuccessModal({
         visible: true,
-        message: result.data?.message || "Tu cuenta ha sido eliminada permanentemente"
+        message: result.data?.message || "Eliminamos tu cuenta."
       });
       
       // Redirigir a login después de 2 segundos
@@ -158,7 +158,7 @@ export default function ConfiguracionesScreen() {
       setShowPasswordConfirm(false);
       setErrorModal({
         visible: true,
-        message: error.message || "No se pudo eliminar la cuenta. Por favor, intenta nuevamente más tarde."
+        message: error.message || "No se pudo eliminar la cuenta. Inténtalo en unos minutos."
       });
     }
   };
@@ -235,7 +235,7 @@ export default function ConfiguracionesScreen() {
         }}
         onCancel={() => setShowDeleteConfirm(false)}
         title="¿Eliminar cuenta?"
-        message="Esta acción es irreversible. Todos tus datos serán eliminados permanentemente y no podrán ser recuperados."
+        message="Borraremos tu cuenta y todos tus datos. No podrás recuperarlos."
         confirmText="Continuar"
         cancelText="Cancelar"
       />

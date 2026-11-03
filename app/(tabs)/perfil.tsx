@@ -114,19 +114,19 @@ export default function PerfilScreen() {
       if (response.error) {
         setErrorModal({
           visible: true,
-          message: response.error.message || "Error al eliminar la imagen",
+          message: response.error.message || "No se pudo quitar la foto.",
         });
       } else {
         setAvatarUri(null);
         setSuccessModal({
           visible: true,
-          message: "Foto de perfil eliminada correctamente",
+          message: "Quitaste tu foto de perfil.",
         });
       }
     } catch (error: any) {
       setErrorModal({
         visible: true,
-        message: error.message || "Error al eliminar la imagen",
+        message: error.message || "No se pudo quitar la foto.",
       });
     } finally {
       setIsUploadingAvatar(false);
@@ -182,7 +182,7 @@ export default function PerfilScreen() {
       } catch {
         setErrorModal({
           visible: true,
-          message: 'No se pudo procesar la imagen. Por favor elige una diferente.',
+          message: 'No pudimos usar esa imagen. Elige otra.',
         });
         setIsUploadingAvatar(false);
         return;
@@ -195,7 +195,7 @@ export default function PerfilScreen() {
         console.error('❌ Error en respuesta:', response.error);
         setErrorModal({
           visible: true,
-          message: response.error.message || "Error al subir la imagen",
+          message: response.error.message || "No se pudo subir la foto.",
         });
       } else {
         console.log('✅ Avatar actualizado');
@@ -203,14 +203,14 @@ export default function PerfilScreen() {
         setAvatarUri(await profileService.fetchAvatar(user.userId));
         setSuccessModal({
           visible: true,
-          message: "Foto de perfil actualizada correctamente",
+          message: "Cambiaste tu foto de perfil.",
         });
       }
     } catch (error: any) {
       console.error('❌ Error al subir imagen:', error);
       setErrorModal({
         visible: true,
-        message: error.message || "Error inesperado al subir la imagen",
+        message: error.message || "No se pudo subir la foto.",
       });
     } finally {
       setIsUploadingAvatar(false);
@@ -241,7 +241,7 @@ export default function PerfilScreen() {
     if (!editDisplayName.trim()) {
       setErrorModal({
         visible: true,
-        message: "El nombre completo es obligatorio",
+        message: "Escribe tu nombre.",
       });
       return;
     }
@@ -276,7 +276,7 @@ export default function PerfilScreen() {
     if (age < 18) {
       setErrorModal({
         visible: true,
-        message: "Debes ser mayor de edad (18 años o más) para usar esta aplicación",
+        message: "Nexus es para mayores de 18 años.",
       });
       return;
     }
@@ -315,7 +315,7 @@ export default function PerfilScreen() {
         if (result.error.message?.includes("mayor de edad")) {
           setErrorModal({
             visible: true,
-            message: "Debes ser mayor de edad (18 años o más) para usar esta aplicación",
+            message: "Nexus es para mayores de 18 años.",
           });
         }
         // FA03: Email ya registrado (RN-25)
@@ -328,7 +328,7 @@ export default function PerfilScreen() {
           // FA04: Error general
           setErrorModal({
             visible: true,
-            message: result.error.message || "Error al actualizar el perfil",
+            message: result.error.message || "No se pudo guardar tu perfil.",
           });
         }
       } else {
@@ -367,7 +367,7 @@ export default function PerfilScreen() {
       // FA04: Error inesperado
       setErrorModal({
         visible: true,
-        message: "Ocurrió un error inesperado. Por favor intenta más tarde.",
+        message: "Algo salió mal de nuestro lado. Intenta de nuevo en unos momentos.",
       });
     } finally {
       setIsLoading(false);
@@ -606,7 +606,7 @@ export default function PerfilScreen() {
         visible={showPermissionModal}
         type="info"
         title="Permisos necesarios"
-        message="Se requieren permisos para acceder a la galería de fotos"
+        message="Para elegir una foto, dale permiso a Nexus de ver tu galería."
         confirmText="OK"
         showCancel={false}
         onConfirm={() => setShowPermissionModal(false)}
@@ -617,7 +617,7 @@ export default function PerfilScreen() {
         visible={showEmailVerifyModal}
         type="info"
         title="Verifica tu nuevo correo"
-        message="Se ha enviado un código de verificación a tu nuevo correo electrónico. Por favor verifícalo para continuar usando tu cuenta."
+        message="Te enviamos un código a tu nuevo correo. Escríbelo para seguir usando tu cuenta."
         confirmText="Verificar ahora"
         cancelText="Después"
         onConfirm={() => {

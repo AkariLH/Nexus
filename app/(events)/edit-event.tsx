@@ -250,7 +250,7 @@ export default function EditEventScreen() {
     const newErrors: Record<string, string> = {};
     
     if (!title.trim()) {
-      newErrors.title = 'El título es obligatorio';
+      newErrors.title = 'Ponle un título.';
     } else if (title.length > 255) {
       newErrors.title = 'El título no puede exceder 255 caracteres';
     }
@@ -268,7 +268,7 @@ export default function EditEventScreen() {
     }
     
     if (isRecurring && !recurrenceConfig) {
-      newErrors.recurrence = 'Debes configurar la recurrencia';
+      newErrors.recurrence = 'Elige cada cuánto se repite.';
     }
     
     setErrors(newErrors);
@@ -281,7 +281,7 @@ export default function EditEventScreen() {
     }
 
     if (!user?.userId || !eventId) {
-      setErrorMessage('No se pudo identificar el usuario o el evento');
+      setErrorMessage('Tu sesión venció. Inicia sesión otra vez.');
       setShowErrorModal(true);
       return;
     }
@@ -388,12 +388,12 @@ export default function EditEventScreen() {
 
       await eventService.updateEvent(parseInt(eventId), user.userId, eventData);
       
-      setSuccessMessage('Los cambios han sido guardados y están pendientes de aprobación de tu pareja.');
+      setSuccessMessage('Guardaste los cambios. Falta que tu pareja los acepte.');
       setShowSuccessModal(true);
       
     } catch (error: any) {
       console.error('Error actualizando evento:', error);
-      const errMsg = error.message || 'Error al actualizar el evento. Inténtalo de nuevo.';
+      const errMsg = error.message || 'No se pudieron guardar los cambios. Inténtalo de nuevo.';
       setErrorMessage(errMsg);
       setShowErrorModal(true);
     } finally {
@@ -403,7 +403,7 @@ export default function EditEventScreen() {
 
   const handleDeleteEvent = () => {
     if (!user?.userId) {
-      setErrorMessage('No se pudo identificar el usuario');
+      setErrorMessage('Tu sesión venció. Inicia sesión otra vez.');
       setShowErrorModal(true);
       return;
     }
@@ -418,7 +418,7 @@ export default function EditEventScreen() {
       setShowDeleteConfirm(false);
       setSaving(true);
       await eventService.deleteEvent(parseInt(eventId), user.userId);
-      setSuccessMessage('El evento ha sido eliminado exitosamente');
+      setSuccessMessage('Eliminaste el evento.');
       setShowSuccessModal(true);
     } catch (error) {
       setErrorMessage('No se pudo eliminar el evento');
@@ -526,7 +526,7 @@ export default function EditEventScreen() {
               style={[styles.input, errors.title && styles.inputError]}
               value={title}
               onChangeText={setTitle}
-              placeholder="Cita romántica, Aniversario..."
+              placeholder="Cita romántica, Aniversario…"
               placeholderTextColor={palette.textMuted}
               maxLength={255}
               editable={!saving}
@@ -735,7 +735,7 @@ export default function EditEventScreen() {
               style={[styles.textArea, errors.description && styles.inputError]}
               value={description}
               onChangeText={setDescription}
-              placeholder="Añade detalles sobre el evento..."
+              placeholder="Añade detalles sobre el evento…"
               placeholderTextColor={palette.textMuted}
               maxLength={2000}
               multiline
@@ -868,7 +868,7 @@ export default function EditEventScreen() {
         <ConfirmModal
           visible={showErrorModal}
           type="error"
-          title="Error"
+          title="Algo salió mal"
           message={errorMessage}
           confirmText="OK"
           showCancel={false}
