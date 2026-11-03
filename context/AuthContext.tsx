@@ -9,6 +9,7 @@ interface UserData {
   email: string;
   displayName: string;
   nickname?: string;
+  birthDate?: string; // YYYY-MM-DD
   linkCode: string;
   emailConfirmed: boolean;
   profilePhoto?: string;

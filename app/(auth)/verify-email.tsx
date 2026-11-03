@@ -80,6 +80,7 @@ export default function VerifyEmailScreen() {
         email: data.email,
         displayName: data.displayName,
         nickname: data.nickname,
+        birthDate: data.birthDate,
         linkCode: data.linkCode ?? "",
         emailConfirmed: true,
       },

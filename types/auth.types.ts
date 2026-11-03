@@ -42,6 +42,7 @@ export interface VerifyEmailResponse {
   email: string;
   displayName: string;
   nickname: string;
+  birthDate?: string; // YYYY-MM-DD
   emailConfirmed: boolean;
   // Figma H4: al verificar el correo se entra directo con esta sesion (null en verify-reset-code).
   linkCode?: string;
@@ -85,6 +86,7 @@ export interface LoginResponse {
   email: string;
   displayName?: string;
   nickname?: string;
+  birthDate?: string; // YYYY-MM-DD
   linkCode?: string;
   emailConfirmed: boolean;
   token?: string;
@@ -111,6 +113,7 @@ export interface UpdateProfileResponse {
   email: string;
   displayName: string;
   nickname?: string;
+  birthDate?: string; // YYYY-MM-DD
   emailConfirmed: boolean;
   emailChanged: boolean;
   message: string;

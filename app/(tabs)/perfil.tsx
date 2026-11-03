@@ -43,7 +43,8 @@ export default function PerfilScreen() {
   const [displayName, setDisplayName] = useState(user?.displayName || "Usuario de Prueba");
   const [nickname, setNickname] = useState(user?.nickname || "usuario_prueba");
   const [email, setEmail] = useState(user?.email || "usuario@prueba.com");
-  const [birthDate, setBirthDate] = useState<string>("2000-01-01");
+  // Sin fecha en la sesión (sesiones de antes de este cambio) queda vacía: Guardar pide elegirla.
+  const [birthDate, setBirthDate] = useState<string>(user?.birthDate ?? "");
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   
   // Actualizar estados cuando cambie el usuario
@@ -52,6 +53,7 @@ export default function PerfilScreen() {
       setDisplayName(user.displayName);
       setNickname(user.nickname || "");
       setEmail(user.email);
+      setBirthDate(user.birthDate ?? "");
       // La foto exige sesion: se pide por apiClient (sin foto queda null)
       profileService.fetchAvatar(user.userId).then(setAvatarUri);
     }
@@ -334,7 +336,7 @@ export default function PerfilScreen() {
         setDisplayName(result.data!.displayName);
         setNickname(result.data!.nickname || "");
         setEmail(result.data!.email);
-        setBirthDate(editBirthDate);
+        setBirthDate(result.data!.birthDate ?? editBirthDate);
         
         // Actualizar contexto global
         await updateUser({
@@ -342,6 +344,7 @@ export default function PerfilScreen() {
           nickname: result.data!.nickname,
           email: result.data!.email,
           emailConfirmed: result.data!.emailConfirmed,
+          birthDate: result.data!.birthDate ?? editBirthDate,
         });
         
         setIsEditing(false);

@@ -77,6 +77,7 @@ export default function LoginScreen() {
         email: data.email,
         displayName: data.displayName!,
         nickname: data.nickname,
+        birthDate: data.birthDate,
         linkCode: data.linkCode!,
         emailConfirmed: data.emailConfirmed,
       },
