@@ -3,7 +3,8 @@ rem Compila el APK release de Nexus en Windows (mismo metodo que projects/finanz
 rem
 rem La ruta del usuario (C:\Users\HP Elitebook) tiene un espacio y es larga, lo que rompe la
 rem compilacion nativa. Por eso el script:
-rem   1. Genera la carpeta android con expo prebuild si todavia no existe.
+rem   1. Genera o actualiza la carpeta android con expo prebuild (si no existe, o si cambio app.json
+rem      o los iconos de Android desde la ultima vez).
 rem   2. Monta el SDK de Android en la unidad S: (sin espacios).
 rem   3. Copia el proyecto a C:\nx y compila ahi (ruta corta).
 rem   4. Genera los objetos C++ en C:\bn para no pasar de 260 caracteres.
@@ -15,7 +16,8 @@ rem
 rem Uso:  scripts\build-apk.bat                          compila contra la IP actual
 rem       scripts\build-apk.bat install                  compila contra la IP actual e instala por USB
 rem       scripts\build-apk.bat 192.168.0.197            compila contra http://192.168.0.197:8080/api
-rem       scripts\build-apk.bat 192.168.0.197 install    compila e instala en el telefono por USB
+rem       scripts\build-apk.bat 192.168.0.197 install    compila e instala por USB
+rem "install" instala en todos los telefonos conectados (los que adb devices muestra como device).
 
 setlocal
 set "TARGET_IP=%~1"
@@ -42,10 +44,24 @@ if not exist "%SDK%\platform-tools" (
 )
 
 echo [1/5] Revisando la carpeta android ...
-if not exist "%PROJECT%\android" (
+rem android\.prebuild-stamp marca el ultimo prebuild; si app.json o un icono de Android es mas
+rem nuevo, se vuelve a correr (sin --clean, para conservar la cache).
+set "STAMP=%PROJECT%\android\.prebuild-stamp"
+set "NEEDS_PREBUILD="
+if not exist "%PROJECT%\android" set "NEEDS_PREBUILD=1"
+if not defined NEEDS_PREBUILD (
   pushd "%PROJECT%"
+  node -e "const fs=require('fs');const t=f=>fs.existsSync(f)?fs.statSync(f).mtimeMs:0;const s=t('android/.prebuild-stamp');const n=Math.max(...['app.json','assets/images/icon.png','assets/images/android-icon-foreground.png','assets/images/android-icon-gradient.png'].map(t));process.exit(n>s?1:0)"
+  if errorlevel 1 set "NEEDS_PREBUILD=1"
+  popd
+)
+if defined NEEDS_PREBUILD (
+  echo       Actualizando la carpeta android con expo prebuild ...
+  pushd "%PROJECT%"
+  set "EXPO_NO_GIT_STATUS=1"
   call npx expo prebuild --platform android --no-install || (popd & exit /b 1)
   popd
+  type nul > "%STAMP%"
 )
 
 echo [2/5] Montando el SDK en %SDK_DRIVE% ...
@@ -88,8 +104,15 @@ copy /Y "%BUILD_DIR%\android\app\build\outputs\apk\release\app-release.apk" "%AP
 echo Listo: %APK%
 
 if /I "%INSTALL%"=="install" (
-  echo Instalando en el telefono ...
-  adb install -r "%APK%" || exit /b 1
+  set "INSTALLED=0"
+  for /f "skip=1 tokens=1,2" %%A in ('call "%SDK%\platform-tools\adb.exe" devices') do (
+    if "%%B"=="device" (
+      echo Instalando en %%A ...
+      call "%SDK%\platform-tools\adb.exe" -s %%A install -r "%APK%" && set /a INSTALLED+=1
+    )
+    if "%%B"=="unauthorized" echo [aviso] %%A no esta autorizado: acepta la depuracion USB en su pantalla.
+  )
+  call echo Instalado en %%INSTALLED%% telefono^(s^).
 )
 
 endlocal

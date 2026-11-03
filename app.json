@@ -22,7 +22,8 @@
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
-        "foregroundImage": "./assets/images/icon.png"
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-gradient.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
