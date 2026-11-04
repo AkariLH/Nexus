@@ -191,7 +191,7 @@ export default function LinkExternalCalendarsScreen() {
       ) : (
         <ScrollView contentContainerStyle={styles.content}>
           <Text style={styles.intro}>
-            Tu pareja ve tus horarios ocupados. Tú decides si también ve los detalles.
+            Tu pareja ve tus bloques de tiempo ocupado. Tú decides si también ve los detalles.
           </Text>
 
           {linkedCalendars.length > 0 && (
@@ -215,12 +215,12 @@ export default function LinkExternalCalendarsScreen() {
                   <View style={styles.divider} />
                   <ListRow
                     icon="sync-outline"
-                    title="Sincronizar"
+                    title="Sincronización automática"
                     trailing={
                       <Switch
                         value={calendar.syncEnabled}
                         onValueChange={(value) => handleToggleSync(calendar, value)}
-                        accessibilityLabel={`Sincronizar ${calendar.calendarName}`}
+                        accessibilityLabel={`Sincronización automática de ${calendar.calendarName}`}
                         {...switchColors}
                       />
                     }
@@ -287,7 +287,7 @@ export default function LinkExternalCalendarsScreen() {
                   />
                 </View>
                 <Text style={styles.meta}>
-                  Tus eventos confirmados de Nexus se copian a ese calendario y cambian solos si cambian en Nexus. Al elegirlo se prende «Sincronizar».
+                  Tus eventos confirmados de Nexus se copian a ese calendario y cambian solos si cambian en Nexus. Al elegirlo se prende «Sincronización automática».
                 </Text>
               </Card>
             </View>

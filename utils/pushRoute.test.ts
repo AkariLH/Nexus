@@ -24,10 +24,12 @@ describe('routeForPush ([push-avisos] U8)', () => {
     });
   });
 
-  it('al vincularse abre el inicio con el nombre de la pareja', () => {
+  it('al vincularse reemplaza el inicio (no apila otro) con el nombre de la pareja', () => {
+    // Apilar un segundo Inicio dejaba el modal "¡Ya están vinculados!" del de abajo sin cerrar.
     expect(routeForPush({ type: 'LINK_ESTABLISHED', route: '/(tabs)', partnerName: 'Andrea' })).toEqual({
       pathname: '/(tabs)',
       params: { linked: 'Andrea' },
+      replace: true,
     });
   });
 

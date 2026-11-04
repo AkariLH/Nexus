@@ -59,7 +59,7 @@ function RootNavigator() {
       const unsubscribe = await notificationService.initialize(
         user.userId,
         // [push-avisos] Al tocar una push se abre la pantalla de su aviso.
-        (target) => router.push(target as Href),
+        ({ replace, ...target }) => (replace ? router.replace(target as Href) : router.push(target as Href)),
         (data) => {
           // Avisa a Inicio que hay un aviso nuevo en la campanita.
           DeviceEventEmitter.emit(NOTICES_EVENT);

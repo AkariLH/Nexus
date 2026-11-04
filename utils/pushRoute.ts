@@ -1,5 +1,6 @@
 /** [push-avisos] Pantalla que abre una push al tocarla. */
-export type PushTarget = { pathname: string; params?: Record<string, string> };
+/** `replace`: sustituye la pantalla actual en vez de apilar otra (p. ej. un segundo Inicio). */
+export type PushTarget = { pathname: string; params?: Record<string, string>; replace?: boolean };
 
 /** Las únicas rutas que manda el backend (PushRoute.java); cualquier otra se ignora (R9). */
 const KNOWN_ROUTES = new Set([
@@ -17,7 +18,8 @@ export function routeForPush(data: Record<string, unknown> | undefined): PushTar
   if (typeof route !== 'string' || !KNOWN_ROUTES.has(route)) return null;
   const partnerName = data?.partnerName;
   if (data?.type === 'LINK_ESTABLISHED' && typeof partnerName === 'string' && partnerName) {
-    return { pathname: route, params: { linked: partnerName } };
+    // Se reemplaza: un segundo Inicio apilado dejaba el modal H7 del de abajo abierto sin fin.
+    return { pathname: route, params: { linked: partnerName }, replace: true };
   }
   // [avisos-calendario] RF-29: abre "Libres juntos" en el calendario.
   if (route === '/(tabs)/calendario') return { pathname: route, params: { freeTogether: '1' } };

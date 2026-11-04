@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { Href, useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
+import { Href, useLocalSearchParams, useNavigation, useRouter, useFocusEffect } from "expo-router";
+import { useIsFocused } from "@react-navigation/native";
 import { useState, useCallback, useEffect } from "react";
 import { StyleSheet, Text, TouchableOpacity, View, ScrollView, ActivityIndicator, DeviceEventEmitter } from "react-native";
 import { Card, GradientIcon, MetaLine, SectionLabel } from "../../components/ui/Surface";
@@ -313,8 +314,13 @@ export default function HomeScreen() {
     if (linked) setLinkedName(linked);
   }, [linked]);
 
+  // El parámetro se limpia en ESTE Inicio (router.setParams cambia la pantalla enfocada, que
+  // puede ser otro Inicio apilado) y el modal solo se ve con la pantalla al frente: un Modal de
+  // React Native se dibuja encima de todo aunque su pantalla esté tapada.
+  const navigation = useNavigation();
+  const isFocused = useIsFocused();
   const closeLinked = (then?: () => void) => {
-    router.setParams({ linked: undefined });
+    navigation.setParams({ linked: undefined } as never);
     then?.();
   };
 
@@ -622,7 +628,7 @@ export default function HomeScreen() {
 
       {/* H7: recien vinculados */}
       <ResultModal
-        visible={!!linked && !questionnaire}
+        visible={!!linked && !questionnaire && isFocused}
         header={<LinkedAvatars me={displayName} partner={linkedName} />}
         title="¡Ya están vinculados!"
         subtitle={linkedSubtitle(displayName, linkedName, freeCount)}
