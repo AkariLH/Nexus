@@ -683,7 +683,7 @@ export default function HomeScreen() {
         visible={offerVisible}
         icon="sparkles-outline"
         title="¿Te mostramos la app?"
-        subtitle="Te indicamos dónde tocar para configurar tu calendario y tus horarios. Con estos datos Nexus te proporciona mejores recomendaciones."
+        subtitle="Te indicamos dónde tocar para configurar tu calendario y tus horarios."
         primary={{
           label: "Sí, enséñame",
           onPress: () => {
