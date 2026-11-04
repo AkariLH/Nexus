@@ -279,6 +279,10 @@ export const API_CONFIG = {
       PENDING: '/ratings/:userId/pending',
       RATE: '/ratings/:userId/events/:eventId',
     },
+    // [primeros-pasos] Avance de la tarjeta "Primeros pasos".
+    ONBOARDING: {
+      PROGRESS: '/onboarding/:userId/progress',
+    },
   },
   
   TIMEOUT: 30000, // 30 segundos para dar tiempo al envío de email
