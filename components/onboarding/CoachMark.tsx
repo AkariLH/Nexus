@@ -2,6 +2,8 @@ import { RefObject, useCallback, useEffect, useState } from 'react';
 import {
   InteractionManager,
   Modal,
+  Platform,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -37,6 +39,16 @@ type Box = { x: number; y: number; width: number; height: number };
 const PAD = 6;
 const BUBBLE_GAP = 14;
 
+/**
+ * Pasa la medida del elemento a coordenadas de la guía. En Android la guía es un Modal que cubre
+ * también la barra de estado (statusBarTranslucent), pero `measureInWindow` mide desde debajo de
+ * esa barra: sin esta corrección el hueco quedaba corrido hacia arriba esa altura (visto 03-nov).
+ */
+export function toOverlay(box: Box, os: string, statusBarHeight: number | undefined): Box {
+  if (os !== 'android' || !statusBarHeight) return box;
+  return { ...box, y: box.y + statusBarHeight };
+}
+
 function measure(step: CoachStep): Promise<Box | null> {
   return new Promise(resolve => {
     const node = step.target.current;
@@ -70,7 +82,7 @@ export function CoachMark({ screen, steps, enabled = true }: CoachMarkProps) {
       return;
     }
     setIndex(i);
-    setBox(measured);
+    setBox(toOverlay(measured, Platform.OS, StatusBar.currentHeight));
     setActive(true);
   }, [shown, winH]);
 

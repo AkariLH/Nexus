@@ -7,7 +7,24 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { markSeen, wasSeen } from '../../utils/guideStore';
-import { CoachMark, Measurable } from './CoachMark';
+import { CoachMark, Measurable, toOverlay } from './CoachMark';
+
+describe('toOverlay (la guía cubre toda la pantalla, barra de estado incluida)', () => {
+  const box = { x: 16, y: 200, width: 328, height: 120 };
+
+  it('en Android baja el hueco la altura de la barra de estado', () => {
+    expect(toOverlay(box, 'android', 32)).toEqual({ x: 16, y: 232, width: 328, height: 120 });
+  });
+
+  it('en iOS y en la web no cambia nada', () => {
+    expect(toOverlay(box, 'ios', 47)).toEqual(box);
+    expect(toOverlay(box, 'web', undefined)).toEqual(box);
+  });
+
+  it('sin altura conocida no inventa nada', () => {
+    expect(toOverlay(box, 'android', undefined)).toEqual(box);
+  });
+});
 
 const target = (x: number, y: number, w: number, h: number) =>
   ({ current: { measureInWindow: (cb: (x: number, y: number, w: number, h: number) => void) => cb(x, y, w, h) } }) as React.RefObject<Measurable>;
