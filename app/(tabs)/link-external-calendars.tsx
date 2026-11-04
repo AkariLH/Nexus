@@ -355,12 +355,12 @@ export default function LinkExternalCalendarsScreen() {
           available.length > 0 && {
             target: phoneListRef,
             title: 'Elige qué calendario compartir',
-            text: 'Toca «Compartir» en el que quieras. Tu pareja solo ve tus bloques de tiempo ocupado.',
+            text: 'Toca «Compartir» en el que quieras. Tu pareja ve tus horas ocupadas, sin títulos.',
           },
           linkedCalendars.length > 0 && {
             target: firstSharedRef,
-            title: 'Tú decides qué ve',
-            text: `En «Tu pareja ve» eliges si ${partnerName} también ve los detalles. La sincronización automática lo mantiene al día.`,
+            title: `Elige qué ve ${partnerName}`,
+            text: 'En «Tu pareja ve» cambias entre «Solo ocupado» y «Los detalles».',
           },
         ].filter(Boolean) as CoachStep[])}
       />

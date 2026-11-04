@@ -110,8 +110,8 @@ export default function RecommendationModeScreen() {
         enabled={error === null}
         steps={[{
           target: optionsRef,
-          title: 'Dos formas de planear',
-          text: 'Individual: tú eliges y le mandas la invitación. En pareja: eligen juntos y pueden mandarse mensajes.',
+          title: 'Elige cómo planear',
+          text: 'Individual: tú eliges y le mandas la invitación. En pareja: eligen juntos y se escriben en el chat.',
         }]}
       />
       <View style={styles.footer}>

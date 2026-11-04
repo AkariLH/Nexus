@@ -272,12 +272,12 @@ export default function AvailabilityScheduleScreen() {
           {
             target: quickRef,
             title: 'Elige tus días',
-            text: 'Un toque para todos los días, entre semana o fines de semana.',
+            text: 'Marca todos los días, entre semana o fines de semana.',
           },
           {
             target: daysRef,
             title: 'Ajusta cada día',
-            text: 'Toca una hora para cambiarla o apaga un día sin planes. Al terminar, toca «Guardar».',
+            text: 'Toca una hora para cambiarla o apaga el día. Al terminar, toca «Guardar».',
           },
         ]}
       />

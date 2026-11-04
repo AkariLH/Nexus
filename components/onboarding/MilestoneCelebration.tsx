@@ -114,7 +114,7 @@ export function MilestoneCelebration({ visible, celebration, from, to, onNext, o
       title={celebration.title}
       subtitle={celebration.subtitle}
       primary={celebration.nextLabel ? { label: celebration.nextLabel, onPress: onNext } : { label: '¡Listo!', onPress: onClose }}
-      secondary={celebration.nextLabel ? { label: 'Seguir en Inicio', onPress: onClose } : undefined}
+      secondary={celebration.nextLabel ? { label: 'Quedarme en Inicio', onPress: onClose } : undefined}
       onRequestClose={onClose}
     >
       <View style={styles.track} accessibilityLabel={celebration.subtitle}>

@@ -672,12 +672,12 @@ export default function HomeScreen() {
           firstSteps.progress && !firstSteps.hidden && {
             target: firstStepsRef,
             title: 'Tus primeros pasos',
-            text: 'Aquí ves cuánto les falta. Toca el siguiente paso y te llevamos directo.',
+            text: 'Toca el siguiente paso y te llevamos a esa pantalla.',
           },
           isLinked && {
             target: recommendRef,
-            title: 'Pidan un plan',
-            text: 'Nexus les sugiere citas según sus gustos y sus horarios libres.',
+            title: 'Pidan una cita',
+            text: 'Nexus les propone citas con sus gustos y sus horas libres.',
           },
         ].filter(Boolean) as CoachStep[])}
       />

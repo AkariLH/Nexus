@@ -103,7 +103,7 @@ describe('celebrationFor (Figma N2)', () => {
     const summary = milestonesFrom(progress({ questionnaire: true, linked: true, calendar: true }), false);
     expect(celebrationFor('calendar', summary)).toEqual({
       title: '¡Calendario conectado!',
-      subtitle: 'Van 3 de 6.',
+      subtitle: 'Llevan 3 de 6.',
       nextLabel: 'Siguiente: tus horarios',
       nextRoute: '/(settings)/availability-schedule',
       finished: false,
