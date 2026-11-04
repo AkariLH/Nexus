@@ -553,12 +553,6 @@ export default function PerfilScreen() {
               subtitle="Cómo te has sentido estos días"
               onPress={() => router.push("/(mood)/mood-history")}
             />
-            <ListRow
-              icon="key-outline"
-              title="Cambiar contraseña"
-              subtitle="Te enviamos un código a tu correo"
-              onPress={() => router.push({ pathname: "/(auth)/forgot-password", params: { email } })}
-            />
             <TourTarget id="perfil.settings">
               <ListRow
                 icon="settings-outline"

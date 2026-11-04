@@ -210,6 +210,14 @@ export default function ConfiguracionesScreen() {
 
         <SectionLabel muted>Cuenta</SectionLabel>
         <ListCard>
+          {/* Antes en Perfil; vive aquí, con el resto de la cuenta. */}
+          <ListRow
+            icon="key-outline"
+            title="Cambiar contraseña"
+            subtitle="Te enviamos un código a tu correo"
+            onPress={() => router.push({ pathname: "/(auth)/forgot-password", params: { email: user?.email ?? "" } })}
+            disabled={isLoading}
+          />
           <ListRow
             icon="log-out-outline"
             title="Cerrar sesión"

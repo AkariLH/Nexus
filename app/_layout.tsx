@@ -42,7 +42,7 @@ function RootNavigator() {
       // No autenticado, enviar a login
       router.replace("/(auth)/login");
     } else if (user && inAuthGroup && hasCheckedAuth && !CHANGE_PASSWORD_ROUTES.includes(route[1])) {
-      // Con sesion, las pantallas de cambio de contrasena si se pueden abrir (Perfil > Cambiar contrasena).
+      // Con sesion, las pantallas de cambio de contrasena si se pueden abrir (Configuraciones > Cuenta > Cambiar contrasena).
       // Ya autenticado y en pantallas de auth, ir a tabs
       // El QuestionnaireProvider manejará la lógica del cuestionario
       router.replace("/(tabs)");
