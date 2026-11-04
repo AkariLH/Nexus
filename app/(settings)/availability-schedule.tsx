@@ -1,5 +1,6 @@
 import { useRouter, useFocusEffect } from "expo-router";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
+import { CoachMark } from "../../components/onboarding/CoachMark";
 import {
   ScrollView,
   StyleSheet,
@@ -66,6 +67,9 @@ export default function AvailabilityScheduleScreen() {
   ]);
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  // [primeros-pasos] Guía de primera visita.
+  const quickRef = useRef<View>(null);
+  const daysRef = useRef<View>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Estados para el DateTimePicker
@@ -191,7 +195,7 @@ export default function AvailabilityScheduleScreen() {
             Cuándo puede Nexus sugerirles planes. Tus eventos no cambian.
           </Text>
 
-          <View style={styles.section}>
+          <View style={styles.section} ref={quickRef} collapsable={false}>
             <SectionLabel>Días</SectionLabel>
             <View style={styles.chips}>
               <OptionChip label="Todos los días" selected={quick === 'all'} onPress={() => setQuickOption('all')} />
@@ -200,6 +204,7 @@ export default function AvailabilityScheduleScreen() {
             </View>
           </View>
 
+          <View ref={daysRef} collapsable={false}>
           <Card style={styles.card}>
             {schedule.map((day, index) => (
               <View key={day.day}>
@@ -239,6 +244,7 @@ export default function AvailabilityScheduleScreen() {
               </View>
             ))}
           </Card>
+          </View>
 
           <GradientButton title="Guardar" onPress={handleSave} loading={saving} />
         </ScrollView>
@@ -258,6 +264,23 @@ export default function AvailabilityScheduleScreen() {
           <DateTimePicker value={pickerTime} mode="time" is24Hour display="default" onChange={handleTimeChange} />
         )
       )}
+
+      <CoachMark
+        screen="schedule"
+        enabled={!loading && !showTimePicker && !showSuccessModal && errorMessage === null}
+        steps={[
+          {
+            target: quickRef,
+            title: 'Elige tus días',
+            text: 'Un toque para todos los días, entre semana o fines de semana.',
+          },
+          {
+            target: daysRef,
+            title: 'Ajusta cada día',
+            text: 'Toca una hora para cambiarla o apaga un día sin planes. Al terminar, toca «Guardar».',
+          },
+        ]}
+      />
 
       <ResultModal
         visible={showSuccessModal}

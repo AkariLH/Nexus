@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Href, useLocalSearchParams, useNavigation, useRouter, useFocusEffect } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { StyleSheet, Text, TouchableOpacity, View, ScrollView, ActivityIndicator, DeviceEventEmitter } from "react-native";
 import { Card, GradientIcon, MetaLine, SectionLabel } from "../../components/ui/Surface";
 import { findMutualAvailability } from "../../services/availabilityService";
@@ -11,6 +11,10 @@ import { cleanWindows, FreeWindow, proposalsOf } from "../../utils/freeProposals
 import { planParams, reserveParams } from "../../utils/planFromWindow";
 import { ProposalSheet } from "../../components/calendar/ProposalSheet";
 import { FreeTogetherCard } from "../../components/home/FreeTogetherCard";
+import { FirstStepsCard } from "../../components/home/FirstStepsCard";
+import { MilestoneCelebration } from "../../components/onboarding/MilestoneCelebration";
+import { useFirstSteps } from "../../hooks/useFirstSteps";
+import { CoachMark, CoachStep } from "../../components/onboarding/CoachMark";
 import { homeHighlight } from "../../components/home/homeHighlight";
 import { linkedSubtitle, listLabel } from "../../utils/linkFormat";
 import { GradientButton } from "../components/ui/GradientButton";
@@ -205,6 +209,12 @@ export default function HomeScreen() {
     }
   }, [user?.userId]);
 
+  // [primeros-pasos] Figma N1/N2: tarjeta de hitos y festejo.
+  const firstSteps = useFirstSteps(user?.userId);
+  const refreshFirstSteps = firstSteps.refresh;
+  const firstStepsRef = useRef<View>(null);
+  const recommendRef = useRef<View>(null);
+
   // Verificar cada vez que el tab obtiene foco
   useFocusEffect(
     useCallback(() => {
@@ -215,7 +225,8 @@ export default function HomeScreen() {
       checkInviteNotice();
       checkPlanning();
       checkRatings();
-    }, [fetchLinkStatus, loadPendingCount, loadUpcomingEvents, checkInviteNotice, checkPlanning, checkRatings])
+      refreshFirstSteps();
+    }, [fetchLinkStatus, loadPendingCount, loadUpcomingEvents, checkInviteNotice, checkPlanning, checkRatings, refreshFirstSteps])
   );
 
   // [push-avisos] Llegó una push con la app abierta: la campanita sube sin salir de Inicio.
@@ -369,6 +380,17 @@ export default function HomeScreen() {
         </View>
       ) : (
         <>
+          {/* [primeros-pasos] Figma N1: hasta 6 de 6 o hasta que la oculte */}
+          {firstSteps.progress && !firstSteps.hidden && (
+            <View ref={firstStepsRef} collapsable={false}>
+              <FirstStepsCard
+                progress={firstSteps.progress}
+                onOpen={(route) => router.push(route)}
+                onHide={firstSteps.hide}
+              />
+            </View>
+          )}
+
           {/* [libres-juntos] Figma K1: lo primero es cuando se ven */}
           {highlight && (
             <FreeTogetherCard
@@ -381,6 +403,7 @@ export default function HomeScreen() {
 
           {/* RF-37: entrada principal para pedir una recomendacion */}
           {isLinked && (
+            <View ref={recommendRef} collapsable={false}>
             <TouchableOpacity
               onPress={() => router.push("/(recommend)/mode")}
               activeOpacity={0.9}
@@ -398,6 +421,7 @@ export default function HomeScreen() {
                 <Ionicons name="chevron-forward" size={22} color={palette.onPrimary} />
               </LinearGradient>
             </TouchableOpacity>
+            </View>
           )}
 
           {/* CU42: hay citas por calificar (no esta en Figma; mismo estilo que la planeacion) */}
@@ -624,6 +648,38 @@ export default function HomeScreen() {
         subtitle="Ya conocemos tus gustos."
         primary={{ label: 'Continuar', onPress: finishQuestionnaire }}
         onRequestClose={finishQuestionnaire}
+      />
+
+      {/* [primeros-pasos] Figma N2: festejo de un hito; espera a que no haya otro modal (R4) */}
+      <MilestoneCelebration
+        visible={!!firstSteps.pending && isFocused && !linked && !questionnaire}
+        celebration={firstSteps.pending?.celebration ?? null}
+        from={firstSteps.pending?.from ?? 0}
+        to={firstSteps.pending?.to ?? 0}
+        onClose={firstSteps.dismissCelebration}
+        onNext={() => {
+          const route = firstSteps.pending?.celebration.nextRoute;
+          firstSteps.dismissCelebration();
+          if (route) router.push(route);
+        }}
+      />
+
+      {/* [primeros-pasos] Guía de Inicio: después del festejo y de los demás avisos (R4) */}
+      <CoachMark
+        screen="home"
+        enabled={!loading && isFocused && !firstSteps.pending && !linked && !questionnaire && !planningNotice && !inviteNotice}
+        steps={([
+          firstSteps.progress && !firstSteps.hidden && {
+            target: firstStepsRef,
+            title: 'Tus primeros pasos',
+            text: 'Aquí ves cuánto les falta. Toca el siguiente paso y te llevamos directo.',
+          },
+          isLinked && {
+            target: recommendRef,
+            title: 'Pidan un plan',
+            text: 'Nexus les sugiere citas según sus gustos y sus horarios libres.',
+          },
+        ].filter(Boolean) as CoachStep[])}
       />
 
       {/* H7: recien vinculados */}

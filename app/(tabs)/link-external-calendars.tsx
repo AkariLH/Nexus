@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { CoachMark, CoachStep } from '../../components/onboarding/CoachMark';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Switch, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { calendarService, ExternalCalendar } from '../../services/calendar.service';
@@ -34,6 +35,9 @@ export default function LinkExternalCalendarsScreen() {
   // [ux-ajustes] D4 (Figma L2b): pasar a "Los detalles" se confirma antes.
   const [detailsFor, setDetailsFor] = useState<LinkedCalendar | null>(null);
   const [partnerName, setPartnerName] = useState('Tu pareja');
+  // [primeros-pasos] Figma N3: guía de primera visita.
+  const phoneListRef = useRef<View>(null);
+  const firstSharedRef = useRef<View>(null);
 
   useEffect(() => {
     loadCalendars();
@@ -197,8 +201,9 @@ export default function LinkExternalCalendarsScreen() {
           {linkedCalendars.length > 0 && (
             <View style={styles.section}>
               <SectionLabel>Compartidos</SectionLabel>
-              {linkedCalendars.map((calendar) => (
-                <Card key={calendar.id} style={styles.card}>
+              {linkedCalendars.map((calendar, index) => (
+                <View key={calendar.id} ref={index === 0 ? firstSharedRef : undefined} collapsable={false}>
+                <Card style={styles.card}>
                   <View style={styles.calendarHeader}>
                     <View style={[styles.colorDot, { backgroundColor: calendar.calendarColor }]} />
                     <View style={styles.calendarInfo}>
@@ -261,6 +266,7 @@ export default function LinkExternalCalendarsScreen() {
                     <Text style={styles.unlinkText}>Dejar de compartir</Text>
                   </TouchableOpacity>
                 </Card>
+                </View>
               ))}
               {!ON_WEB && <GradientButton title="Sincronizar ahora" onPress={handleSyncNow} loading={syncing} />}
             </View>
@@ -305,6 +311,7 @@ export default function LinkExternalCalendarsScreen() {
             ) : available.length === 0 ? (
               <Text style={styles.empty}>No encontramos calendarios en tu teléfono.</Text>
             ) : (
+              <View ref={phoneListRef} collapsable={false}>
               <Card style={styles.card}>
                 {available.map((calendar, index) => {
                   const linked = isCalendarLinked(calendar.id);
@@ -334,10 +341,29 @@ export default function LinkExternalCalendarsScreen() {
                   );
                 })}
               </Card>
+              </View>
             )}
           </View>
         </ScrollView>
       )}
+
+      {/* [primeros-pasos] Figma N3: primero qué se comparte; con uno ya compartido, qué ve la pareja */}
+      <CoachMark
+        screen="calendars"
+        enabled={!ON_WEB && !loading && !errorModal.visible && !successModal.visible && !confirmModal.visible && detailsFor === null}
+        steps={([
+          available.length > 0 && {
+            target: phoneListRef,
+            title: 'Elige qué calendario compartir',
+            text: 'Toca «Compartir» en el que quieras. Tu pareja solo ve tus bloques de tiempo ocupado.',
+          },
+          linkedCalendars.length > 0 && {
+            target: firstSharedRef,
+            title: 'Tú decides qué ve',
+            text: `En «Tu pareja ve» eliges si ${partnerName} también ve los detalles. La sincronización automática lo mantiene al día.`,
+          },
+        ].filter(Boolean) as CoachStep[])}
+      />
 
       <ErrorModal
         visible={errorModal.visible}

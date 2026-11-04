@@ -4,7 +4,9 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { OnboardingProgress } from '../services/onboarding.service';
-import { loadCelebrated, milestonesFrom, newlyDone, saveCelebrated } from './onboarding';
+import {
+  SILENT_MILESTONES, celebrationFor, loadCelebrated, milestonesFrom, newlyDone, partnerLine, saveCelebrated,
+} from './onboarding';
 
 const progress = (over: Partial<OnboardingProgress['me']> = {}, couple: Partial<OnboardingProgress['couple']> = {}): OnboardingProgress => ({
   me: { questionnaire: false, linked: false, calendar: false, schedule: false, ...over },
@@ -68,6 +70,56 @@ describe('newlyDone ([primeros-pasos] U4)', () => {
   it('F-08 un hito ya festejado que se perdió y volvió no se repite', () => {
     // El calendario se festejó, luego se desconectó y ahora volvió: sigue en la lista guardada.
     expect(newlyDone(['questionnaire', 'calendar'], ['questionnaire', 'calendar'])).toEqual([]);
+  });
+});
+
+describe('partnerLine (Figma N1: cómo va la pareja)', () => {
+  const withPartner = (partner: Partial<NonNullable<OnboardingProgress['partner']>>, me: Partial<OnboardingProgress['me']> = {}) => ({
+    ...progress({ linked: true, ...me }),
+    partner: { name: 'Sam', questionnaire: false, calendar: false, schedule: false, ...partner },
+  });
+
+  it('sin pareja no hay línea', () => {
+    expect(partnerLine(progress())).toBeNull();
+  });
+
+  it('cuenta lo que la pareja ya hizo y tú todavía no', () => {
+    expect(partnerLine(withPartner({ calendar: true }))).toBe('Sam ya conectó su calendario');
+    expect(partnerLine(withPartner({ schedule: true }))).toBe('Sam ya ajustó sus horarios');
+  });
+
+  it('si ya hiciste lo mismo, dice cuántos lleva', () => {
+    expect(partnerLine(withPartner({ calendar: true }, { calendar: true }))).toBe('Sam lleva 1 de 3 de sus pasos');
+  });
+
+  it('con los tres hechos (y nada que tú te falte de eso), dice que terminó', () => {
+    const all = { questionnaire: true, calendar: true, schedule: true };
+    expect(partnerLine(withPartner(all, all))).toBe('Sam ya terminó sus pasos');
+  });
+});
+
+describe('celebrationFor (Figma N2)', () => {
+  it('título del hito, cuántos van y el siguiente paso', () => {
+    const summary = milestonesFrom(progress({ questionnaire: true, linked: true, calendar: true }), false);
+    expect(celebrationFor('calendar', summary)).toEqual({
+      title: '¡Calendario conectado!',
+      subtitle: 'Van 3 de 6.',
+      nextLabel: 'Siguiente: tus horarios',
+      nextRoute: '/(settings)/availability-schedule',
+      finished: false,
+    });
+  });
+
+  it('en 6 de 6 dice «¡Listos!» y no hay siguiente', () => {
+    const all = milestonesFrom(progress(
+      { questionnaire: true, linked: true, calendar: true, schedule: true },
+      { firstRecommendation: true, firstRatedDate: true },
+    ), false);
+    expect(celebrationFor('rating', all)).toMatchObject({ title: '¡Listos!', finished: true, nextRoute: null });
+  });
+
+  it('cuestionario y vínculo ya tienen su propio modal: no se festejan otra vez', () => {
+    expect(SILENT_MILESTONES).toEqual(['questionnaire', 'link']);
   });
 });
 

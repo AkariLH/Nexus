@@ -12,6 +12,7 @@ import { profileService } from "../../services/profile.service";
 import linkService from "../../services/link.service";
 import { useAuth } from "../../context/AuthContext";
 import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
+import { restartTutorial } from "../../hooks/useFirstSteps";
 import { palette } from "../../constants/colors";
 
 export default function ConfiguracionesScreen() {
@@ -182,6 +183,22 @@ export default function ConfiguracionesScreen() {
             title="Calendarios externos"
             subtitle="Vincula el calendario de tu teléfono"
             onPress={() => router.push("/(tabs)/link-external-calendars")}
+            disabled={isLoading}
+          />
+        </ListCard>
+
+        {/* [primeros-pasos] U7 */}
+        <SectionLabel muted>Ayuda</SectionLabel>
+        <ListCard>
+          <ListRow
+            icon="school-outline"
+            title="Ver tutorial"
+            subtitle="Vuelven los primeros pasos y las guías"
+            onPress={async () => {
+              if (!user?.userId) return;
+              await restartTutorial(user.userId);
+              router.navigate("/(tabs)");
+            }}
             disabled={isLoading}
           />
         </ListCard>
