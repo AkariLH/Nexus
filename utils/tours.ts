@@ -1,4 +1,5 @@
 import type { MilestoneId } from './onboarding';
+import type { OnboardingProgress } from '../services/onboarding.service';
 
 /** [primeros-pasos] T1 · Figma N5: un recorrido corto por cada paso de «Primeros pasos». */
 export type TourId = 'calendar' | 'schedule' | 'link' | 'recommendation' | 'rating';
@@ -106,6 +107,25 @@ export const TOURS: Record<TourId, TourStep[]> = {
 /** El cuestionario no lleva recorrido: la app lo pide sola antes de entrar. */
 export function tourForMilestone(id: MilestoneId): TourId | null {
   return id === 'questionnaire' ? null : id;
+}
+
+/**
+ * Recorrido de un paso elegido de la lista (en orden o no, hecho o no). Sin recorrido posible,
+ * `reason` dice por qué, en vez de arrancar uno que se detendría solo (R11).
+ */
+export function tourAvailability(
+  id: MilestoneId,
+  progress: OnboardingProgress,
+  onWeb: boolean,
+): { tour: TourId | null; reason?: string } {
+  const linked = progress.me.linked;
+  if (id === 'questionnaire') return { tour: null };
+  if (id === 'link') return { tour: linked ? null : 'link' };
+  if (id === 'calendar' && onWeb) return { tour: null, reason: 'Hazlo desde tu teléfono' };
+  if ((id === 'recommendation' || id === 'rating') && !linked) {
+    return { tour: null, reason: 'Primero vincúlate con tu pareja' };
+  }
+  return { tour: tourForMilestone(id) };
 }
 
 /**

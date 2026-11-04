@@ -1,4 +1,33 @@
-import { TOURS, reconcile, tourForMilestone } from './tours';
+import { TOURS, reconcile, tourAvailability, tourForMilestone } from './tours';
+import type { OnboardingProgress } from '../services/onboarding.service';
+
+const progress = (linked: boolean): OnboardingProgress => ({
+  me: { questionnaire: true, linked, calendar: false, schedule: false },
+  partner: null,
+  couple: { firstRecommendation: false, firstRatedDate: false },
+});
+
+describe('tourAvailability (cualquier paso, en orden o no)', () => {
+  it('horarios y calendario siempre tienen recorrido en el teléfono', () => {
+    expect(tourAvailability('schedule', progress(false), false)).toEqual({ tour: 'schedule' });
+    expect(tourAvailability('calendar', progress(true), false)).toEqual({ tour: 'calendar' });
+  });
+
+  it('en la web el calendario no tiene recorrido', () => {
+    expect(tourAvailability('calendar', progress(true), true)).toEqual({ tour: null, reason: 'Hazlo desde tu teléfono' });
+  });
+
+  it('recomendación y calificación piden pareja primero', () => {
+    expect(tourAvailability('recommendation', progress(false), false)).toEqual({ tour: null, reason: 'Primero vincúlate con tu pareja' });
+    expect(tourAvailability('rating', progress(true), false)).toEqual({ tour: 'rating' });
+  });
+
+  it('vincular solo se enseña si todavía no hay pareja; el cuestionario no lleva recorrido', () => {
+    expect(tourAvailability('link', progress(false), false)).toEqual({ tour: 'link' });
+    expect(tourAvailability('link', progress(true), false)).toEqual({ tour: null });
+    expect(tourAvailability('questionnaire', progress(true), false)).toEqual({ tour: null });
+  });
+});
 
 describe('TOURS ([primeros-pasos] Figma N5)', () => {
   it('el del calendario va Inicio → Perfil → Configuraciones → Calendarios externos', () => {

@@ -6,7 +6,7 @@ import { palette } from '../../constants/colors';
 import type { OnboardingProgress } from '../../services/onboarding.service';
 import { MilestoneId, milestonesFrom, partnerDid, partnerLine } from '../../utils/onboarding';
 import { GradientIcon } from '../ui/Surface';
-import { tourForMilestone } from '../../utils/tours';
+import { tourAvailability, tourForMilestone } from '../../utils/tours';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -75,24 +75,34 @@ export function FirstStepsCard({ progress, onOpen, onHide, onShowMe }: FirstStep
 
       {open ? (
         <View style={styles.list}>
+          <Text style={styles.listHint}>Toca un paso y te enseñamos cómo</Text>
           {summary.items.map(item => {
             const theirs = partnerDid(progress, item.id);
             const together = item.shared || (item.id === 'link' && !!progress.partner);
+            // Cualquier paso, en orden o no: su recorrido; sin recorrido, su pantalla si falta.
+            const { tour, reason } = tourAvailability(item.id, progress, Platform.OS === 'web');
+            const action = tour && onShowMe
+              ? () => onShowMe(item.id)
+              : !item.done && item.route && !reason ? () => item.route && onOpen(item.route) : null;
+            const state = item.done ? 'hecho' : 'pendiente';
             return (
               <TouchableOpacity
                 key={item.id}
                 style={styles.row}
-                disabled={item.done || !item.route}
-                onPress={() => item.route && onOpen(item.route)}
+                disabled={!action}
+                onPress={() => action?.()}
                 accessibilityRole="button"
-                accessibilityLabel={`${item.title}: ${item.done ? 'hecho' : 'pendiente'}`}
+                accessibilityLabel={`${item.title}: ${state}${tour && onShowMe ? '. Ver cómo' : ''}`}
               >
                 {item.done ? (
                   <Ionicons name="checkmark-circle-outline" size={22} color={palette.success} />
                 ) : (
                   <View style={styles.emptyDot} />
                 )}
-                <Text style={[styles.rowText, !item.done && styles.rowTextPending]}>{item.title}</Text>
+                <View style={styles.rowBody}>
+                  <Text style={[styles.rowText, !item.done && styles.rowTextPending]}>{item.title}</Text>
+                  {reason && <Text style={styles.rowReason}>{reason}</Text>}
+                </View>
                 {together ? (
                   <View style={[styles.chip, { backgroundColor: palette.secondarySoft }]}>
                     <Text style={styles.chipText}>Juntos</Text>
@@ -104,6 +114,7 @@ export function FirstStepsCard({ progress, onOpen, onHide, onShowMe }: FirstStep
                     </Text>
                   </View>
                 ) : null}
+                {action && tour && <Ionicons name="chevron-forward" size={18} color={palette.icon} />}
               </TouchableOpacity>
             );
           })}
@@ -175,7 +186,10 @@ const styles = StyleSheet.create({
   list: { gap: 2 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, minHeight: 44 },
   emptyDot: { width: 20, height: 20, marginHorizontal: 1, borderRadius: 10, borderWidth: 2, borderColor: palette.border },
-  rowText: { flex: 1, fontSize: 14, color: palette.textSecondary },
+  listHint: { fontSize: 13, color: palette.textSecondary, marginBottom: 2 },
+  rowBody: { flex: 1, gap: 2 },
+  rowReason: { fontSize: 12, color: palette.textMuted },
+  rowText: { fontSize: 14, color: palette.textSecondary },
   rowTextPending: { color: palette.text, fontWeight: '600' },
   chip: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
   chipText: { fontSize: 12, color: palette.textSecondary },

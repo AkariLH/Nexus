@@ -43,6 +43,27 @@ describe('FirstStepsCard ([primeros-pasos] Figma N1/N4)', () => {
     expect(onShowMe).toHaveBeenCalledWith('calendar');
   });
 
+  it('en la lista, tocar cualquier paso (hecho o no) inicia su recorrido', () => {
+    const onShowMe = jest.fn();
+    render(<FirstStepsCard progress={progress(3)} onOpen={jest.fn()} onHide={jest.fn()} onShowMe={onShowMe} />);
+    fireEvent.press(screen.getByLabelText('Primeros pasos, 3 de 6. Ver todos'));
+    expect(screen.getByText('Toca un paso y te enseñamos cómo')).toBeTruthy();
+
+    fireEvent.press(screen.getByLabelText('Califiquen su primera cita: pendiente. Ver cómo'));
+    expect(onShowMe).toHaveBeenLastCalledWith('rating');
+    fireEvent.press(screen.getByLabelText('Conecta tu calendario: hecho. Ver cómo'));
+    expect(onShowMe).toHaveBeenLastCalledWith('calendar');
+  });
+
+  it('sin pareja, los pasos de pareja dicen por qué no hay recorrido', () => {
+    const onShowMe = jest.fn();
+    render(<FirstStepsCard progress={progress(1)} onOpen={jest.fn()} onHide={jest.fn()} onShowMe={onShowMe} />);
+    fireEvent.press(screen.getByLabelText('Primeros pasos, 1 de 6. Ver todos'));
+    expect(screen.getAllByText('Primero vincúlate con tu pareja').length).toBe(2);
+    fireEvent.press(screen.getByText('Pidan su primera recomendación'));
+    expect(onShowMe).not.toHaveBeenCalled();
+  });
+
   it('F-12 «Ocultar» avisa a Inicio', () => {
     const onHide = jest.fn();
     render(<FirstStepsCard progress={progress(1)} onOpen={jest.fn()} onHide={onHide} />);
