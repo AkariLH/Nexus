@@ -1,10 +1,21 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { palette } from '../../constants/colors';
 import { useTour } from '../../context/TourContext';
 import { GradientButton } from '../../app/components/ui/GradientButton';
 
 type Box = { x: number; y: number; width: number; height: number };
+type Point = { x: number; y: number };
+
+/**
+ * Pasa la medida de lo resaltado a coordenadas de la capa. La capa se mide con el mismo método y se
+ * resta su origen: en Android (edge-to-edge) la capa empieza en el borde de la pantalla, pero
+ * measureInWindow cuenta desde debajo de la barra de estado; el hueco quedaba esa altura más arriba
+ * (visto en el teléfono 04-nov). Restando el origen, el desfase se cancela en cualquier teléfono.
+ */
+export function relativeTo(box: Box, origin: Point): Box {
+  return { ...box, x: box.x - origin.x, y: box.y - origin.y };
+}
 
 const PAD = 6;
 const GAP = 14;
@@ -21,6 +32,8 @@ export function TourOverlay() {
   const { active, paused, next, stop, target } = useTour();
   const { width: winW, height: winH } = useWindowDimensions();
   const [box, setBox] = useState<Box | null>(null);
+  const layerRef = useRef<View>(null);
+  const origin = useRef<Point>({ x: 0, y: 0 });
   const targetId = active?.step.target;
   const stepKey = active ? `${active.tour}:${active.index}` : null;
 
@@ -30,16 +43,20 @@ export function TourOverlay() {
     let waited = 0;
     let found = false;
     const tick = () => {
+      // Origen de la capa con el mismo método que lo resaltado (ver relativeTo).
+      layerRef.current?.measureInWindow((x, y) => {
+        if (Number.isFinite(x) && Number.isFinite(y)) origin.current = { x, y };
+      });
       const node = target(targetId)?.current;
       if (node) {
-        node.measureInWindow((x, y, width, height) => {
-          const valid = [x, y, width, height].every(Number.isFinite) && width > 0 && height > 0
-            && y >= 0 && y + height <= winH;
-          if (valid) {
-            found = true;
-            setBox(prev => (prev && prev.x === x && prev.y === y && prev.width === width && prev.height === height
-              ? prev : { x, y, width, height }));
-          }
+        node.measureInWindow((mx, my, width, height) => {
+          if (![mx, my, width, height].every(Number.isFinite) || width <= 0 || height <= 0) return;
+          const { x, y } = relativeTo({ x: mx, y: my, width, height }, origin.current);
+          // Fuera de la capa (p. ej. debajo del pliegue) no cuenta: no se adivina (R3).
+          if (y < 0 || y + height > winH) return;
+          found = true;
+          setBox(prev => (prev && prev.x === x && prev.y === y && prev.width === width && prev.height === height
+            ? prev : { x, y, width, height }));
         });
       }
       waited += POLL_MS;
@@ -50,7 +67,9 @@ export function TourOverlay() {
     return () => clearInterval(id);
   }, [stepKey, targetId, paused, target, stop, winH]);
 
-  if (!active || paused || !box) return null;
+  if (!active || paused) return null;
+  // La capa (sin pintar) existe desde que hay recorrido, para poder medir su origen.
+  if (!box) return <View ref={layerRef} collapsable={false} style={StyleSheet.absoluteFill} pointerEvents="none" />;
   const { step, index, total } = active;
   const last = index === total - 1;
   const hole = { x: box.x - PAD, y: box.y - PAD, width: box.width + PAD * 2, height: box.height + PAD * 2 };
@@ -58,7 +77,7 @@ export function TourOverlay() {
   const tipLeft = Math.min(Math.max(hole.x + hole.width / 2 - 8, 32), winW - 48);
 
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+    <View ref={layerRef} collapsable={false} style={StyleSheet.absoluteFill} pointerEvents="box-none">
       <View style={[styles.shade, { top: 0, left: 0, right: 0, height: Math.max(hole.y, 0) }]} />
       <View style={[styles.shade, { top: hole.y + hole.height, left: 0, right: 0, bottom: 0 }]} />
       <View style={[styles.shade, { top: hole.y, left: 0, width: Math.max(hole.x, 0), height: hole.height }]} />

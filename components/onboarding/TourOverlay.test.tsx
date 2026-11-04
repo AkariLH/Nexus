@@ -5,7 +5,20 @@ import React, { useEffect } from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { Measurable, TourProvider, useTour } from '../../context/TourContext';
 import type { TargetId } from '../../utils/tours';
-import { TourOverlay } from './TourOverlay';
+import { TourOverlay, relativeTo } from './TourOverlay';
+
+describe('relativeTo (la capa y lo resaltado se miden igual y se restan)', () => {
+  const target = { x: 270, y: 740, width: 90, height: 60 };
+
+  it('si la capa empieza más arriba que el origen de las medidas, baja el hueco', () => {
+    // Android: la capa cubre la barra de estado (32 px) y las medidas empiezan debajo de ella.
+    expect(relativeTo(target, { x: 0, y: -32 })).toEqual({ x: 270, y: 772, width: 90, height: 60 });
+  });
+
+  it('con el mismo origen no cambia nada', () => {
+    expect(relativeTo(target, { x: 0, y: 0 })).toEqual(target);
+  });
+});
 
 const fake = (x: number, y: number, w: number, h: number) =>
   ({ current: { measureInWindow: (cb: (a: number, b: number, c: number, d: number) => void) => cb(x, y, w, h) } }) as React.RefObject<Measurable>;
