@@ -111,6 +111,8 @@ export interface Celebration {
   subtitle: string;
   nextLabel: string | null;
   nextRoute: Href | null;
+  /** Hito que sigue: el festejo ofrece su recorrido. */
+  nextId: MilestoneId | null;
   /** 6 de 6: el festejo grande (brote doble). */
   finished: boolean;
 }
@@ -124,6 +126,7 @@ export function celebrationFor(id: MilestoneId, summary: MilestoneSummary): Cele
     subtitle: finished ? 'Terminaron los 6 pasos.' : `Llevan ${summary.done} de ${summary.total}.`,
     nextLabel: next && next.route ? `Siguiente: ${NEXT_LABELS[next.id]}` : null,
     nextRoute: next?.route ?? null,
+    nextId: next?.id ?? null,
     finished,
   };
 }

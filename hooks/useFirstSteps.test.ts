@@ -10,8 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { act, renderHook } from '@testing-library/react-native';
 import onboardingService from '../services/onboarding.service';
 import { saveCelebrated } from '../utils/onboarding';
-import { markSeen, wasSeen } from '../utils/guideStore';
-import { restartTutorial, showFirstStepsAgain, useFirstSteps } from './useFirstSteps';
+import { restartTutorial, useFirstSteps } from './useFirstSteps';
 
 const getProgress = onboardingService.getProgress as jest.Mock;
 const withCalendar = (calendar: boolean) => ({
@@ -53,22 +52,43 @@ describe('useFirstSteps ([primeros-pasos] U3/U4)', () => {
     expect(result.current.hidden).toBe(true);
     expect(result.current.pending).toBeNull();
 
-    await showFirstStepsAgain(4);
+    await restartTutorial(4);
     await act(() => result.current.refresh());
     expect(result.current.hidden).toBe(false);
   });
 
-  it('F-21 «Ver tutorial» muestra otra vez la tarjeta y las guías', async () => {
+  it('N6 ofrece el recorrido del siguiente paso una sola vez', async () => {
+    getProgress.mockResolvedValue(withCalendar(false));
+    const { result } = renderHook(() => useFirstSteps(4));
+    await act(() => result.current.refresh());
+    expect(result.current.offer).toBe('calendar');
+
+    await act(() => result.current.answerOffer());
+    expect(result.current.offer).toBeNull();
+    await act(() => result.current.refresh());
+    expect(result.current.offer).toBeNull();
+  });
+
+  it('con la tarjeta oculta no ofrece el recorrido', async () => {
     getProgress.mockResolvedValue(withCalendar(false));
     const { result } = renderHook(() => useFirstSteps(4));
     await act(() => result.current.hide());
-    await markSeen(4, 'calendars');
+    await act(() => result.current.refresh());
+    expect(result.current.offer).toBeNull();
+  });
+
+  it('F-21 «Ver tutorial» vuelve a mostrar la tarjeta y a ofrecer el recorrido', async () => {
+    getProgress.mockResolvedValue(withCalendar(false));
+    const { result } = renderHook(() => useFirstSteps(4));
+    await act(() => result.current.refresh());
+    await act(() => result.current.answerOffer());
+    await act(() => result.current.hide());
 
     await restartTutorial(4);
     await act(() => result.current.refresh());
 
     expect(result.current.hidden).toBe(false);
-    await expect(wasSeen(4, 'calendars')).resolves.toBe(false);
+    expect(result.current.offer).toBe('calendar');
   });
 
   it('sin red no hay tarjeta (R5)', async () => {

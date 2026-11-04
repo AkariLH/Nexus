@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { CoachMark, CoachStep } from '../../components/onboarding/CoachMark';
+import React, { useState, useEffect } from 'react';
+import { TourTarget } from '../../components/onboarding/TourTarget';
+import { usePauseTour } from '../../context/TourContext';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Switch, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { calendarService, ExternalCalendar } from '../../services/calendar.service';
@@ -35,9 +36,8 @@ export default function LinkExternalCalendarsScreen() {
   // [ux-ajustes] D4 (Figma L2b): pasar a "Los detalles" se confirma antes.
   const [detailsFor, setDetailsFor] = useState<LinkedCalendar | null>(null);
   const [partnerName, setPartnerName] = useState('Tu pareja');
-  // [primeros-pasos] Figma N3: guía de primera visita.
-  const phoneListRef = useRef<View>(null);
-  const firstSharedRef = useRef<View>(null);
+  // [primeros-pasos] R13: el recorrido espera mientras haya un modal abierto.
+  usePauseTour('calendars', errorModal.visible || successModal.visible || confirmModal.visible || detailsFor !== null);
 
   useEffect(() => {
     loadCalendars();
@@ -201,8 +201,8 @@ export default function LinkExternalCalendarsScreen() {
           {linkedCalendars.length > 0 && (
             <View style={styles.section}>
               <SectionLabel>Compartidos</SectionLabel>
-              {linkedCalendars.map((calendar, index) => (
-                <View key={calendar.id} ref={index === 0 ? firstSharedRef : undefined} collapsable={false}>
+              {linkedCalendars.map((calendar) => (
+                <View key={calendar.id}>
                 <Card style={styles.card}>
                   <View style={styles.calendarHeader}>
                     <View style={[styles.colorDot, { backgroundColor: calendar.calendarColor }]} />
@@ -311,7 +311,7 @@ export default function LinkExternalCalendarsScreen() {
             ) : available.length === 0 ? (
               <Text style={styles.empty}>No encontramos calendarios en tu teléfono.</Text>
             ) : (
-              <View ref={phoneListRef} collapsable={false}>
+              <TourTarget id="calendars.phoneList">
               <Card style={styles.card}>
                 {available.map((calendar, index) => {
                   const linked = isCalendarLinked(calendar.id);
@@ -341,29 +341,12 @@ export default function LinkExternalCalendarsScreen() {
                   );
                 })}
               </Card>
-              </View>
+              </TourTarget>
             )}
           </View>
         </ScrollView>
       )}
 
-      {/* [primeros-pasos] Figma N3: primero qué se comparte; con uno ya compartido, qué ve la pareja */}
-      <CoachMark
-        screen="calendars"
-        enabled={!ON_WEB && !loading && !errorModal.visible && !successModal.visible && !confirmModal.visible && detailsFor === null}
-        steps={([
-          available.length > 0 && {
-            target: phoneListRef,
-            title: 'Elige qué calendario compartir',
-            text: 'Toca «Compartir» en el que quieras. Tu pareja solo ve tus bloques de tiempo ocupado.',
-          },
-          linkedCalendars.length > 0 && {
-            target: firstSharedRef,
-            title: `Elige qué ve ${partnerName}`,
-            text: 'En «Tu pareja ve» cambias entre «Solo ocupado» y «Los detalles».',
-          },
-        ].filter(Boolean) as CoachStep[])}
-      />
 
       <ErrorModal
         visible={errorModal.visible}

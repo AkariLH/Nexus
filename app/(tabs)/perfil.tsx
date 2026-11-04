@@ -21,6 +21,7 @@ import { toBackendDate } from '@/utils/registerForm';
 import { WebDateInput } from '@/components/ui/WebDateInput';
 import { LinearGradient } from "expo-linear-gradient";
 import { Card, ListCard, ListRow, TabTitle } from "../../components/ui/Surface";
+import { TourTarget } from "../../components/onboarding/TourTarget";
 import { GradientButton } from "../components/ui/GradientButton";
 import { ErrorModal } from "../components/ErrorModal";
 import { SuccessModal } from "../components/SuccessModal";
@@ -558,12 +559,14 @@ export default function PerfilScreen() {
               subtitle="Te enviamos un código a tu correo"
               onPress={() => router.push({ pathname: "/(auth)/forgot-password", params: { email } })}
             />
-            <ListRow
-              icon="settings-outline"
-              title="Configuraciones"
-              subtitle="Horarios, calendarios y cuenta"
-              onPress={() => router.push("/(tabs)/configuraciones")}
-            />
+            <TourTarget id="perfil.settings">
+              <ListRow
+                icon="settings-outline"
+                title="Configuraciones"
+                subtitle="Horarios, calendarios y cuenta"
+                onPress={() => router.push("/(tabs)/configuraciones")}
+              />
+            </TourTarget>
           </ListCard>
         )}
       </ScrollView>

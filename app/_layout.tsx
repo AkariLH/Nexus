@@ -8,7 +8,9 @@ import { QuestionnaireProvider } from "../context/QuestionnaireContext";
 import { AvailabilityProvider } from "../context/AvailabilityContext";
 import notificationService from "../services/firebase.service";
 import { useCalendarAutoSync } from "../hooks/useCalendarAutoSync";
-import { DeviceEventEmitter } from "react-native";
+import { DeviceEventEmitter, View } from "react-native";
+import { TourProvider } from "../context/TourContext";
+import { TourOverlay } from "../components/onboarding/TourOverlay";
 import { NOTICES_EVENT } from "../utils/pushRoute";
 import { codeFromLink, savePendingLinkCode } from "../utils/pendingLinkCode";
 
@@ -93,14 +95,20 @@ function RootNavigator() {
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      {/* Grupo de autenticación */}
-      <Stack.Screen name="(auth)" />
-      {/* Grupo principal de tabs */}
-      <Stack.Screen name="(tabs)" />
-      {/* Grupo de vinculación */}
-      <Stack.Screen name="(link)" />
-    </Stack>
+    // [primeros-pasos] T2/T4: el recorrido vive encima de todas las pantallas, en la misma ventana.
+    <TourProvider>
+      <View style={{ flex: 1 }}>
+        <Stack screenOptions={{ headerShown: false }}>
+          {/* Grupo de autenticación */}
+          <Stack.Screen name="(auth)" />
+          {/* Grupo principal de tabs */}
+          <Stack.Screen name="(tabs)" />
+          {/* Grupo de vinculación */}
+          <Stack.Screen name="(link)" />
+        </Stack>
+        <TourOverlay />
+      </View>
+    </TourProvider>
   );
 }
 

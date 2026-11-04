@@ -6,6 +6,7 @@ import { palette } from '../../constants/colors';
 import type { OnboardingProgress } from '../../services/onboarding.service';
 import { MilestoneId, milestonesFrom, partnerDid, partnerLine } from '../../utils/onboarding';
 import { GradientIcon } from '../ui/Surface';
+import { tourForMilestone } from '../../utils/tours';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -22,6 +23,8 @@ interface FirstStepsCardProps {
   progress: OnboardingProgress;
   onOpen: (route: Href) => void;
   onHide: () => void;
+  /** «Enséñame dónde» (Figma N1): empieza el recorrido del siguiente paso. */
+  onShowMe?: (id: MilestoneId) => void;
 }
 
 /**
@@ -29,7 +32,7 @@ interface FirstStepsCardProps {
  * animación, botón al siguiente paso, cómo va la pareja y «Ocultar». Al tocar el encabezado se
  * despliegan los 6 hitos. En 6 de 6 no dibuja nada.
  */
-export function FirstStepsCard({ progress, onOpen, onHide }: FirstStepsCardProps) {
+export function FirstStepsCard({ progress, onOpen, onHide, onShowMe }: FirstStepsCardProps) {
   const summary = milestonesFrom(progress, Platform.OS === 'web');
   const [open, setOpen] = useState(false);
   const fill = useRef(new Animated.Value(summary.done / summary.total)).current;
@@ -122,6 +125,12 @@ export function FirstStepsCard({ progress, onOpen, onHide }: FirstStepsCardProps
         </TouchableOpacity>
       )}
 
+      {!open && onShowMe && next.route && tourForMilestone(next.id) && (
+        <TouchableOpacity onPress={() => onShowMe(next.id)} accessibilityRole="button" hitSlop={8} style={styles.showMe}>
+          <Text style={styles.showMeText}>Enséñame dónde</Text>
+        </TouchableOpacity>
+      )}
+
       {partner && (
         <View style={styles.partner}>
           <Ionicons name="people-outline" size={16} color={palette.textSecondary} />
@@ -170,6 +179,8 @@ const styles = StyleSheet.create({
   rowTextPending: { color: palette.text, fontWeight: '600' },
   chip: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
   chipText: { fontSize: 12, color: palette.textSecondary },
+  showMe: { alignSelf: 'flex-start', minHeight: 32, justifyContent: 'center' },
+  showMeText: { fontSize: 13, fontWeight: '600', color: palette.textAccent },
   partner: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   partnerText: { fontSize: 13, color: palette.textSecondary },
   hide: { alignSelf: 'flex-end' },

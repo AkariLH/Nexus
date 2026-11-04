@@ -1,8 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, Text, View, ActivityIndicator, TouchableOpacity, Image, ScrollView } from "react-native";
-import { useEffect, useState, useCallback, useRef } from "react";
-import { CoachMark } from "../../components/onboarding/CoachMark";
+import { useEffect, useState, useCallback } from "react";
+import { TourTarget } from "../../components/onboarding/TourTarget";
 import { useAuth } from "../../context/AuthContext";
 import { useRouter, useFocusEffect } from "expo-router";
 import eventService from "../../services/event.service";
@@ -39,9 +39,6 @@ export default function LinkScreen() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [sharedEvents, setSharedEvents] = useState(0);
-  // [primeros-pasos] Guía de primera visita (solo sin vínculo).
-  const inviteRef = useRef<View>(null);
-  const joinRef = useRef<View>(null);
 
   const checkLinkStatus = useCallback(async () => {
     if (!user?.userId) return;
@@ -122,7 +119,6 @@ export default function LinkScreen() {
   // Figma F2b - sin vinculo: dos caminos para conectarse.
   if (!isLinked) {
     return (
-      <>
       <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: insets.top + 20 }]}>
         <TabTitle>Vínculo</TabTitle>
         <View style={styles.emptyHero}>
@@ -132,26 +128,17 @@ export default function LinkScreen() {
           <Text style={styles.emptyTitle}>Aún no tienes un vínculo</Text>
           <Text style={styles.emptyText}>Conecta con tu pareja para planear juntos.</Text>
         </View>
-        <View ref={inviteRef} collapsable={false}>
+        <TourTarget id="link.invite">
           <Card>
             <ListRow icon="qr-code-outline" title="Invitar a mi pareja" subtitle="Le compartes un QR para que lo escanee" onPress={handleGenerateCode} />
           </Card>
-        </View>
-        <View ref={joinRef} collapsable={false}>
+        </TourTarget>
+        <TourTarget id="link.join">
           <Card>
             <ListRow icon="keypad-outline" title="Unirme a mi pareja" subtitle="Escanea su QR o escribe lo que te compartió" onPress={handleEnterCode} />
           </Card>
-        </View>
+        </TourTarget>
       </ScrollView>
-      <CoachMark
-        screen="link"
-        enabled={!loading && !errorMessage && !successMessage}
-        steps={[
-          { target: inviteRef, title: 'Invita a tu pareja', text: 'Te damos un QR y tu pareja lo escanea con su teléfono.' },
-          { target: joinRef, title: '¿Tu pareja ya te invitó?', text: 'Escanea su QR o escribe el código que te compartió.' },
-        ]}
-      />
-      </>
     );
   }
 

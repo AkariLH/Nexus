@@ -1,6 +1,7 @@
 import { useRouter, useFocusEffect } from "expo-router";
-import { useState, useCallback, useRef } from "react";
-import { CoachMark } from "../../components/onboarding/CoachMark";
+import { useState, useCallback } from "react";
+import { TourTarget } from "../../components/onboarding/TourTarget";
+import { usePauseTour } from "../../context/TourContext";
 import {
   ScrollView,
   StyleSheet,
@@ -67,9 +68,6 @@ export default function AvailabilityScheduleScreen() {
   ]);
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  // [primeros-pasos] Guía de primera visita.
-  const quickRef = useRef<View>(null);
-  const daysRef = useRef<View>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Estados para el DateTimePicker
@@ -77,6 +75,8 @@ export default function AvailabilityScheduleScreen() {
   const [pickerDayIndex, setPickerDayIndex] = useState<number | null>(null);
   const [pickerField, setPickerField] = useState<'startTime' | 'endTime'>('startTime');
   const [pickerTime, setPickerTime] = useState(new Date());
+  // [primeros-pasos] R13: el recorrido espera mientras el selector de hora o un aviso estén abiertos.
+  usePauseTour("schedule", showTimePicker || showSuccessModal || errorMessage !== null);
 
   useFocusEffect(
     useCallback(() => {
@@ -195,16 +195,16 @@ export default function AvailabilityScheduleScreen() {
             Cuándo puede Nexus sugerirles planes. Tus eventos no cambian.
           </Text>
 
-          <View style={styles.section} ref={quickRef} collapsable={false}>
+          <TourTarget id="schedule.quick" style={styles.section}>
             <SectionLabel>Días</SectionLabel>
             <View style={styles.chips}>
               <OptionChip label="Todos los días" selected={quick === 'all'} onPress={() => setQuickOption('all')} />
               <OptionChip label="Entre semana" selected={quick === 'weekdays'} onPress={() => setQuickOption('weekdays')} />
               <OptionChip label="Fines de semana" selected={quick === 'weekends'} onPress={() => setQuickOption('weekends')} />
             </View>
-          </View>
+          </TourTarget>
 
-          <View ref={daysRef} collapsable={false}>
+          <TourTarget id="schedule.days">
           <Card style={styles.card}>
             {schedule.map((day, index) => (
               <View key={day.day}>
@@ -244,7 +244,7 @@ export default function AvailabilityScheduleScreen() {
               </View>
             ))}
           </Card>
-          </View>
+          </TourTarget>
 
           <GradientButton title="Guardar" onPress={handleSave} loading={saving} />
         </ScrollView>
@@ -265,22 +265,6 @@ export default function AvailabilityScheduleScreen() {
         )
       )}
 
-      <CoachMark
-        screen="schedule"
-        enabled={!loading && !showTimePicker && !showSuccessModal && errorMessage === null}
-        steps={[
-          {
-            target: quickRef,
-            title: 'Elige tus días',
-            text: 'Marca todos los días, entre semana o fines de semana.',
-          },
-          {
-            target: daysRef,
-            title: 'Ajusta cada día',
-            text: 'Toca una hora para cambiarla o apaga el día. Al terminar, toca «Guardar».',
-          },
-        ]}
-      />
 
       <ResultModal
         visible={showSuccessModal}

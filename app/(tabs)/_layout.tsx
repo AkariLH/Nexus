@@ -3,6 +3,8 @@ import { Tabs } from "expo-router";
 import { View, ActivityIndicator } from "react-native";
 import { useQuestionnaire } from "../../context/QuestionnaireContext";
 import { palette } from "../../constants/colors";
+import { PlatformPressable } from "@react-navigation/elements";
+import { TourTarget } from "../../components/onboarding/TourTarget";
 
 // Pantallas que se abren desde Perfil: llevan encabezado con regreso y no son de ninguna pestaña,
 // asi que no se muestra la barra (antes aparecia sin ninguna pestaña marcada).
@@ -76,6 +78,12 @@ export default function TabLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? "link" : "link-outline"} color={color} size={24} />
           ),
+          // [primeros-pasos] T3: el recorrido puede resaltar esta pestaña; mismo botón de siempre.
+          tabBarButton: (props) => (
+            <TourTarget id="tab.link" style={{ flex: 1 }}>
+              <PlatformPressable {...props} />
+            </TourTarget>
+          ),
         }}
         listeners={{
           tabPress: (e) => handleTabPress(e, 'link'),
@@ -87,6 +95,11 @@ export default function TabLayout() {
           title: "Perfil",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? "person" : "person-outline"} color={color} size={24} />
+          ),
+          tabBarButton: (props) => (
+            <TourTarget id="tab.perfil" style={{ flex: 1 }}>
+              <PlatformPressable {...props} />
+            </TourTarget>
           ),
         }}
         listeners={{

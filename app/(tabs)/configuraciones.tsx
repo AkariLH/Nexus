@@ -13,6 +13,7 @@ import linkService from "../../services/link.service";
 import { useAuth } from "../../context/AuthContext";
 import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
 import { restartTutorial } from "../../hooks/useFirstSteps";
+import { TourTarget } from "../../components/onboarding/TourTarget";
 import { palette } from "../../constants/colors";
 
 export default function ConfiguracionesScreen() {
@@ -171,20 +172,24 @@ export default function ConfiguracionesScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <SectionLabel muted>Disponibilidad</SectionLabel>
         <ListCard>
-          <ListRow
-            icon="time-outline"
-            title="Horarios permitidos"
-            subtitle="Cuándo puede Nexus sugerirles planes"
-            onPress={() => router.push("/(settings)/availability-schedule")}
-            disabled={isLoading}
-          />
-          <ListRow
-            icon="calendar-outline"
-            title="Calendarios externos"
-            subtitle="Vincula el calendario de tu teléfono"
-            onPress={() => router.push("/(tabs)/link-external-calendars")}
-            disabled={isLoading}
-          />
+          <TourTarget id="settings.schedule">
+            <ListRow
+              icon="time-outline"
+              title="Horarios permitidos"
+              subtitle="Cuándo puede Nexus sugerirles planes"
+              onPress={() => router.push("/(settings)/availability-schedule")}
+              disabled={isLoading}
+            />
+          </TourTarget>
+          <TourTarget id="settings.calendars">
+            <ListRow
+              icon="calendar-outline"
+              title="Calendarios externos"
+              subtitle="Vincula el calendario de tu teléfono"
+              onPress={() => router.push("/(tabs)/link-external-calendars")}
+              disabled={isLoading}
+            />
+          </TourTarget>
         </ListCard>
 
         {/* [primeros-pasos] U7 */}

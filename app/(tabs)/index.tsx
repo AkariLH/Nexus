@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Href, useLocalSearchParams, useNavigation, useRouter, useFocusEffect } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { StyleSheet, Text, TouchableOpacity, View, ScrollView, ActivityIndicator, DeviceEventEmitter } from "react-native";
 import { Card, GradientIcon, MetaLine, SectionLabel } from "../../components/ui/Surface";
 import { findMutualAvailability } from "../../services/availabilityService";
@@ -14,7 +14,9 @@ import { FreeTogetherCard } from "../../components/home/FreeTogetherCard";
 import { FirstStepsCard } from "../../components/home/FirstStepsCard";
 import { MilestoneCelebration } from "../../components/onboarding/MilestoneCelebration";
 import { useFirstSteps } from "../../hooks/useFirstSteps";
-import { CoachMark, CoachStep } from "../../components/onboarding/CoachMark";
+import { TourTarget } from "../../components/onboarding/TourTarget";
+import { usePauseTour, useTour } from "../../context/TourContext";
+import { tourForMilestone } from "../../utils/tours";
 import { homeHighlight } from "../../components/home/homeHighlight";
 import { linkedSubtitle, listLabel } from "../../utils/linkFormat";
 import { GradientButton } from "../components/ui/GradientButton";
@@ -212,8 +214,6 @@ export default function HomeScreen() {
   // [primeros-pasos] Figma N1/N2: tarjeta de hitos y festejo.
   const firstSteps = useFirstSteps(user?.userId);
   const refreshFirstSteps = firstSteps.refresh;
-  const firstStepsRef = useRef<View>(null);
-  const recommendRef = useRef<View>(null);
 
   // Verificar cada vez que el tab obtiene foco
   useFocusEffect(
@@ -330,6 +330,13 @@ export default function HomeScreen() {
   // React Native se dibuja encima de todo aunque su pantalla esté tapada.
   const navigation = useNavigation();
   const isFocused = useIsFocused();
+
+  // [primeros-pasos] T5/R13: una cosa a la vez. El festejo y los avisos de Inicio van antes que la
+  // oferta del recorrido, y el recorrido espera mientras haya cualquiera de ellos abierto.
+  const tour = useTour();
+  const homeModalOpen = !!firstSteps.pending || !!linked || !!questionnaire || !!planningNotice || !!inviteNotice;
+  const offerVisible = !!firstSteps.offer && isFocused && !homeModalOpen && !tour.active;
+  usePauseTour("home", isFocused && (homeModalOpen || offerVisible));
   const closeLinked = (then?: () => void) => {
     navigation.setParams({ linked: undefined } as never);
     then?.();
@@ -382,13 +389,17 @@ export default function HomeScreen() {
         <>
           {/* [primeros-pasos] Figma N1: hasta 6 de 6 o hasta que la oculte */}
           {firstSteps.progress && !firstSteps.hidden && (
-            <View ref={firstStepsRef} collapsable={false}>
+            <TourTarget id="home.firstSteps">
               <FirstStepsCard
                 progress={firstSteps.progress}
                 onOpen={(route) => router.push(route)}
                 onHide={firstSteps.hide}
+                onShowMe={(id) => {
+                  const t = tourForMilestone(id);
+                  if (t) tour.start(t);
+                }}
               />
-            </View>
+            </TourTarget>
           )}
 
           {/* [libres-juntos] Figma K1: lo primero es cuando se ven */}
@@ -403,7 +414,7 @@ export default function HomeScreen() {
 
           {/* RF-37: entrada principal para pedir una recomendacion */}
           {isLinked && (
-            <View ref={recommendRef} collapsable={false}>
+            <TourTarget id="home.recommend">
             <TouchableOpacity
               onPress={() => router.push("/(recommend)/mode")}
               activeOpacity={0.9}
@@ -421,7 +432,7 @@ export default function HomeScreen() {
                 <Ionicons name="chevron-forward" size={22} color={palette.onPrimary} />
               </LinearGradient>
             </TouchableOpacity>
-            </View>
+            </TourTarget>
           )}
 
           {/* CU42: hay citas por calificar (no esta en Figma; mismo estilo que la planeacion) */}
@@ -658,29 +669,33 @@ export default function HomeScreen() {
         to={firstSteps.pending?.to ?? 0}
         onClose={firstSteps.dismissCelebration}
         onNext={() => {
-          const route = firstSteps.pending?.celebration.nextRoute;
+          const { nextRoute, nextId } = firstSteps.pending?.celebration ?? {};
           firstSteps.dismissCelebration();
-          if (route) router.push(route);
+          // T5: el festejo lleva al recorrido del siguiente paso; sin recorrido, a su pantalla.
+          const nextTour = nextId ? tourForMilestone(nextId) : null;
+          if (nextTour) tour.start(nextTour);
+          else if (nextRoute) router.push(nextRoute);
         }}
       />
 
-      {/* [primeros-pasos] Guía de Inicio: después del festejo y de los demás avisos (R4) */}
-      <CoachMark
-        screen="home"
-        enabled={!loading && isFocused && !firstSteps.pending && !linked && !questionnaire && !planningNotice && !inviteNotice}
-        steps={([
-          firstSteps.progress && !firstSteps.hidden && {
-            target: firstStepsRef,
-            title: 'Tus primeros pasos',
-            text: 'Toca el siguiente paso y te acompañamos en el proceso.',
+      {/* [primeros-pasos] Figma N6: se ofrece una vez el recorrido del siguiente paso */}
+      <ResultModal
+        visible={offerVisible}
+        icon="sparkles-outline"
+        title="¿Te mostramos la app?"
+        subtitle="Te indicamos dónde tocar para configurar tu calendario y tus horarios. Con estos datos Nexus te proporciona mejores recomendaciones."
+        primary={{
+          label: "Sí, enséñame",
+          onPress: () => {
+            const offered = firstSteps.offer;
+            firstSteps.answerOffer();
+            if (offered) tour.start(offered);
           },
-          isLinked && {
-            target: recommendRef,
-            title: 'Pidan un plan',
-            text: 'Nexus les sugiere citas según sus gustos y sus horarios libres.',
-          },
-        ].filter(Boolean) as CoachStep[])}
+        }}
+        secondary={{ label: "Ahora no", onPress: firstSteps.answerOffer }}
+        onRequestClose={firstSteps.answerOffer}
       />
+
 
       {/* H7: recien vinculados */}
       <ResultModal

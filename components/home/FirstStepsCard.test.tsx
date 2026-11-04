@@ -36,6 +36,13 @@ describe('FirstStepsCard ([primeros-pasos] Figma N1/N4)', () => {
     expect(screen.queryByText(/Sam/)).toBeNull();
   });
 
+  it('«Enséñame dónde» empieza el recorrido del siguiente paso', () => {
+    const onShowMe = jest.fn();
+    render(<FirstStepsCard progress={progress(2)} onOpen={jest.fn()} onHide={jest.fn()} onShowMe={onShowMe} />);
+    fireEvent.press(screen.getByText('Enséñame dónde'));
+    expect(onShowMe).toHaveBeenCalledWith('calendar');
+  });
+
   it('F-12 «Ocultar» avisa a Inicio', () => {
     const onHide = jest.fn();
     render(<FirstStepsCard progress={progress(1)} onOpen={jest.fn()} onHide={onHide} />);

@@ -106,6 +106,7 @@ describe('celebrationFor (Figma N2)', () => {
       subtitle: 'Llevan 3 de 6.',
       nextLabel: 'Siguiente: tus horarios',
       nextRoute: '/(settings)/availability-schedule',
+      nextId: 'schedule',
       finished: false,
     });
   });

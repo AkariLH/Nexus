@@ -2,7 +2,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback, useState } from 'react';
 import { Platform } from 'react-native';
 import onboardingService, { OnboardingProgress } from '../services/onboarding.service';
-import { resetAll } from '../utils/guideStore';
 import {
   Celebration,
   SILENT_MILESTONES,
@@ -12,8 +11,10 @@ import {
   newlyDone,
   saveCelebrated,
 } from '../utils/onboarding';
+import { TourId, tourForMilestone } from '../utils/tours';
 
 const hiddenKey = (userId: number) => `@nexus_onboarding_hidden_${userId}`;
+const offeredKey = (userId: number) => `@nexus_tour_offered_${userId}`;
 
 export interface PendingCelebration {
   celebration: Celebration;
@@ -22,24 +23,29 @@ export interface PendingCelebration {
   to: number;
 }
 
+const readFlag = (key: string) => AsyncStorage.getItem(key).then(v => v === '1').catch(() => false);
+const writeFlag = (key: string) => AsyncStorage.setItem(key, '1').catch(() => undefined);
+
 /**
- * [primeros-pasos] U3/U4: estado de la tarjeta «Primeros pasos» de Inicio. `refresh` se llama al
- * enfocar Inicio; si falla la red, no hay tarjeta y el resto de Inicio no espera (R5).
+ * [primeros-pasos] U3/U4/T5: estado de la tarjeta «Primeros pasos» de Inicio, el festejo y la
+ * oferta del recorrido (Figma N6). `refresh` se llama al enfocar Inicio; si falla la red, no hay
+ * tarjeta y el resto de Inicio no espera (R5).
  */
 export function useFirstSteps(userId: number | undefined) {
   const [progress, setProgress] = useState<OnboardingProgress | null>(null);
   const [hidden, setHidden] = useState(true);
   const [pending, setPending] = useState<PendingCelebration | null>(null);
+  const [offer, setOffer] = useState<TourId | null>(null);
 
   const refresh = useCallback(async () => {
     if (!userId) return;
     try {
-      const [next, hiddenFlag, celebrated] = await Promise.all([
+      const [next, isHidden, offered, celebrated] = await Promise.all([
         onboardingService.getProgress(userId),
-        AsyncStorage.getItem(hiddenKey(userId)).catch(() => null),
+        readFlag(hiddenKey(userId)),
+        readFlag(offeredKey(userId)),
         loadCelebrated(userId),
       ]);
-      const isHidden = hiddenFlag === '1';
       setProgress(next);
       setHidden(isHidden);
 
@@ -56,6 +62,9 @@ export function useFirstSteps(userId: number | undefined) {
           to: summary.done / summary.total,
         });
       }
+      // N6: una sola vez por cuenta, con la tarjeta visible y un paso que tenga recorrido.
+      const tour = summary.next && !summary.next.phoneOnly ? tourForMilestone(summary.next.id) : null;
+      setOffer(!offered && !isHidden && tour ? tour : null);
     } catch {
       setProgress(null);
     }
@@ -63,29 +72,26 @@ export function useFirstSteps(userId: number | undefined) {
 
   const hide = useCallback(async () => {
     setHidden(true);
-    if (!userId) return;
-    try {
-      await AsyncStorage.setItem(hiddenKey(userId), '1');
-    } catch {
-      // Sin almacenamiento la tarjeta puede volver a salir la próxima vez; no es grave.
-    }
+    setOffer(null);
+    if (userId) await writeFlag(hiddenKey(userId));
+  }, [userId]);
+
+  /** «Sí, enséñame» o «Ahora no»: la oferta no vuelve a salir. */
+  const answerOffer = useCallback(async () => {
+    setOffer(null);
+    if (userId) await writeFlag(offeredKey(userId));
   }, [userId]);
 
   const dismissCelebration = useCallback(() => setPending(null), []);
 
-  return { progress, hidden, hide, pending, dismissCelebration, refresh };
+  return { progress, hidden, hide, pending, dismissCelebration, offer, answerOffer, refresh };
 }
 
-/** Vuelve a mostrar la tarjeta. */
-export async function showFirstStepsAgain(userId: number): Promise<void> {
-  try {
-    await AsyncStorage.removeItem(hiddenKey(userId));
-  } catch {
-    // Igual que arriba.
-  }
-}
-
-/** U7 «Ver tutorial»: la tarjeta y todas las guías vuelven a salir. */
+/** U7 «Ver tutorial»: vuelve la tarjeta y la oferta del recorrido. */
 export async function restartTutorial(userId: number): Promise<void> {
-  await Promise.all([showFirstStepsAgain(userId), resetAll(userId)]);
+  try {
+    await AsyncStorage.multiRemove([hiddenKey(userId), offeredKey(userId)]);
+  } catch {
+    // Sin almacenamiento no hay nada que borrar.
+  }
 }

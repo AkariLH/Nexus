@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useRef, useState } from "react";
-import { CoachMark } from "../../components/onboarding/CoachMark";
+import { useState } from "react";
+import { TourTarget } from "../../components/onboarding/TourTarget";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { palette } from "../../constants/colors";
@@ -54,8 +54,6 @@ export default function RecommendationModeScreen() {
   const [mode, setMode] = useState<"INDIVIDUAL" | "JOINT">("INDIVIDUAL");
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // [primeros-pasos] Guía de primera visita.
-  const optionsRef = useRef<View>(null);
 
   const startJoint = async () => {
     if (!user?.userId) return;
@@ -88,7 +86,7 @@ export default function RecommendationModeScreen() {
       <ScreenHeader title="Pedir recomendación" onBack={() => router.back()} />
       <View style={styles.content}>
         <Text style={styles.heading}>¿Cómo quieren planear?</Text>
-        <View ref={optionsRef} collapsable={false} style={styles.options}>
+        <TourTarget id="recommend.options" style={styles.options}>
         <ModeOption
           icon="person-outline"
           title="Individual"
@@ -103,17 +101,8 @@ export default function RecommendationModeScreen() {
           selected={mode === "JOINT"}
           onPress={() => setMode("JOINT")}
         />
-        </View>
+        </TourTarget>
       </View>
-      <CoachMark
-        screen="recommend"
-        enabled={error === null}
-        steps={[{
-          target: optionsRef,
-          title: 'Elige cómo planear',
-          text: 'Individual: tú eliges y le mandas la invitación. En pareja: eligen juntos y se escriben en el chat.',
-        }]}
-      />
       <View style={styles.footer}>
         <GradientButton title="Continuar" onPress={proceed} loading={starting} />
       </View>
