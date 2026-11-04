@@ -355,7 +355,7 @@ export default function LinkExternalCalendarsScreen() {
           available.length > 0 && {
             target: phoneListRef,
             title: 'Elige qué calendario compartir',
-            text: 'Toca «Compartir» en el que quieras. Tu pareja ve tus horas ocupadas, sin títulos.',
+            text: 'Toca «Compartir» en el que quieras. Tu pareja solo ve tus bloques de tiempo ocupado.',
           },
           linkedCalendars.length > 0 && {
             target: firstSharedRef,

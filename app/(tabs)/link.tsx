@@ -148,7 +148,7 @@ export default function LinkScreen() {
         enabled={!loading && !errorMessage && !successMessage}
         steps={[
           { target: inviteRef, title: 'Invita a tu pareja', text: 'Te damos un QR y tu pareja lo escanea con su teléfono.' },
-          { target: joinRef, title: 'Únete con su código', text: 'Escanea su QR o escribe el código que te mandó.' },
+          { target: joinRef, title: '¿Tu pareja ya te invitó?', text: 'Escanea su QR o escribe el código que te compartió.' },
         ]}
       />
       </>

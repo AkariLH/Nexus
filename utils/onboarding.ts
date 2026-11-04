@@ -33,17 +33,17 @@ type Spec = Omit<Milestone, 'done' | 'route' | 'phoneOnly'> & {
 };
 
 const SPECS: Spec[] = [
-  { id: 'questionnaire', title: 'Contesta el cuestionario', hint: 'Cuéntale a Nexus qué les gusta', shared: false,
+  { id: 'questionnaire', title: 'Contesta el cuestionario', hint: 'Cuéntale a Nexus qué te gusta', shared: false,
     route: '/(tabs)/initial-questionnaire', isDone: p => p.me.questionnaire },
   { id: 'link', title: 'Vincúlate con tu pareja', hint: 'Comparte tu código o escribe el suyo', shared: false,
     route: '/(tabs)/link', isDone: p => p.me.linked },
-  { id: 'calendar', title: 'Conecta tu calendario', hint: 'Comparte tus horas ocupadas con tu pareja', shared: false,
+  { id: 'calendar', title: 'Conecta tu calendario', hint: 'Así Nexus sabe cuándo están libres', shared: false,
     route: '/(tabs)/link-external-calendars', phoneOnly: true, isDone: p => p.me.calendar },
   { id: 'schedule', title: 'Ajusta tus horarios', hint: 'Elige los días y horas para sus planes', shared: false,
     route: '/(settings)/availability-schedule', isDone: p => p.me.schedule },
-  { id: 'recommendation', title: 'Pidan su primera recomendación', hint: 'Pidan ideas de cita para los dos', shared: true,
+  { id: 'recommendation', title: 'Pidan su primera recomendación', hint: 'Nexus les sugiere un plan para los dos', shared: true,
     route: '/(recommend)/mode', isDone: p => p.couple.firstRecommendation },
-  { id: 'rating', title: 'Califiquen su primera cita', hint: 'Díganle a Nexus qué tal estuvo', shared: true,
+  { id: 'rating', title: 'Califiquen su primera cita', hint: 'Cuéntanos qué tal estuvo tu cita.', shared: true,
     route: '/(rating)/pending-ratings', isDone: p => p.couple.firstRatedDate },
 ];
 
