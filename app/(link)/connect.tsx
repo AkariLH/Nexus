@@ -20,7 +20,7 @@ import { useAuth } from "../../context/AuthContext";
 import linkService, { LinkCodeResponse } from "../../services/link.service";
 import { GradientButton } from "../components/ui/GradientButton";
 import { Input } from "../components/ui/Input";
-import { inviteMessage } from "../../utils/pendingLinkCode";
+import { codeFromLink, inviteMessage } from "../../utils/pendingLinkCode";
 
 const PREFIX = "NEXUS-";
 const CODE_LENGTH = 6;
@@ -187,8 +187,8 @@ export default function ConnectScreen() {
             accessibilityLabel="Código de tu pareja"
             value={`${PREFIX}${partnerCode}`}
             onChangeText={(text) => {
-              const clean = text.toUpperCase().replace(/^NEXUS-?/, "").replace(/[^A-Z0-9]/g, "");
-              setPartnerCode(clean.slice(0, CODE_LENGTH));
+              // [vinculo-pegar] El campo siempre muestra «NEXUS-»; si se borró el guion se repone antes de limpiar.
+              setPartnerCode(codeFromLink(text.replace(/^NEXUS-?/i, PREFIX)));
               if (connectError) setConnectError("");
             }}
             error={connectError}

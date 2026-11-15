@@ -27,7 +27,7 @@ export default function EnterLinkCodeScreen() {
     if (!user?.userId) return;
     
     // Remover el prefijo NEXUS- para obtener solo el código
-    const cleanCode = code.replace(/^NEXUS-/i, "").trim();
+    const cleanCode = codeFromLink(code);
     
     if (!cleanCode || cleanCode.length < 6) {
       setError("Revisa las 6 letras y números.");
@@ -92,15 +92,12 @@ export default function EnterLinkCodeScreen() {
             <TextInput
               value={code}
               onChangeText={(text) => {
-                // Solo permitir caracteres alfanuméricos y convertir a mayúsculas
-                const cleaned = text.toUpperCase().replace(/[^A-Z0-9]/g, "");
-                // Limitar a 6 caracteres
-                setCode(cleaned.substring(0, 6));
+                // [vinculo-pegar] Acepta lo pegado con «NEXUS-» (así lo copia «Copiar»); deja 6 letras y números.
+                setCode(codeFromLink(text));
               }}
               placeholder="XXXXXX"
               placeholderTextColor={palette.textMuted}
               style={styles.inputField}
-              maxLength={6}
               autoCapitalize="characters"
               editable={!loading}
             />

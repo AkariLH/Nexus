@@ -26,10 +26,29 @@ export function inviteMessage(code: string, validityMinutes: number, baseUrl?: s
   return `¡Únete a mí en Nexus! Toca para unirte: ${base}/unirme?code=${encodeURIComponent(code)}\n\nO abre ${steps}`;
 }
 
-/** El código como lo acepta el campo: sin "NEXUS-", en mayúsculas, solo letras y números, 6 caracteres. */
+const CODE_LENGTH = 6;
+const PREFIX = 'NEXUS';
+
+/**
+ * El código como lo acepta el campo: sin "NEXUS-", en mayúsculas, solo letras y números, 6 caracteres.
+ * [vinculo-pegar] «Copiar» copia `NEXUS-ABC234`; pegado junto al `NEXUS-` del campo llegaba
+ * `NEXUS-NEXUS-ABC234` y se mandaba `NEXUSA`. Se quita el prefijo las veces que venga: con separador
+ * siempre, y pegado al código solo si después quedan 6 o más (un código real puede empezar con NEXUS).
+ */
 export function codeFromLink(raw: string | string[] | undefined): string {
   const value = Array.isArray(raw) ? raw[0] : raw;
-  return (value ?? '').trim().replace(/^NEXUS-/i, '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+  let text = (value ?? '').trim().toUpperCase();
+  for (;;) {
+    const withSeparator = text.match(/^NEXUS[^A-Z0-9]+/);
+    if (withSeparator) {
+      text = text.slice(withSeparator[0].length);
+    } else if (text.startsWith(PREFIX) && text.replace(/[^A-Z0-9]/g, '').length >= PREFIX.length + CODE_LENGTH) {
+      text = text.slice(PREFIX.length);
+    } else {
+      break;
+    }
+  }
+  return text.replace(/[^A-Z0-9]/g, '').slice(0, CODE_LENGTH);
 }
 
 export async function savePendingLinkCode(code: string, now: Date = new Date()): Promise<void> {

@@ -19,6 +19,18 @@ describe('linkCodeUrl / codeFromLink', () => {
     expect(codeFromLink(['AB12CD'])).toBe('AB12CD');
     expect(codeFromLink(undefined)).toBe('');
   });
+
+  it('[vinculo-pegar] quita el prefijo aunque venga repetido o sin guion', () => {
+    expect(codeFromLink('NEXUS-NEXUS-ABC234')).toBe('ABC234');
+    expect(codeFromLink('NEXUSABC234')).toBe('ABC234');
+    expect(codeFromLink('nexus - abc234')).toBe('ABC234');
+    expect(codeFromLink('NEXUS-')).toBe('');
+  });
+
+  it('[vinculo-pegar] no se come un código que de verdad empieza con NEXUS', () => {
+    expect(codeFromLink('NEXUS2')).toBe('NEXUS2');
+    expect(codeFromLink('NEXUS-NEXUS2')).toBe('NEXUS2');
+  });
 });
 
 describe('código pendiente (escaneado sin sesión)', () => {
