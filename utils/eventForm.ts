@@ -21,3 +21,11 @@ export function missingForEvent(form: EventFormState): string | null {
   if (!form.isAllDay && !form.endTimeSelected) return 'Falta la hora de fin.';
   return null;
 }
+
+/**
+ * [eventos-sin-choques] Título del modal de error al guardar. El backend responde 409 cuando alguno
+ * de los dos ya tiene algo a esa hora; el mensaje (quién está ocupado) lo pone el backend.
+ */
+export function errorTitleFor(error: { status?: number; message?: string } | null | undefined): string {
+  return error?.status === 409 ? 'Ese horario está ocupado' : 'Algo salió mal';
+}

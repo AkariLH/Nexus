@@ -22,7 +22,7 @@ import { RemindersModal, Reminder } from "../components/RemindersModal";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { palette, gradients, eventColors } from "../../constants/colors";
 import { ScreenHeader } from "../components/layout/ScreenHeader";
-import { EVENT_CATEGORIES } from "../../utils/eventForm";
+import { EVENT_CATEGORIES, errorTitleFor } from "../../utils/eventForm";
 
 export default function EditEventScreen() {
   const router = useRouter();
@@ -64,6 +64,7 @@ export default function EditEventScreen() {
   // Estados para modales de confirmación
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [errorTitle, setErrorTitle] = useState(errorTitleFor(null));
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -394,6 +395,7 @@ export default function EditEventScreen() {
     } catch (error: any) {
       console.error('Error actualizando evento:', error);
       const errMsg = error.message || 'No se pudieron guardar los cambios. Inténtalo de nuevo.';
+      setErrorTitle(errorTitleFor(error));
       setErrorMessage(errMsg);
       setShowErrorModal(true);
     } finally {
@@ -868,11 +870,14 @@ export default function EditEventScreen() {
         <ConfirmModal
           visible={showErrorModal}
           type="error"
-          title="Algo salió mal"
+          title={errorTitle}
           message={errorMessage}
           confirmText="OK"
           showCancel={false}
-          onConfirm={() => setShowErrorModal(false)}
+          onConfirm={() => {
+            setShowErrorModal(false);
+            setErrorTitle(errorTitleFor(null));
+          }}
         />
 
         {/* Modal de éxito */}

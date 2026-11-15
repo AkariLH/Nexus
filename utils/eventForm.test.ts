@@ -1,4 +1,17 @@
-import { EVENT_CATEGORIES, missingForEvent } from './eventForm';
+import { EVENT_CATEGORIES, errorTitleFor, missingForEvent } from './eventForm';
+
+describe('[eventos-sin-choques] errorTitleFor', () => {
+  it('un choque de horario (409) tiene título propio', () => {
+    expect(errorTitleFor({ status: 409, message: 'Luis ya tiene algo a esa hora. Elige otro horario.' })).toBe(
+      'Ese horario está ocupado'
+    );
+  });
+
+  it('cualquier otro error sigue diciendo «Algo salió mal»', () => {
+    expect(errorTitleFor({ status: 400 })).toBe('Algo salió mal');
+    expect(errorTitleFor(undefined)).toBe('Algo salió mal');
+  });
+});
 
 const complete = {
   title: 'Cena',

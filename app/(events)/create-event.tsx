@@ -22,7 +22,7 @@ import { RecurrenceModal } from "../components/RecurrenceModal";
 import { RemindersModal, Reminder } from "../components/RemindersModal";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { endFromDuration } from "../../utils/ideaFormat";
-import { EVENT_CATEGORIES, missingForEvent } from "../../utils/eventForm";
+import { EVENT_CATEGORIES, errorTitleFor, missingForEvent } from "../../utils/eventForm";
 import { palette, gradients, eventColors } from "../../constants/colors";
 import { ScreenHeader } from "../components/layout/ScreenHeader";
 
@@ -81,6 +81,7 @@ export default function CreateEventScreen() {
   // Estados para modales de confirmación
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [errorTitle, setErrorTitle] = useState(errorTitleFor(null));
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -272,6 +273,7 @@ export default function CreateEventScreen() {
     } catch (error: any) {
       console.error('Error creando evento:', error);
       const errMsg = error.message || 'No se pudo crear el evento. Inténtalo de nuevo.';
+      setErrorTitle(errorTitleFor(error));
       setErrorMessage(errMsg);
       setShowErrorModal(true);
     } finally {
@@ -737,11 +739,14 @@ export default function CreateEventScreen() {
       <ConfirmModal
         visible={showErrorModal}
         type="error"
-        title="Algo salió mal"
+        title={errorTitle}
         message={errorMessage}
         confirmText="OK"
         showCancel={false}
-        onConfirm={() => setShowErrorModal(false)}
+        onConfirm={() => {
+          setShowErrorModal(false);
+          setErrorTitle(errorTitleFor(null));
+        }}
       />
 
       {/* Modal de éxito */}
