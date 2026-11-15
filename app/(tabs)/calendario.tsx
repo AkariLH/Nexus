@@ -146,6 +146,11 @@ export default function CalendarioScreen() {
   };
 
   const openItem = (item: CalendarItem) => {
+    // [reaprobar-edicion] Figma P2: «Te toca aceptar» abre la campanita, donde están Aceptar y Rechazar.
+    if (item.waiting === "me") {
+      router.push("/(events)/notifications");
+      return;
+    }
     if (item.eventId !== null) {
       const event = events.find((e) => e.id === item.eventId);
       // Las repeticiones guardan el id compuesto "id-fecha" para editar o borrar solo esa.

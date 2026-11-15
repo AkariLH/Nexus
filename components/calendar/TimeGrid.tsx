@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { palette } from '../../constants/colors';
 import { belowBusy, CalendarItem, dayTitle, FreeSlot, hm, itemsOnDay, layoutLanes, sameDay } from '../../utils/calendarLayout';
-import { barColor, tint } from './calendarColors';
+import { barColor, blockTint } from './calendarColors';
 
 const HOURS = Array.from({ length: 24 }, (_, h) => h);
 
@@ -106,7 +106,7 @@ export function TimeGrid({ days, items, freeSlots = [], compact, firstHour = 8, 
                         {
                           left: `${(lane / lanes) * 100}%`,
                           width: `${100 / lanes}%`,
-                          backgroundColor: tint(color),
+                          backgroundColor: blockTint(item),
                           borderLeftColor: color,
                         },
                       ]}
@@ -123,9 +123,16 @@ export function TimeGrid({ days, items, freeSlots = [], compact, firstHour = 8, 
                               {item.title}
                             </Text>
                             {item.source === 'partner' && <Ionicons name="lock-closed-outline" size={16} color={palette.text} />}
-                            {item.source === 'couple' && <Ionicons name="heart-outline" size={16} color={palette.text} />}
+                            {/* [reaprobar-edicion] Figma P: reloj de arena mientras falta que alguien acepte */}
+                            {item.source === 'couple' && (
+                              <Ionicons
+                                name={item.waiting ? 'hourglass-outline' : 'heart-outline'}
+                                size={16}
+                                color={item.waiting ? palette.warning : palette.text}
+                              />
+                            )}
                           </View>
-                          <Text style={styles.subtitle} numberOfLines={1}>
+                          <Text style={[styles.subtitle, item.waiting && { color: palette.warning }]} numberOfLines={1}>
                             {[`${hm(item.start)} – ${hm(item.end)}`, item.subtitle].filter(Boolean).join(' · ')}
                           </Text>
                         </>

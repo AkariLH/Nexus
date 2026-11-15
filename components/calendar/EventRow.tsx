@@ -30,13 +30,20 @@ export function EventRow({ item, onPress }: { item: CalendarItem; onPress?: () =
           {item.title}
         </Text>
         {!!item.subtitle && (
-          <Text style={styles.subtitle} numberOfLines={1}>
+          <Text style={[styles.subtitle, item.waiting && { color: palette.warning }]} numberOfLines={1}>
             {item.subtitle}
           </Text>
         )}
       </View>
       {locked && <Ionicons name="lock-closed-outline" size={18} color={palette.text} />}
-      {item.source === 'couple' && <Ionicons name="heart-outline" size={18} color={palette.text} />}
+      {/* [reaprobar-edicion] Figma P: reloj de arena mientras falta que alguien acepte */}
+      {item.source === 'couple' && (
+        <Ionicons
+          name={item.waiting ? 'hourglass-outline' : 'heart-outline'}
+          size={18}
+          color={item.waiting ? palette.warning : palette.text}
+        />
+      )}
     </TouchableOpacity>
   );
 }

@@ -53,6 +53,33 @@ const external = (over: Partial<ExternalEventDTO>): ExternalEventDTO => ({
 
 const range = { start: new Date(2026, 8, 1), end: new Date(2026, 11, 31) };
 
+describe('[reaprobar-edicion] Figma P: planes pendientes en el calendario', () => {
+  const build = (events: EventResponse[], userId: number) =>
+    buildCalendarItems({ events, external: [], userId, partnerName: 'Sam', range });
+  const pending = (over: Partial<EventResponse>) =>
+    event({ status: 'PENDING', fullyApproved: false, creatorApproved: true, partnerApproved: false, ...over });
+
+  it('el que yo propuse sale con «Pendiente de Sam»', () => {
+    const [item] = build([pending({})], 4);
+    expect([item.waiting, item.subtitle]).toEqual(['partner', 'Pendiente de Sam']);
+  });
+
+  it('el que me propusieron sale con «Te toca aceptar»', () => {
+    const [item] = build([pending({})], 9);
+    expect([item.waiting, item.subtitle]).toEqual(['me', 'Te toca aceptar']);
+  });
+
+  it('el que yo creé y mi pareja cambió también me toca aceptarlo', () => {
+    const [item] = build([pending({ creatorApproved: false, partnerApproved: true })], 4);
+    expect(item.waiting).toBe('me');
+  });
+
+  it('los confirmados siguen igual y los rechazados no salen', () => {
+    const items = build([event({}), pending({ id: 3, status: 'REJECTED' })], 4);
+    expect(items.map((i) => [i.title, i.waiting, i.subtitle])).toEqual([['Cine al aire libre', null, 'Coyoacán']]);
+  });
+});
+
 describe('calendarLayout', () => {
   it('separa eventos de los dos, de mi calendario y de la pareja', () => {
     const items = buildCalendarItems({

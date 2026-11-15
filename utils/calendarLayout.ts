@@ -27,6 +27,19 @@ export interface CalendarItem {
   eventId: number | null;
   /** Id del evento externo para su detalle (null si es de Nexus o es "Ocupado"). */
   externalId: number | null;
+  /**
+   * [reaprobar-edicion] Figma P: plan de Nexus pendiente y a quién le toca aceptarlo ('me' = a mí,
+   * 'partner' = a la pareja); null si ya está confirmado o no es de Nexus.
+   */
+  waiting?: 'me' | 'partner' | null;
+}
+
+/** [reaprobar-edicion] A quién le falta aprobar un plan pendiente (RN-17: al que no lo cambió). */
+function waitingFor(e: EventResponse, userId: number): 'me' | 'partner' | null {
+  if (e.fullyApproved) return null;
+  const iCreatedIt = e.creatorUserId === userId;
+  const mine = iCreatedIt ? e.creatorApproved : e.partnerApproved;
+  return mine ? 'partner' : 'me';
 }
 
 export const SOURCE_ORDER: CalendarSource[] = ['couple', 'mine', 'partner'];
@@ -97,22 +110,25 @@ interface BuildInput {
 
 export function buildCalendarItems({ events, external, userId, partnerName, range }: BuildInput): CalendarItem[] {
   const items: CalendarItem[] = [];
-  // Solo cuentan los aprobados por los dos.
-  const approved = events.filter((e) => e.fullyApproved === true);
+  // Los aprobados por los dos y, [reaprobar-edicion] Figma P, los pendientes (nuevos o editados),
+  // para que un plan no desaparezca mientras el otro lo acepta. Los rechazados no salen.
+  const approved = events.filter((e) => e.fullyApproved === true || e.status === 'PENDING');
 
   approved.forEach((e) => {
     const allDay = isAllDayEvent(e.startDateTime, e.endDateTime);
     const start = allDay ? localDateOf(e.startDateTime, false) : new Date(e.startDateTime);
     const end = allDay ? localDateOf(e.endDateTime, true) : new Date(e.endDateTime);
+    const waiting = waitingFor(e, userId);
     const base = {
       title: e.title,
       allDay,
       source: 'couple' as const,
-      subtitle: e.location ?? '',
+      subtitle: waiting === 'me' ? 'Te toca aceptar' : waiting === 'partner' ? `Pendiente de ${partnerName}` : e.location ?? '',
       color: e.color || '',
       readOnly: false,
       eventId: e.id,
       externalId: null,
+      waiting,
     };
 
     if (!(e.isRecurring && e.recurrencePattern)) {
