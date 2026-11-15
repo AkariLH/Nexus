@@ -36,6 +36,7 @@ import {
 import { formatMxn, slotOptionLabel } from "../../utils/recommendationFormat";
 import { ScreenHeader } from "../components/layout/ScreenHeader";
 import { ResultModal } from "../components/ResultModal";
+import { useAfterModalClose } from "../../hooks/useAfterModalClose";
 import { GradientButton } from "../components/ui/GradientButton";
 import { OptionChip } from "../components/ui/OptionChip";
 
@@ -81,6 +82,7 @@ export default function RecommendationRequestScreen() {
   const [locating, setLocating] = useState(false);
   const [locationFailed, setLocationFailed] = useState(false);
   const [showBoroughs, setShowBoroughs] = useState(false);
+  const afterModalClose = useAfterModalClose();
   const now = useMemo(() => new Date(), []);
 
   const update = (patch: Partial<RequestForm>) => setForm((current) => ({ ...current, ...patch }));
@@ -297,7 +299,8 @@ export default function RecommendationRequestScreen() {
           label: "Elegir una alcaldía",
           onPress: () => {
             setShowLocation(false);
-            setShowBoroughs(true);
+            // [modales-un-clic] M-02: las alcaldías salen cuando ya se cerró el aviso de ubicación
+            afterModalClose(() => setShowBoroughs(true));
           },
         }}
         onRequestClose={() => setShowLocation(false)}

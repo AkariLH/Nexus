@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { BlurView } from "expo-blur";
 import { palette, gradients } from "../../constants/colors";
+import { useTapGuard } from "../../hooks/useTapGuard";
 
 type ModalType = "confirm" | "success" | "error" | "info";
 
@@ -38,6 +39,8 @@ export function ConfirmModal({
   loading = false,
   showCancel = true,
 }: ConfirmModalProps) {
+  // [modales-un-clic] M-03: el primer toque cuenta; los que llegan mientras se cierra, no.
+  const guard = useTapGuard();
   const getIcon = () => {
     switch (type) {
       case "success":
@@ -58,7 +61,7 @@ export function ConfirmModal({
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={onCancel}
+      onRequestClose={guard(onCancel)}
     >
       <BlurView intensity={20} style={styles.modalOverlay}>
         <View style={styles.modalContainer}>
@@ -84,7 +87,7 @@ export function ConfirmModal({
               {showCancel && onCancel && (
                 <TouchableOpacity accessibilityRole="button"
                   style={[styles.button, styles.cancelButton]}
-                  onPress={onCancel}
+                  onPress={guard(onCancel)}
                   disabled={loading}
                   activeOpacity={0.8}
                 >
@@ -99,7 +102,7 @@ export function ConfirmModal({
                     styles.confirmButton,
                     loading && styles.buttonDisabled,
                   ]}
-                  onPress={onConfirm}
+                  onPress={guard(onConfirm)}
                   disabled={loading}
                   activeOpacity={0.8}
                 >

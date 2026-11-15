@@ -17,6 +17,7 @@ import eventService from "../../services/event.service";
 import { useAuth } from "../../context/AuthContext";
 import { palette, gradients } from "../../constants/colors";
 import { recurrenceLabel } from "../../utils/eventDetailFormat";
+import { useAfterModalClose } from "../../hooks/useAfterModalClose";
 
 const { height } = Dimensions.get("window");
 
@@ -50,6 +51,7 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, o
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDeleteRecurringModal, setShowDeleteRecurringModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const afterModalClose = useAfterModalClose();
   const [deleteType, setDeleteType] = useState<'single' | 'all'>('single');
   const { user } = useAuth();
   
@@ -117,7 +119,8 @@ export function EventDetailsModal({ visible, event, onClose, onEdit, onDelete, o
   const handleDeleteRecurringChoice = (type: 'single' | 'all') => {
     setDeleteType(type);
     setShowDeleteRecurringModal(false);
-    setShowDeleteModal(true);
+    // [modales-un-clic] M-02: la confirmación sale cuando ya se cerró «¿solo este o todos?»
+    afterModalClose(() => setShowDeleteModal(true));
   };
   
   const handleDelete = async () => {

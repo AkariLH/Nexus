@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { palette, gradients } from "../../constants/colors";
+import { useTapGuard } from "../../hooks/useTapGuard";
 
 interface SuccessModalProps {
   visible: boolean;
@@ -18,12 +19,14 @@ export function SuccessModal({
   message,
   buttonText = "Continuar"
 }: SuccessModalProps) {
+  // [modales-un-clic] M-03: el primer toque cuenta; los que llegan mientras se cierra, no.
+  const guard = useTapGuard();
   return (
     <Modal
       animationType="fade"
       transparent={true}
       visible={visible}
-      onRequestClose={onClose}
+      onRequestClose={guard(onClose)}
     >
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
@@ -42,7 +45,7 @@ export function SuccessModal({
 
           <TouchableOpacity accessibilityRole="button"
             style={styles.modalButtonWrapper}
-            onPress={onClose}
+            onPress={guard(onClose)}
             activeOpacity={0.9}
           >
             <LinearGradient

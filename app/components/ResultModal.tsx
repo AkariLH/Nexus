@@ -4,6 +4,7 @@ import { ReactNode, useEffect, useRef } from "react";
 import { Animated, Easing, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { palette, gradients } from "../../constants/colors";
 import { GradientButton } from "./ui/GradientButton";
+import { useTapGuard } from "../../hooks/useTapGuard";
 
 interface ModalAction {
   label: string;
@@ -65,6 +66,8 @@ export function ResultModal({
   secondary,
   onRequestClose,
 }: ResultModalProps) {
+  // [modales-un-clic] M-03: el primer toque cuenta; los que llegan mientras se cierra, no.
+  const guard = useTapGuard();
   const pop = useRef(new Animated.Value(animateIcon ? 0 : 1)).current;
   useEffect(() => {
     if (!animateIcon || !visible) return;
@@ -83,7 +86,7 @@ export function ResultModal({
   };
 
   return (
-    <Modal animationType="fade" transparent visible={visible} onRequestClose={onRequestClose}>
+    <Modal animationType="fade" transparent visible={visible} onRequestClose={guard(onRequestClose)}>
       <View style={styles.overlay}>
         <View style={styles.card} accessibilityViewIsModal>
           {header && <View style={styles.header}>{header}</View>}
@@ -123,14 +126,14 @@ export function ResultModal({
 
           <GradientButton
             title={primary.label}
-            onPress={primary.onPress}
+            onPress={guard(primary.onPress)}
             loading={primary.loading}
             style={styles.primary}
           />
           {secondary && (
             <TouchableOpacity
               style={styles.secondary}
-              onPress={secondary.onPress}
+              onPress={guard(secondary.onPress)}
               disabled={primary.loading}
               accessibilityRole="button"
             >

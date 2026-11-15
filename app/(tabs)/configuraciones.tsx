@@ -15,6 +15,7 @@ import { useQuestionnaireGuard } from "../../hooks/useQuestionnaireGuard";
 import { restartTutorial } from "../../hooks/useFirstSteps";
 import { TourTarget } from "../../components/onboarding/TourTarget";
 import { palette } from "../../constants/colors";
+import { useAfterModalClose } from "../../hooks/useAfterModalClose";
 
 export default function ConfiguracionesScreen() {
   useQuestionnaireGuard();
@@ -31,6 +32,7 @@ export default function ConfiguracionesScreen() {
   const [showUnlinkConfirm, setShowUnlinkConfirm] = useState(false);
   const [isUnlinking, setIsUnlinking] = useState(false);
   const [unlinkMessage, setUnlinkMessage] = useState<string | null>(null);
+  const afterModalClose = useAfterModalClose();
 
   useEffect(() => {
     if (!user?.userId) return;
@@ -74,26 +76,13 @@ export default function ConfiguracionesScreen() {
   };
 
   // CU06 - Cerrar sesión
+  // [modales-un-clic] M-02: sin «Cerraste sesión» con temporizador; ese aviso competía con la
+  // redirección a login (al quedar sin sesión) y había que tocarlo. Ir a login ya lo dice.
   const handleLogout = async () => {
     setIsLoading(true);
     try {
-      // Usar el logout del contexto que ya limpia todo
       await logoutContext();
-      
-      setIsLoading(false);
-      
-      // Mostrar mensaje de éxito
-      setSuccessModal({ 
-        visible: true, 
-        message: "Cerraste sesión." 
-      });
-      
-      // Redirigir a la pantalla de login después de cerrar el modal
-      setTimeout(() => {
-        setSuccessModal({ visible: false, message: "" });
-        router.replace("/(auth)/login");
-      }, 1500);
-      
+      router.replace("/(auth)/login");
     } catch (error) {
       // FA01 - Error al cerrar sesión
       setIsLoading(false);
@@ -136,24 +125,13 @@ export default function ConfiguracionesScreen() {
         return;
       }
       
-      // Usar el logout del contexto para limpiar todo
-      await logoutContext();
-      
+      // [modales-un-clic] M-02: el aviso sale cuando ya se cerró el de la contraseña; la sesión se
+      // cierra al tocar «Continuar» (antes, un temporizador y la redirección competían con el botón).
       setIsLoading(false);
       setShowPasswordConfirm(false);
-      
-      // Mostrar mensaje de éxito
-      setSuccessModal({
-        visible: true,
-        message: result.data?.message || "Eliminamos tu cuenta."
-      });
-      
-      // Redirigir a login después de 2 segundos
-      setTimeout(() => {
-        setSuccessModal({ visible: false, message: "" });
-        router.replace("/(auth)/login");
-      }, 2000);
-      
+      const message = result.data?.message || "Eliminamos tu cuenta.";
+      afterModalClose(() => setSuccessModal({ visible: true, message }));
+
     } catch (error: any) {
       // FA04 - Error del sistema
       setIsLoading(false);
@@ -278,7 +256,8 @@ export default function ConfiguracionesScreen() {
         visible={showDeleteConfirm}
         onConfirm={() => {
           setShowDeleteConfirm(false);
-          setShowPasswordConfirm(true);
+          // [modales-un-clic] M-02: la contraseña se pide cuando ya se cerró «¿Eliminar cuenta?»
+          afterModalClose(() => setShowPasswordConfirm(true));
         }}
         onCancel={() => setShowDeleteConfirm(false)}
         title="¿Eliminar cuenta?"
@@ -324,7 +303,7 @@ export default function ConfiguracionesScreen() {
         visible={showLogoutConfirm}
         onConfirm={() => {
           setShowLogoutConfirm(false);
-          handleLogout();
+          afterModalClose(handleLogout);
         }}
         onCancel={() => setShowLogoutConfirm(false)}
         title="Cerrar sesión"
@@ -339,11 +318,13 @@ export default function ConfiguracionesScreen() {
         onClose={() => setErrorModal({ visible: false, message: "" })}
       />
 
+      {/* «Eliminamos tu cuenta»: al tocar Continuar se cierra la sesión y se va a login. */}
       <SuccessModal
         visible={successModal.visible}
         message={successModal.message}
-        onClose={() => {
+        onClose={async () => {
           setSuccessModal({ visible: false, message: "" });
+          await logoutContext();
           router.replace("/(auth)/login");
         }}
       />

@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { palette } from "../../constants/colors";
+import { useTapGuard } from "../../hooks/useTapGuard";
 
 interface ActionModalProps {
   visible: boolean;
@@ -23,14 +24,16 @@ interface ActionModalProps {
 }
 
 export function ActionModal({ visible, onClose, title, actions }: ActionModalProps) {
+  // [modales-un-clic] M-03: el primer toque cuenta; los que llegan mientras se cierra, no.
+  const guard = useTapGuard();
   return (
     <Modal
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={onClose}
+      onRequestClose={guard(onClose)}
     >
-      <TouchableWithoutFeedback onPress={onClose}>
+      <TouchableWithoutFeedback onPress={guard(onClose)}>
         <View style={styles.overlay}>
           <TouchableWithoutFeedback>
             <View style={styles.modalContainer}>
@@ -44,10 +47,10 @@ export function ActionModal({ visible, onClose, title, actions }: ActionModalPro
                       styles.actionButton,
                       action.destructive && styles.destructiveButton,
                     ]}
-                    onPress={() => {
+                    onPress={guard(() => {
                       action.onPress();
                       onClose();
-                    }}
+                    })}
                     activeOpacity={0.7}
                   >
                     {action.icon && (

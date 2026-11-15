@@ -40,6 +40,7 @@ import { markSeen, PlanningNotice, wasSeen } from "../../utils/planningSeen";
 import { closedNotice, remainingLabel } from "../../utils/planningFormat";
 import { NOTICES_EVENT } from "../../utils/pushRoute";
 import { bellCount } from "../../utils/noticeFormat";
+import { homeModalToShow } from "../../utils/homeModals";
 
 const OPEN_PHASES = ["INVITED", "FILTERS", "OPTIONS", "PROPOSAL"];
 
@@ -334,8 +335,20 @@ export default function HomeScreen() {
   // [primeros-pasos] T5/R13: una cosa a la vez. El festejo y los avisos de Inicio van antes que la
   // oferta del recorrido, y el recorrido espera mientras haya cualquiera de ellos abierto.
   const tour = useTour();
-  const homeModalOpen = !!firstSteps.pending || !!linked || !!questionnaire || !!planningNotice || !!inviteNotice;
-  const offerVisible = !!firstSteps.offer && isFocused && !homeModalOpen && !tour.active;
+  // [modales-un-clic] M-01: un solo aviso a la vez, en orden; al cerrar uno sale el siguiente.
+  const activeModal = homeModalToShow({
+    focused: isFocused,
+    questionnaireDone: questionnaire === 'done',
+    linked: !!linked,
+    expiredScan,
+    invite: inviteNotice && inviteNotice.kind !== 'gone' ? inviteNotice.kind : null,
+    planning: planningNotice,
+    milestone: !!firstSteps.pending,
+    offer: !!firstSteps.offer,
+    tourActive: !!tour.active,
+  });
+  const homeModalOpen = activeModal !== null && activeModal !== 'offer';
+  const offerVisible = activeModal === 'offer';
   usePauseTour("home", isFocused && (homeModalOpen || offerVisible));
   const closeLinked = (then?: () => void) => {
     navigation.setParams({ linked: undefined } as never);
@@ -562,7 +575,7 @@ export default function HomeScreen() {
       )}
 
       <ResultModal
-        visible={expiredScan}
+        visible={activeModal === 'expiredScan'}
         icon="time-outline"
         tone="warning"
         title="La invitación venció"
@@ -573,7 +586,7 @@ export default function HomeScreen() {
       />
 
       <ResultModal
-        visible={inviteNotice?.kind === 'sent'}
+        visible={activeModal === 'invite-sent'}
         icon="send-outline"
         title="Invitación enviada"
         subtitle={`Te avisaremos cuando ${partnerLabel} responda.`}
@@ -585,7 +598,7 @@ export default function HomeScreen() {
       </ResultModal>
 
       <ResultModal
-        visible={inviteNotice?.kind === 'accepted'}
+        visible={activeModal === 'invite-accepted'}
         icon="heart-outline"
         title={`¡${partnerLabel} aceptó!`}
         subtitle={invite ? `Ya tienen cita ${dayPhrase(invite.startsAt, now)}.` : undefined}
@@ -597,7 +610,7 @@ export default function HomeScreen() {
       </ResultModal>
 
       <ResultModal
-        visible={inviteNotice?.kind === 'rejected'}
+        visible={activeModal === 'invite-rejected'}
         icon="close"
         tone="danger"
         title={`${partnerLabel} rechazó la invitación`}
@@ -612,7 +625,7 @@ export default function HomeScreen() {
 
       {/* B1 (vista de la pareja): invitacion a planear juntos */}
       <ResultModal
-        visible={planningNotice === 'INVITE'}
+        visible={activeModal === 'planning-INVITE'}
         icon="people-outline"
         title={`${planning?.partner.name ?? partnerLabel} te invita a planear una cita`}
         subtitle="Elijan juntos los detalles y Nexus les sugerirá planes."
@@ -631,7 +644,7 @@ export default function HomeScreen() {
 
       {/* B5: cita confirmada, si no se vio dentro de la planeacion */}
       <ResultModal
-        visible={planningNotice === 'AGREED'}
+        visible={activeModal === 'planning-AGREED'}
         icon="heart-outline"
         title="¡Cita confirmada!"
         subtitle={planning?.agreed ? `Ya tienen cita ${dayPhrase(planning.agreed.item.startsAt, now)}.` : undefined}
@@ -652,7 +665,7 @@ export default function HomeScreen() {
 
       {/* D5: cuestionario completado */}
       <ResultModal
-        visible={questionnaire === 'done'}
+        visible={activeModal === 'questionnaire'}
         icon="checkmark-circle-outline"
         animateIcon
         title="¡Listo!"
@@ -663,7 +676,7 @@ export default function HomeScreen() {
 
       {/* [primeros-pasos] Figma N2: festejo de un hito; espera a que no haya otro modal (R4) */}
       <MilestoneCelebration
-        visible={!!firstSteps.pending && isFocused && !linked && !questionnaire}
+        visible={activeModal === 'milestone'}
         celebration={firstSteps.pending?.celebration ?? null}
         from={firstSteps.pending?.from ?? 0}
         to={firstSteps.pending?.to ?? 0}
@@ -699,7 +712,7 @@ export default function HomeScreen() {
 
       {/* H7: recien vinculados */}
       <ResultModal
-        visible={!!linked && !questionnaire && isFocused}
+        visible={activeModal === 'linked'}
         header={<LinkedAvatars me={displayName} partner={linkedName} />}
         title="¡Ya están vinculados!"
         subtitle={linkedSubtitle(displayName, linkedName, freeCount)}
@@ -713,7 +726,7 @@ export default function HomeScreen() {
 
       {/* B8a: la invitacion vencio */}
       <ResultModal
-        visible={planningNotice === 'EXPIRED'}
+        visible={activeModal === 'planning-EXPIRED'}
         icon="hourglass-outline"
         tone="warning"
         title={planning?.role === 'INVITER'
@@ -732,7 +745,7 @@ export default function HomeScreen() {
       {/* B8b: se acabaron las 12 horas. Si quedo una propuesta o una coincidencia, no se pierde:
           se puede mandar como invitacion o volver a planear. */}
       <ResultModal
-        visible={planningNotice === 'CLOSED'}
+        visible={activeModal === 'planning-CLOSED'}
         icon="hourglass-outline"
         tone="warning"
         title="Se les fue el tiempo"

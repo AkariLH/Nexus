@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { palette, gradients } from "../../constants/colors";
+import { useTapGuard } from "../../hooks/useTapGuard";
 
 interface ErrorModalProps {
   visible: boolean;
@@ -15,12 +16,14 @@ interface ErrorModalProps {
 }
 
 export function ErrorModal({ visible, onClose, title = "Algo salió mal", message, actionButton }: ErrorModalProps) {
+  // [modales-un-clic] M-03: el primer toque cuenta; los que llegan mientras se cierra, no.
+  const guard = useTapGuard();
   return (
     <Modal
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={onClose}
+      onRequestClose={guard(onClose)}
     >
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
@@ -47,7 +50,7 @@ export function ErrorModal({ visible, onClose, title = "Algo salió mal", messag
             <TouchableOpacity accessibilityRole="button"
               activeOpacity={0.9}
               style={[styles.buttonWrapper, styles.actionButtonWrapper]}
-              onPress={actionButton.onPress}
+              onPress={guard(actionButton.onPress)}
             >
               <LinearGradient
                 colors={gradients.primary}
@@ -64,7 +67,7 @@ export function ErrorModal({ visible, onClose, title = "Algo salió mal", messag
           <TouchableOpacity accessibilityRole="button"
             activeOpacity={0.9}
             style={[styles.buttonWrapper, actionButton && styles.secondaryButtonWrapper]}
-            onPress={onClose}
+            onPress={guard(onClose)}
           >
             {actionButton ? (
               <View style={styles.secondaryButton}>
