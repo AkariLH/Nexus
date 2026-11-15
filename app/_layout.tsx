@@ -13,6 +13,7 @@ import { TourProvider } from "../context/TourContext";
 import { TourOverlay } from "../components/onboarding/TourOverlay";
 import { NOTICES_EVENT } from "../utils/pushRoute";
 import { codeFromLink, savePendingLinkCode } from "../utils/pendingLinkCode";
+import { opensWithoutSession } from "../utils/publicRoutes";
 
 const CHANGE_PASSWORD_ROUTES = ["forgot-password", "reset-password"];
 
@@ -28,6 +29,8 @@ function RootNavigator() {
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === "(auth)";
+    // [terminos-en-app] Los términos se leen también sin sesión (desde Crear cuenta).
+    const isPublic = opensWithoutSession(segments as string[]);
 
     // La pantalla de inicio (y la ruta raiz que lleva a ella) se muestra siempre completa; al
     // terminar su animacion ella misma decide a donde ir. Sin esto, la redireccion de aqui le
@@ -35,7 +38,7 @@ function RootNavigator() {
     const route = segments as string[];
     if (route.length === 0 || route[1] === "splash") return;
 
-    if (!user && !inAuthGroup) {
+    if (!user && !isPublic) {
       // QR de vínculo escaneado sin sesión: se guarda el código e Inicio lo retoma al entrar.
       const scanned = route[1] === "enter-link-code" ? codeFromLink(searchParams.code) : "";
       if (scanned) savePendingLinkCode(scanned);
@@ -105,6 +108,8 @@ function RootNavigator() {
           <Stack.Screen name="(tabs)" />
           {/* Grupo de vinculación */}
           <Stack.Screen name="(link)" />
+          {/* Términos y aviso de privacidad */}
+          <Stack.Screen name="(legal)" />
         </Stack>
         <TourOverlay />
       </View>

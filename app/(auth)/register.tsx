@@ -1,6 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import {
@@ -14,7 +12,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { palette, gradients } from "../../constants/colors";
+import { palette } from "../../constants/colors";
 import { authService } from "../../services/auth.service";
 import type { RegisterRequest } from "../../types/auth.types";
 import { birthDateLabel } from "../../utils/profileFormat";
@@ -22,6 +20,7 @@ import { emailProblem, fromBackendDate, isAdult, nicknameOrName, passwordProblem
 import { WebDateInput } from "../../components/ui/WebDateInput";
 import { keepRegisterDraft, readRegisterDraft } from "../../utils/registerDraft";
 import { PasswordRules } from "../../components/ui/PasswordRules";
+import { TermsConsent } from "../../components/ui/TermsConsent";
 import { ErrorModal } from "../components/ErrorModal";
 import { Header } from "../components/layout/Header";
 import { GradientButton } from "../components/ui/GradientButton";
@@ -244,22 +243,13 @@ export default function RegisterScreen() {
               />
             )}
 
-            <TouchableOpacity
-              style={styles.terms}
-              onPress={() => setTermsAccepted(!termsAccepted)}
-              activeOpacity={0.7}
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: termsAccepted }}
-            >
-              {termsAccepted ? (
-                <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.checkbox}>
-                  <Ionicons name="checkmark" size={16} color={palette.onPrimary} />
-                </LinearGradient>
-              ) : (
-                <View style={[styles.checkbox, styles.checkboxEmpty]} />
-              )}
-              <Text style={styles.termsText}>Acepto los términos y el aviso de privacidad</Text>
-            </TouchableOpacity>
+            {/* [terminos-en-app] Figma O1: los enlaces abren el texto sin salir del registro. */}
+            <TermsConsent
+              checked={termsAccepted}
+              onToggle={() => setTermsAccepted(!termsAccepted)}
+              onOpenTerms={() => router.push("/(legal)/terms")}
+              onOpenPrivacy={() => router.push("/(legal)/privacy")}
+            />
           </>
         )}
       </ScrollView>
@@ -317,10 +307,6 @@ const styles = StyleSheet.create({
   datePlaceholder: { color: palette.textMuted },
   fieldHelp: { marginTop: 6, fontSize: 12, lineHeight: 16, color: palette.textSecondary },
   fieldError: { marginTop: 6, fontSize: 12, lineHeight: 16, color: palette.error },
-  terms: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 8 },
-  checkbox: { width: 24, height: 24, borderRadius: 6, alignItems: "center", justifyContent: "center" },
-  checkboxEmpty: { borderWidth: 2, borderColor: palette.border, backgroundColor: palette.surface },
-  termsText: { flex: 1, fontSize: 14, color: palette.text },
   footer: { paddingHorizontal: 16, paddingTop: 8, gap: 16 },
   switchRow: { flexDirection: "row", justifyContent: "center" },
   switchText: { fontSize: 14, color: palette.textSecondary },

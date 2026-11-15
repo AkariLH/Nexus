@@ -227,6 +227,23 @@ export default function ConfiguracionesScreen() {
           />
         </ListCard>
 
+        {/* [terminos-en-app] Figma O4 */}
+        <SectionLabel muted>Legal</SectionLabel>
+        <ListCard>
+          <ListRow
+            icon="document-text-outline"
+            title="Términos y condiciones"
+            onPress={() => router.push("/(legal)/terms")}
+            disabled={isLoading}
+          />
+          <ListRow
+            icon="shield-checkmark-outline"
+            title="Aviso de privacidad"
+            onPress={() => router.push("/(legal)/privacy")}
+            disabled={isLoading}
+          />
+        </ListCard>
+
         {/* [pulido-critica] D4 (Figma M4): lo que no se puede deshacer va junto y al final. */}
         <SectionLabel muted>Zona delicada</SectionLabel>
         {partnerName && (
