@@ -58,7 +58,7 @@ export const TOURS: Record<TourId, TourStep[]> = {
     TO_SETTINGS,
     {
       target: 'settings.schedule', screen: '/configuraciones', advance: 'tap',
-      title: 'Toca «Horarios permitidos»', text: 'Ahí eliges cuándo puede Nexus sugerirles planes.',
+      title: 'Toca «Horarios para citas»', text: 'Ahí eliges en qué horas quieres tener citas.',
     },
     {
       target: 'schedule.quick', screen: '/availability-schedule', advance: 'next',

@@ -39,7 +39,7 @@ const SPECS: Spec[] = [
     route: '/(tabs)/link', isDone: p => p.me.linked },
   { id: 'calendar', title: 'Conecta tu calendario', hint: 'Así Nexus sabe cuándo están libres', shared: false,
     route: '/(tabs)/link-external-calendars', phoneOnly: true, isDone: p => p.me.calendar },
-  { id: 'schedule', title: 'Ajusta tus horarios', hint: 'Elige los días y horas para sus planes', shared: false,
+  { id: 'schedule', title: 'Ajusta tus horarios para citas', hint: 'Elige los días y horas para sus citas', shared: false,
     route: '/(settings)/availability-schedule', isDone: p => p.me.schedule },
   { id: 'recommendation', title: 'Pidan su primera recomendación', hint: 'Nexus les sugiere un plan para los dos', shared: true,
     route: '/(recommend)/mode', isDone: p => p.couple.firstRecommendation },

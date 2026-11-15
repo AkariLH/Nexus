@@ -175,8 +175,8 @@ export default function ConfiguracionesScreen() {
           <TourTarget id="settings.schedule">
             <ListRow
               icon="time-outline"
-              title="Horarios permitidos"
-              subtitle="Cuándo puede Nexus sugerirles planes"
+              title="Horarios para citas"
+              subtitle="Cuándo quieres que Nexus proponga citas"
               onPress={() => router.push("/(settings)/availability-schedule")}
               disabled={isLoading}
             />

@@ -20,7 +20,7 @@ import { ScreenHeader } from "../components/layout/ScreenHeader";
 import { ResultModal } from "../components/ResultModal";
 import { GradientButton } from "../components/ui/GradientButton";
 import { OptionChip } from "../components/ui/OptionChip";
-import { Card, SectionLabel } from "../../components/ui/Surface";
+import { Card, InfoNotice, SectionLabel } from "../../components/ui/Surface";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface DaySchedule {
@@ -183,7 +183,8 @@ export default function AvailabilityScheduleScreen() {
 
   return (
     <View style={styles.container}>
-      <ScreenHeader title="Horarios permitidos" onBack={() => router.back()} />
+      {/* [horarios-citas] Figma Q1: antes «Horarios permitidos»; en la prueba se leía como «mi horario». */}
+      <ScreenHeader title="Horarios para citas" onBack={() => router.back()} />
 
       {loading ? (
         <View style={styles.loadingContainer}>
@@ -191,9 +192,9 @@ export default function AvailabilityScheduleScreen() {
         </View>
       ) : (
         <ScrollView contentContainerStyle={[styles.content, { paddingBottom: 24 + insets.bottom }]}>
-          <Text style={styles.intro}>
-            Cuándo puede Nexus sugerirles planes. Tus eventos no cambian.
-          </Text>
+          <InfoNotice>
+            No es tu horario de trabajo o escuela: lo que ya tienes ocupado, Nexus lo toma de tu calendario. Aquí eliges en qué horas quieres tener citas.
+          </InfoNotice>
 
           <TourTarget id="schedule.quick" style={styles.section}>
             <SectionLabel>Días</SectionLabel>
@@ -232,12 +233,12 @@ export default function AvailabilityScheduleScreen() {
                       </TouchableOpacity>
                     </View>
                   ) : (
-                    <Text style={styles.offLabel}>Sin planes</Text>
+                    <Text style={styles.offLabel}>Sin citas</Text>
                   )}
                   <Switch
                     value={day.enabled}
                     onValueChange={() => toggleDay(index)}
-                    accessibilityLabel={`Sugerir planes el ${day.dayName.toLowerCase()}`}
+                    accessibilityLabel={`Proponer citas el ${day.dayName.toLowerCase()}`}
                     {...switchColors}
                   />
                 </View>
@@ -291,7 +292,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: palette.background },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   content: { padding: 16, gap: 24 },
-  intro: { fontSize: 14, lineHeight: 20, color: palette.textSecondary },
   section: { gap: 12 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   card: { gap: 0 },

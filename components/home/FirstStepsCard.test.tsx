@@ -17,7 +17,8 @@ describe('FirstStepsCard ([primeros-pasos] Figma N1/N4)', () => {
   it('F-09 muestra cuántos van y el siguiente paso', () => {
     render(<FirstStepsCard progress={progress(3)} onOpen={jest.fn()} onHide={jest.fn()} />);
     expect(screen.getByText('3 de 6')).toBeTruthy();
-    expect(screen.getByText('Ajusta tus horarios')).toBeTruthy();
+    // [horarios-citas] prueba con usuarios del 5-nov: «horarios» solo se leía como «mi horario».
+    expect(screen.getByText('Ajusta tus horarios para citas')).toBeTruthy();
   });
 
   it('F-10 tocar el siguiente paso abre su pantalla', () => {

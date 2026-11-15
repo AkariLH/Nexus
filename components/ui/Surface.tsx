@@ -127,6 +127,16 @@ export function TabTitle({ children, right }: { children: string; right?: ReactN
   );
 }
 
+/** Figma «Aviso» (Tipo=Info): tarjeta morada clara con ícono y un texto corto. */
+export function InfoNotice({ children, icon = 'alert-circle-outline' }: { children: string; icon?: IconName }) {
+  return (
+    <View style={styles.notice}>
+      <Ionicons name={icon} size={20} color={palette.textAccent} />
+      <Text style={styles.noticeText}>{children}</Text>
+    </View>
+  );
+}
+
 export function SectionLabel({ children, muted }: { children: string; muted?: boolean }) {
   return <Text style={[styles.sectionLabel, muted && styles.sectionLabelMuted]}>{children}</Text>;
 }
@@ -164,6 +174,17 @@ const styles = StyleSheet.create({
   metaText: { flexShrink: 1, fontSize: 12, color: palette.textSecondary },
   tabTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   tabTitle: { fontSize: 24, fontWeight: '700', color: palette.text },
+  notice: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    padding: 12,
+    backgroundColor: palette.secondarySoft,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: palette.secondaryBorder,
+  },
+  noticeText: { flex: 1, fontSize: 13, lineHeight: 20, color: palette.text },
   sectionLabel: { fontSize: 16, fontWeight: '600', color: palette.text },
   sectionLabelMuted: { fontSize: 14, fontWeight: '500', color: palette.textSecondary },
 });
