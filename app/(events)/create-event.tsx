@@ -143,6 +143,7 @@ export default function CreateEventScreen() {
     }
 
     if (!user?.userId) {
+      setErrorTitle(errorTitleFor(null));
       setErrorMessage('Tu sesión venció. Inicia sesión otra vez.');
       setShowErrorModal(true);
       return;
@@ -763,10 +764,7 @@ export default function CreateEventScreen() {
         message={errorMessage}
         confirmText="OK"
         showCancel={false}
-        onConfirm={() => {
-          setShowErrorModal(false);
-          setErrorTitle(errorTitleFor(null));
-        }}
+        onConfirm={() => setShowErrorModal(false)}
       />
 
       {/* Modal de éxito */}

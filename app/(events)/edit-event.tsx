@@ -157,6 +157,7 @@ export default function EditEventScreen() {
 
   const loadEvent = async () => {
     if (!user?.userId || !eventId) {
+      setErrorTitle(errorTitleFor(null));
       setErrorMessage('No se pudo cargar el evento');
       setShowErrorModal(true);
       router.back();
@@ -169,6 +170,7 @@ export default function EditEventScreen() {
       const event = events.find(e => e.id === parseInt(eventId));
       
       if (!event) {
+        setErrorTitle(errorTitleFor(null));
         setErrorMessage('Evento no encontrado');
         setShowErrorModal(true);
         router.back();
@@ -231,6 +233,7 @@ export default function EditEventScreen() {
       
     } catch (error: any) {
       console.error('Error cargando evento:', error);
+      setErrorTitle(errorTitleFor(null));
       setErrorMessage('No se pudo cargar el evento');
       setShowErrorModal(true);
       router.back();
@@ -283,6 +286,7 @@ export default function EditEventScreen() {
     }
 
     if (!user?.userId || !eventId) {
+      setErrorTitle(errorTitleFor(null));
       setErrorMessage('Tu sesión venció. Inicia sesión otra vez.');
       setShowErrorModal(true);
       return;
@@ -406,6 +410,7 @@ export default function EditEventScreen() {
 
   const handleDeleteEvent = () => {
     if (!user?.userId) {
+      setErrorTitle(errorTitleFor(null));
       setErrorMessage('Tu sesión venció. Inicia sesión otra vez.');
       setShowErrorModal(true);
       return;
@@ -424,6 +429,7 @@ export default function EditEventScreen() {
       setSuccessMessage('Eliminaste el evento.');
       setShowSuccessModal(true);
     } catch (error) {
+      setErrorTitle(errorTitleFor(null));
       setErrorMessage('No se pudo eliminar el evento');
       setShowErrorModal(true);
     } finally {
@@ -890,10 +896,7 @@ export default function EditEventScreen() {
           message={errorMessage}
           confirmText="OK"
           showCancel={false}
-          onConfirm={() => {
-            setShowErrorModal(false);
-            setErrorTitle(errorTitleFor(null));
-          }}
+          onConfirm={() => setShowErrorModal(false)}
         />
 
         {/* Modal de éxito */}
