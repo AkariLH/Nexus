@@ -31,7 +31,25 @@ const emotional: PreferenceCategory = {
 };
 
 describe('questionnaireSteps', () => {
-  it('tiene las 7 dimensiones en orden, de Físico a Espiritual', () => {
+  it('[proposito] la dimensión espiritual se titula «Propósito» y sigue leyendo «Bienestar Espiritual»', () => {
+    const last = QUESTIONNAIRE_STEPS[6];
+    expect(last.title).toBe('Propósito');
+    expect(last.categoryName).toBe('Bienestar Espiritual');
+  });
+
+  it('[ver-deportes] «Ver deportes» cae en «Pasatiempos» de Intelectual', () => {
+    const intellectual: PreferenceCategory = {
+      id: 4,
+      name: 'Bienestar Intelectual',
+      description: '',
+      preferences: [pref(37, 'Tecnología', 'Bienestar Intelectual'), pref(86, 'Ver Deportes', 'Bienestar Intelectual')],
+    };
+    const step = buildStep(QUESTIONNAIRE_STEPS[3], intellectual);
+    expect(step.groups.map((g) => g.label)).toEqual(['Temas que te interesan', 'Pasatiempos']);
+    expect(step.groups[1].options).toEqual([{ id: 86, label: 'Ver deportes' }]);
+  });
+
+  it('tiene las 7 dimensiones en orden, de Físico a Propósito', () => {
     expect(QUESTIONNAIRE_STEPS.map((s) => s.title)).toEqual([
       'Físico',
       'Emocional',
@@ -39,7 +57,7 @@ describe('questionnaireSteps', () => {
       'Intelectual',
       'Profesional',
       'Ambiental',
-      'Espiritual',
+      'Propósito',
     ]);
   });
 

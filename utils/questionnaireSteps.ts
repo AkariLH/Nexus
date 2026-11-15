@@ -107,7 +107,8 @@ export const QUESTIONNAIRE_STEPS: StepDefinition[] = [
   },
   {
     categoryName: 'Bienestar Espiritual',
-    title: 'Espiritual',
+    // [proposito] En la prueba del 5-nov pidieron un nombre más específico que «Espiritual».
+    title: 'Propósito',
     question: '¿Qué le da sentido a tu tiempo?',
     icon: 'sparkles-outline',
     groups: [],
