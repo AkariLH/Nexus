@@ -28,6 +28,7 @@ import appNotificationService, { AppNotification } from "../../services/appNotif
 import planningService from "../../services/planning.service";
 import { noticeTime } from "../../utils/eventFormat";
 import { routeForNotice } from "../../utils/pushRoute";
+import { inviteHeadline } from "../../utils/pendingInvite";
 
 /** A8 / A9 (vista de la pareja): resultado de aceptar o rechazar una invitacion. */
 interface Outcome {
@@ -57,7 +58,8 @@ export default function NotificationsScreen() {
   const now = new Date();
   const { open, past } = splitInvites(pendingEvents, now);
   const openInvites = open.length;
-  const inviterName = outcome?.event?.creatorName || outcome?.event?.creatorNickname || "tu pareja";
+  // [reaprobar-edicion] «Le avisamos a …»: a quien mandó el plan o el cambio, no a mí.
+  const inviterName = outcome?.event ? inviteHeadline(outcome.event, user?.userId).name : "tu pareja";
 
   useFocusEffect(
     useCallback(() => {
@@ -206,7 +208,7 @@ export default function NotificationsScreen() {
 
   // [pulido-critica] D2: la misma tarjeta para las abiertas y para las que ya pasaron ("Anteriores").
   const renderInvite = (event: EventResponse, past: boolean) => {
-    const inviter = event.creatorName || event.creatorNickname || "Tu pareja";
+    const { name: inviter, text: headline } = inviteHeadline(event, user?.userId);
     const busy = processingEventId === event.id;
     return (
       <View key={event.id} style={styles.notificationCard}>
@@ -215,7 +217,7 @@ export default function NotificationsScreen() {
             <Text style={styles.avatarText}>{inviter.charAt(0).toUpperCase()}</Text>
           </LinearGradient>
           <View style={styles.notificationInfo}>
-            <Text style={styles.notificationName}>{inviter} te invita a una cita</Text>
+            <Text style={styles.notificationName}>{headline}</Text>
             <Text style={styles.notificationTime}>{getTimeAgo(event.createdAt)}</Text>
           </View>
           {past && <Pill label="Ya pasó" />}
