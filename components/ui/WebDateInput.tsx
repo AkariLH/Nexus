@@ -2,7 +2,9 @@ import { createElement } from "react";
 import { palette } from "../../constants/colors";
 
 type Props = {
-  /** "2001-03-14" o "" si no hay fecha. */
+  /** [fecha-web] "date" (por omisión) o "time" para la hora de los eventos. */
+  type?: "date" | "time";
+  /** "2001-03-14" (o "18:30" si es hora), o "" si no hay valor. */
   value: string;
   onChange: (iso: string) => void;
   min?: string;
@@ -10,15 +12,17 @@ type Props = {
   invalid?: boolean;
   disabled?: boolean;
   accessibilityLabel: string;
+  /** [fecha-web] Ajustes de estilo para igualar el campo de la pantalla (p. ej. Crear evento). */
+  inputStyle?: Record<string, string | number>;
 };
 
 /**
  * Solo web: el selector de @react-native-community/datetimepicker no existe en el navegador, así
  * que se usa el campo de fecha del propio navegador con el mismo aspecto que el campo de la app.
  */
-export function WebDateInput({ value, onChange, min, max, invalid, disabled, accessibilityLabel }: Props) {
+export function WebDateInput({ type = "date", value, onChange, min, max, invalid, disabled, accessibilityLabel, inputStyle }: Props) {
   return createElement("input", {
-    type: "date",
+    type,
     value,
     min,
     max,
@@ -38,6 +42,7 @@ export function WebDateInput({ value, onChange, min, max, invalid, disabled, acc
       fontSize: 16,
       fontFamily: "inherit",
       accentColor: palette.secondary,
+      ...inputStyle,
     },
   });
 }

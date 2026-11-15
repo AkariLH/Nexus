@@ -22,7 +22,8 @@ import { RemindersModal, Reminder } from "../components/RemindersModal";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { palette, gradients, eventColors } from "../../constants/colors";
 import { ScreenHeader } from "../components/layout/ScreenHeader";
-import { EVENT_CATEGORIES, errorTitleFor } from "../../utils/eventForm";
+import { EVENT_CATEGORIES, errorTitleFor, toDateInput } from "../../utils/eventForm";
+import { EventDateField } from "../../components/ui/EventDateField";
 
 export default function EditEventScreen() {
   const router = useRouter();
@@ -559,27 +560,35 @@ export default function EditEventScreen() {
               <Text style={styles.label}>Inicio</Text>
             </View>
             <View style={styles.dateTimeRow}>
-              <TouchableOpacity accessibilityRole="button"
-                style={[styles.dateInput, styles.inputWrapper]}
-                onPress={() => setShowStartDatePicker(true)}
-                activeOpacity={0.7}
+              {/* [fecha-web] En la web, el campo del navegador (el selector nativo no existe ahí). */}
+              <EventDateField
+                kind="date"
+                value={startDate}
+                selected
+                label={formatDate(startDate)}
+                onOpen={() => setShowStartDatePicker(true)}
+                onPick={(d) => onStartDateChange(null, d)}
+                min={toDateInput(new Date())}
                 disabled={saving}
-              >
-                <Text style={[styles.input, styles.dateText]}>
-                  {formatDate(startDate)}
-                </Text>
-              </TouchableOpacity>
+                accessibilityLabel="Fecha de inicio"
+                layoutStyle={styles.dateInput}
+                boxStyle={styles.inputWrapper}
+                textStyle={[styles.input, styles.dateText]}
+              />
               {!isAllDay && (
-                <TouchableOpacity accessibilityRole="button"
-                  style={[styles.timeInput, styles.inputWrapper]}
-                  onPress={() => setShowStartTimePicker(true)}
-                  activeOpacity={0.7}
+                <EventDateField
+                  kind="time"
+                  value={startTime}
+                  selected
+                  label={formatTime(startTime)}
+                  onOpen={() => setShowStartTimePicker(true)}
+                  onPick={(t) => onStartTimeChange(null, t)}
                   disabled={saving}
-                >
-                  <Text style={[styles.input, styles.dateText]}>
-                    {formatTime(startTime)}
-                  </Text>
-                </TouchableOpacity>
+                  accessibilityLabel="Hora de inicio"
+                  layoutStyle={styles.timeInput}
+                  boxStyle={styles.inputWrapper}
+                  textStyle={[styles.input, styles.dateText]}
+                />
               )}
             </View>
           </View>
@@ -590,27 +599,34 @@ export default function EditEventScreen() {
               <Text style={styles.label}>Fin</Text>
             </View>
             <View style={styles.dateTimeRow}>
-              <TouchableOpacity accessibilityRole="button"
-                style={[styles.dateInput, styles.inputWrapper]}
-                onPress={() => setShowEndDatePicker(true)}
-                activeOpacity={0.7}
+              <EventDateField
+                kind="date"
+                value={endDate}
+                selected
+                label={formatDate(endDate)}
+                onOpen={() => setShowEndDatePicker(true)}
+                onPick={(d) => onEndDateChange(null, d)}
+                min={toDateInput(startDate)}
                 disabled={saving}
-              >
-                <Text style={[styles.input, styles.dateText]}>
-                  {formatDate(endDate)}
-                </Text>
-              </TouchableOpacity>
+                accessibilityLabel="Fecha de fin"
+                layoutStyle={styles.dateInput}
+                boxStyle={styles.inputWrapper}
+                textStyle={[styles.input, styles.dateText]}
+              />
               {!isAllDay && (
-                <TouchableOpacity accessibilityRole="button"
-                  style={[styles.timeInput, styles.inputWrapper]}
-                  onPress={() => setShowEndTimePicker(true)}
-                  activeOpacity={0.7}
+                <EventDateField
+                  kind="time"
+                  value={endTime}
+                  selected
+                  label={formatTime(endTime)}
+                  onOpen={() => setShowEndTimePicker(true)}
+                  onPick={(t) => onEndTimeChange(null, t)}
                   disabled={saving}
-                >
-                  <Text style={[styles.input, styles.dateText]}>
-                    {formatTime(endTime)}
-                  </Text>
-                </TouchableOpacity>
+                  accessibilityLabel="Hora de fin"
+                  layoutStyle={styles.timeInput}
+                  boxStyle={styles.inputWrapper}
+                  textStyle={[styles.input, styles.dateText]}
+                />
               )}
             </View>
           </View>

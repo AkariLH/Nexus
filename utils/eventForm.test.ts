@@ -1,4 +1,29 @@
-import { EVENT_CATEGORIES, errorTitleFor, missingForEvent } from './eventForm';
+import { EVENT_CATEGORIES, errorTitleFor, missingForEvent, withDateInput, withTimeInput, toDateInput, toTimeInput } from './eventForm';
+
+describe('[fecha-web] campos de fecha y hora del navegador', () => {
+  const base = new Date(2026, 10, 20, 18, 30); // 20 nov 2026, 18:30 hora local
+
+  it('pasa una fecha y una hora al formato de los campos del navegador', () => {
+    expect(toDateInput(base)).toBe('2026-11-20');
+    expect(toTimeInput(base)).toBe('18:30');
+    expect(toTimeInput(new Date(2026, 0, 5, 7, 5))).toBe('07:05');
+  });
+
+  it('cambiar la fecha conserva la hora', () => {
+    const next = withDateInput(base, '2026-12-01')!;
+    expect([next.getFullYear(), next.getMonth(), next.getDate(), next.getHours(), next.getMinutes()]).toEqual([2026, 11, 1, 18, 30]);
+  });
+
+  it('cambiar la hora conserva la fecha', () => {
+    const next = withTimeInput(base, '09:15')!;
+    expect([next.getFullYear(), next.getMonth(), next.getDate(), next.getHours(), next.getMinutes()]).toEqual([2026, 10, 20, 9, 15]);
+  });
+
+  it('un campo vacío o mal escrito no cambia nada', () => {
+    expect(withDateInput(base, '')).toBeNull();
+    expect(withTimeInput(base, '25:99')).toBeNull();
+  });
+});
 
 describe('[eventos-sin-choques] errorTitleFor', () => {
   it('un choque de horario (409) tiene título propio', () => {

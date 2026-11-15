@@ -22,7 +22,8 @@ import { RecurrenceModal } from "../components/RecurrenceModal";
 import { RemindersModal, Reminder } from "../components/RemindersModal";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { endFromDuration } from "../../utils/ideaFormat";
-import { EVENT_CATEGORIES, errorTitleFor, missingForEvent } from "../../utils/eventForm";
+import { EVENT_CATEGORIES, errorTitleFor, missingForEvent, toDateInput } from "../../utils/eventForm";
+import { EventDateField } from "../../components/ui/EventDateField";
 import { palette, gradients, eventColors } from "../../constants/colors";
 import { ScreenHeader } from "../components/layout/ScreenHeader";
 
@@ -403,25 +404,35 @@ export default function CreateEventScreen() {
             <Text style={styles.label}>Inicio</Text>
           </View>
           <View style={styles.dateTimeRow}>
-            <TouchableOpacity accessibilityRole="button"
-              style={[styles.dateInput, styles.inputWrapper, errors.startDate && styles.inputError]}
-              onPress={() => setShowStartDatePicker(true)}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.input, styles.dateText, !startDateSelected && styles.placeholder]}>
-                {formatDate(startDate, startDateSelected)}
-              </Text>
-            </TouchableOpacity>
+            {/* [fecha-web] En la web, el campo del navegador (el selector nativo no existe ahí). */}
+            <EventDateField
+              kind="date"
+              value={startDate}
+              selected={startDateSelected}
+              label={formatDate(startDate, startDateSelected)}
+              onOpen={() => setShowStartDatePicker(true)}
+              onPick={(d) => onStartDateChange(null, d)}
+              min={toDateInput(new Date())}
+              invalid={!!errors.startDate}
+              accessibilityLabel="Fecha de inicio"
+              layoutStyle={styles.dateInput}
+              boxStyle={[styles.inputWrapper, errors.startDate && styles.inputError]}
+              textStyle={[styles.input, styles.dateText, !startDateSelected && styles.placeholder]}
+            />
             {!isAllDay && (
-              <TouchableOpacity accessibilityRole="button"
-                style={[styles.timeInput, styles.inputWrapper, errors.startTime && styles.inputError]}
-                onPress={() => setShowStartTimePicker(true)}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.input, styles.dateText, !startTimeSelected && styles.placeholder]}>
-                  {formatTime(startTime, startTimeSelected)}
-                </Text>
-              </TouchableOpacity>
+              <EventDateField
+                kind="time"
+                value={startTime}
+                selected={startTimeSelected}
+                label={formatTime(startTime, startTimeSelected)}
+                onOpen={() => setShowStartTimePicker(true)}
+                onPick={(t) => onStartTimeChange(null, t)}
+                invalid={!!errors.startTime}
+                accessibilityLabel="Hora de inicio"
+                layoutStyle={styles.timeInput}
+                boxStyle={[styles.inputWrapper, errors.startTime && styles.inputError]}
+                textStyle={[styles.input, styles.dateText, !startTimeSelected && styles.placeholder]}
+              />
             )}
           </View>
           {(errors.startDate || errors.startTime) && (
@@ -435,25 +446,34 @@ export default function CreateEventScreen() {
             <Text style={styles.label}>Fin</Text>
           </View>
           <View style={styles.dateTimeRow}>
-            <TouchableOpacity accessibilityRole="button"
-              style={[styles.dateInput, styles.inputWrapper, errors.endDate && styles.inputError]}
-              onPress={() => setShowEndDatePicker(true)}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.input, styles.dateText, !endDateSelected && styles.placeholder]}>
-                {formatDate(endDate, endDateSelected)}
-              </Text>
-            </TouchableOpacity>
+            <EventDateField
+              kind="date"
+              value={endDate}
+              selected={endDateSelected}
+              label={formatDate(endDate, endDateSelected)}
+              onOpen={() => setShowEndDatePicker(true)}
+              onPick={(d) => onEndDateChange(null, d)}
+              min={toDateInput(startDateSelected ? startDate : new Date())}
+              invalid={!!errors.endDate}
+              accessibilityLabel="Fecha de fin"
+              layoutStyle={styles.dateInput}
+              boxStyle={[styles.inputWrapper, errors.endDate && styles.inputError]}
+              textStyle={[styles.input, styles.dateText, !endDateSelected && styles.placeholder]}
+            />
             {!isAllDay && (
-              <TouchableOpacity accessibilityRole="button"
-                style={[styles.timeInput, styles.inputWrapper, errors.endTime && styles.inputError]}
-                onPress={() => setShowEndTimePicker(true)}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.input, styles.dateText, !endTimeSelected && styles.placeholder]}>
-                  {formatTime(endTime, endTimeSelected)}
-                </Text>
-              </TouchableOpacity>
+              <EventDateField
+                kind="time"
+                value={endTime}
+                selected={endTimeSelected}
+                label={formatTime(endTime, endTimeSelected)}
+                onOpen={() => setShowEndTimePicker(true)}
+                onPick={(t) => onEndTimeChange(null, t)}
+                invalid={!!errors.endTime}
+                accessibilityLabel="Hora de fin"
+                layoutStyle={styles.timeInput}
+                boxStyle={[styles.inputWrapper, errors.endTime && styles.inputError]}
+                textStyle={[styles.input, styles.dateText, !endTimeSelected && styles.placeholder]}
+              />
             )}
           </View>
           {(errors.endDate || errors.endTime) && (
