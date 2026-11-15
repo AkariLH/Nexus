@@ -59,6 +59,31 @@ describe('questionnaireSteps', () => {
     expect(step.noneId).toBe(29);
   });
 
+  it('[juegos-especificos] los tres tipos de juego van en «Planes para salir», no en «Lugares favoritos»', () => {
+    const social: PreferenceCategory = {
+      id: 3,
+      name: 'Bienestar Social',
+      description: '',
+      preferences: [
+        pref(28, 'Paseos en Parques', 'Bienestar Social'),
+        pref(31, 'Juegos de mesa', 'Bienestar Social'),
+        pref(32, 'Restaurantes', 'Bienestar Social'),
+        pref(84, 'Videojuegos', 'Bienestar Social'),
+        pref(85, 'Boliche y arcade', 'Bienestar Social'),
+      ],
+    };
+    const step = buildStep(QUESTIONNAIRE_STEPS[2], social);
+
+    expect(step.groups[0].label).toBe('Planes para salir');
+    expect(step.groups[0].options.map((o) => o.label)).toEqual([
+      'Paseos en parques',
+      'Juegos de mesa',
+      'Videojuegos',
+      'Boliche y arcade',
+    ]);
+    expect(step.groups[1].options.map((o) => o.label)).toEqual(['Restaurantes']);
+  });
+
   it('usa un solo grupo "Elige las que te gusten" cuando la dimensión no tiene grupos', () => {
     const physical: PreferenceCategory = {
       id: 1,

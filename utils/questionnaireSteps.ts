@@ -60,7 +60,10 @@ export const QUESTIONNAIRE_STEPS: StepDefinition[] = [
           'Paseos en Parques',
           'Quedarse en Casa',
           'Parques de Diversiones',
-          'Juegos',
+          // [juegos-especificos] antes un solo «Juegos»; en la prueba del 5-nov pidieron más detalle.
+          'Juegos de mesa',
+          'Videojuegos',
+          'Boliche y arcade',
         ],
       },
       { label: 'Lugares favoritos', names: [] },
