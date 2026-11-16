@@ -33,6 +33,7 @@ import {
   SlotOption,
   slotForWindow,
   visibleSlots,
+  toggleCategory,
 } from "../../utils/recommendationParams";
 import { formatMxn, slotOptionLabel } from "../../utils/recommendationFormat";
 import { ScreenHeader } from "../components/layout/ScreenHeader";
@@ -284,11 +285,21 @@ export default function RecommendationRequestScreen() {
           </View>
         </View>
 
-        <Section title="Tipo de plan" hint="Opcional.">
+        {/* [tipo-plan-varios] Figma R2: varios a la vez, como en la planeación en pareja */}
+        <Section title="Tipo de plan" hint="Opcional. Puedes elegir varios.">
           <View style={styles.chips}>
-            <OptionChip label="Cualquiera" selected={!form.category} onPress={() => update({ category: undefined })} />
+            <OptionChip
+              label="Cualquiera"
+              selected={!form.categories?.length}
+              onPress={() => update({ categories: [] })}
+            />
             {categories.map((c) => (
-              <OptionChip key={c.code} label={c.label} selected={form.category === c.code} onPress={() => update({ category: c.code })} />
+              <OptionChip
+                key={c.code}
+                label={c.label}
+                selected={!!form.categories?.includes(c.code)}
+                onPress={() => setForm((current) => toggleCategory(current, c.code))}
+              />
             ))}
           </View>
         </Section>

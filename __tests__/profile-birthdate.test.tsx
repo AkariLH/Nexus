@@ -31,6 +31,9 @@ jest.mock('../services/profile.service', () => ({
 import { profileService } from '../services/profile.service';
 import PerfilScreen from '../app/(tabs)/perfil';
 
+// Perfil carga muchas piezas; con toda la suite corriendo a veces pasaba de los 5 s por omisión.
+jest.setTimeout(20_000);
+
 const service = profileService as jest.Mocked<typeof profileService>;
 
 it('muestra la fecha guardada y la conserva al guardar otros cambios', async () => {

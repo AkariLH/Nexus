@@ -14,6 +14,8 @@ export interface RecommendationParams {
   scope: Scope;
   maxCostMxn: number;
   category?: string;
+  /** [tipo-plan-varios] Varias dimensiones; el backend las suma a `category`. */
+  categories?: string[];
   slotStart: string;
   slotEnd: string;
   /** [rango-distancia] 1, 3, 5, 10 o 15 km; sin zona no se manda. */

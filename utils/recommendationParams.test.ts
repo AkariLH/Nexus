@@ -116,7 +116,7 @@ describe('toParams', () => {
       zoneType: 'BOROUGH',
       boroughCode: 'COY',
       coords: { lat: 19.3, lon: -99.1 },
-      category: 'SOCIAL',
+      categories: ['SOCIAL', 'FISICO'],
     });
 
     expect(params).toEqual({
@@ -124,7 +124,7 @@ describe('toParams', () => {
       boroughCode: 'COY',
       scope: 'ANY',
       maxCostMxn: 1500,
-      category: 'SOCIAL',
+      categories: ['SOCIAL', 'FISICO'],
       slotStart: '2026-10-18T00:00:00.000Z',
       slotEnd: '2026-10-18T03:00:00.000Z',
       radiusKm: 15,
@@ -303,5 +303,23 @@ describe('[horario-elegido] visibleSlots', () => {
   it('sin horario elegido desde Libres juntos, salen todos como antes', () => {
     expect(visibleSlots([a, b], a, { fromProposal: false, showAll: false })).toEqual([a, b]);
     expect(visibleSlots([a, b], undefined, { fromProposal: true, showAll: false })).toEqual([a, b]);
+  });
+});
+
+describe('[tipo-plan-varios] toggleCategory', () => {
+  const { toggleCategory } = require('./recommendationParams');
+
+  it('se pueden elegir varios tipos y quitar uno tocándolo otra vez', () => {
+    let form = toggleCategory({}, 'SOCIAL');
+    form = toggleCategory(form, 'FISICO');
+    expect(form.categories).toEqual(['SOCIAL', 'FISICO']);
+    expect(toggleCategory(form, 'SOCIAL').categories).toEqual(['FISICO']);
+  });
+
+  it('sin ninguno elegido no se manda tipo (= cualquiera)', () => {
+    const { toParams: build } = require('./recommendationParams');
+    const form = toggleCategory(toggleCategory({}, 'SOCIAL'), 'SOCIAL');
+    expect(form.categories).toEqual([]);
+    expect(build({ ...base, ...form }).categories).toBeUndefined();
   });
 });

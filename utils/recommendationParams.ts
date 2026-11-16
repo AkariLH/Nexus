@@ -39,7 +39,8 @@ export interface RequestForm {
   radiusKm?: number;
   scope: Scope;
   maxCostMxn: number;
-  category?: string;
+  /** [tipo-plan-varios] Varias dimensiones (como en pareja); sin ninguno = cualquiera. */
+  categories?: string[];
 }
 
 const toInstant = (date: string, time: string): Date => new Date(`${date}T${time}:00${CDMX_OFFSET}`);
@@ -147,6 +148,13 @@ export function visibleSlots(
   return slots.filter((s) => s.key === chosen.key);
 }
 
+/** [tipo-plan-varios] Marca o quita un tipo de plan (se pueden elegir varios, como en pareja). */
+export function toggleCategory<T extends RequestForm>(form: T, code: string): T {
+  const current = form.categories ?? [];
+  const categories = current.includes(code) ? current.filter((c) => c !== code) : [...current, code];
+  return { ...form, categories };
+}
+
 /** [rango-distancia] Elegir otro hueco: el rango vuelve a ser el hueco completo. */
 export function chooseSlot<T extends RequestForm>(form: T, slot: SlotOption): T {
   return { ...form, slot, rangeFrom: undefined, rangeTo: undefined };
@@ -186,7 +194,7 @@ export function toParams(form: RequestForm): RecommendationParams {
     params.lat = form.coords.lat;
     params.lon = form.coords.lon;
   }
-  if (form.category) params.category = form.category;
+  if (form.categories?.length) params.categories = [...form.categories];
   return params;
 }
 
