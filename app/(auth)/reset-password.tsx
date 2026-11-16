@@ -20,6 +20,7 @@ import { SuccessModal } from "../components/SuccessModal";
 import { authService } from "../../services/auth.service";
 import { passwordProblem } from "../../utils/registerForm";
 import { Input } from "../components/ui/Input";
+import { CodeDigits } from "../components/ui/CodeDigits";
 import { PasswordRules } from "../../components/ui/PasswordRules";
 import { palette } from "../../constants/colors";
 
@@ -255,27 +256,10 @@ export default function ResetPasswordScreen() {
               </Text>
 
               {/* Inputs del código */}
+              {/* [codigo-pegar] Las mismas casillas que «Verifica tu correo»: pegar el código llena las seis
+                  (antes cada casilla tenía maxLength=1 y solo entraba el primer dígito). */}
               <View style={styles.codeContainer}>
-                {code.map((digit, index) => (
-                  <TextInput
-                    key={index}
-                    ref={(ref) => {
-                      if (ref) {
-                        inputs.current[index] = ref;
-                      }
-                    }}
-                    value={digit}
-                    onChangeText={(value) => handleCodeChange(index, value)}
-                    onKeyPress={({ nativeEvent }) => handleKeyPress(index, nativeEvent.key)}
-                    keyboardType="numeric"
-                    maxLength={1}
-                    style={[
-                      styles.codeInput,
-                      digit && styles.codeInputFilled,
-                    ]}
-                    editable={!isLoading}
-                  />
-                ))}
+                <CodeDigits value={code} onChange={setCode} editable={!isLoading} />
               </View>
 
               {/* Botón verificar código */}
