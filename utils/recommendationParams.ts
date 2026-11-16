@@ -134,6 +134,19 @@ export function slotForWindow(
   return slot ? { slot, from: w.start, to: w.end } : null;
 }
 
+/**
+ * [horario-elegido] Figma R2: llegando con un horario elegido en Libres juntos solo sale ese; con
+ * «Elegir otro horario» (`showAll`) salen todos. Sin horario elegido, todos como antes.
+ */
+export function visibleSlots(
+  slots: SlotOption[],
+  chosen: SlotOption | undefined,
+  opts: { fromProposal: boolean; showAll: boolean },
+): SlotOption[] {
+  if (!opts.fromProposal || opts.showAll || !chosen) return slots;
+  return slots.filter((s) => s.key === chosen.key);
+}
+
 /** [rango-distancia] Elegir otro hueco: el rango vuelve a ser el hueco completo. */
 export function chooseSlot<T extends RequestForm>(form: T, slot: SlotOption): T {
   return { ...form, slot, rangeFrom: undefined, rangeTo: undefined };

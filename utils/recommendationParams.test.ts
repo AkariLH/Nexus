@@ -286,3 +286,22 @@ describe('distancia y en casa ([rango-distancia])', () => {
     expect(chooseScope(near, 'CITY')).toMatchObject({ scope: 'CITY', zoneType: 'NEAR_US' });
   });
 });
+
+describe('[horario-elegido] visibleSlots', () => {
+  const { visibleSlots } = require('./recommendationParams');
+  const a = { key: 'a', date: '2026-11-21', start: '10:00', end: '20:00' };
+  const b = { key: 'b', date: '2026-11-22', start: '09:00', end: '13:00' };
+
+  it('llegando con un horario elegido, solo sale ese', () => {
+    expect(visibleSlots([a, b], a, { fromProposal: true, showAll: false })).toEqual([a]);
+  });
+
+  it('con «Elegir otro horario» salen todos', () => {
+    expect(visibleSlots([a, b], a, { fromProposal: true, showAll: true })).toEqual([a, b]);
+  });
+
+  it('sin horario elegido desde Libres juntos, salen todos como antes', () => {
+    expect(visibleSlots([a, b], a, { fromProposal: false, showAll: false })).toEqual([a, b]);
+    expect(visibleSlots([a, b], undefined, { fromProposal: true, showAll: false })).toEqual([a, b]);
+  });
+});

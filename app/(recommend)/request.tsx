@@ -32,6 +32,7 @@ import {
   RequestForm,
   SlotOption,
   slotForWindow,
+  visibleSlots,
 } from "../../utils/recommendationParams";
 import { formatMxn, slotOptionLabel } from "../../utils/recommendationFormat";
 import { ScreenHeader } from "../components/layout/ScreenHeader";
@@ -73,7 +74,11 @@ export default function RecommendationRequestScreen() {
   // [libres-juntos] Si llega desde una propuesta de «Libres juntos».
   const { slotDate, slotStart, slotEnd } = useLocalSearchParams<{ slotDate?: string; slotStart?: string; slotEnd?: string }>();
   const [slotGone, setSlotGone] = useState(false);
+  // [horario-elegido] Figma R2: con horario de Libres juntos solo sale ese, salvo «Elegir otro horario».
+  const fromProposal = Boolean(slotDate && slotStart && slotEnd);
+  const [showAllSlots, setShowAllSlots] = useState(false);
   const [form, setForm] = useState<RequestForm>({ scope: "ANY", maxCostMxn: DEFAULT_BUDGET });
+  const lockedSlot = fromProposal && !showAllSlots && !slotGone && !!form.slot;
   const [slots, setSlots] = useState<SlotOption[]>([]);
   const [slotsState, setSlotsState] = useState<SlotsState>("loading");
   const [categories, setCategories] = useState<IdeaCategory[]>([]);
@@ -168,7 +173,10 @@ export default function RecommendationRequestScreen() {
       <ScreenHeader title="Detalles de la cita" onBack={() => router.back()} />
 
       <ScrollView contentContainerStyle={styles.content}>
-        <Section title="¿Cuándo?" hint="Espacios libres de los dos.">
+        <Section
+          title="¿Cuándo?"
+          hint={lockedSlot ? "El horario que eligieron en Libres juntos." : "Espacios libres de los dos."}
+        >
           {slotsState === "loading" && <ActivityIndicator color={palette.primary} style={styles.slotsLoading} />}
           {slotsState === "no-link" && <Text style={styles.emptyText}>Necesitas estar vinculado con tu pareja.</Text>}
           {slotsState === "error" && (
@@ -186,7 +194,7 @@ export default function RecommendationRequestScreen() {
           )}
           {slotsState === "ready" && slots.length > 0 && (
             <View style={styles.chips}>
-              {slots.map((slot) => (
+              {visibleSlots(slots, slotGone ? undefined : form.slot, { fromProposal, showAll: showAllSlots }).map((slot) => (
                 <OptionChip
                   key={slot.key}
                   label={slotOptionLabel(slot, now)}
@@ -198,6 +206,11 @@ export default function RecommendationRequestScreen() {
                 />
               ))}
             </View>
+          )}
+          {slotsState === "ready" && lockedSlot && (
+            <TouchableOpacity onPress={() => setShowAllSlots(true)} accessibilityRole="button" hitSlop={8}>
+              <Text style={styles.link}>Elegir otro horario</Text>
+            </TouchableOpacity>
           )}
           {form.slot && (
             <HoursCard

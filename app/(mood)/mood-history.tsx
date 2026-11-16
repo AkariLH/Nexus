@@ -15,9 +15,9 @@ import { useAuth } from '../../context/AuthContext';
 import { emotionService, EmotionLogResponse } from '../../services/emotion.service';
 import { MoodFace } from '../../components/MoodFace';
 import { Card } from '../../components/ui/Surface';
-import { groupByDay, lastSevenDays } from '../../utils/moodHistory';
+import { groupByDay, lastSevenDays, todayEntry } from '../../utils/moodHistory';
 import { palette } from '../../constants/colors';
-import { GradientButton } from '../components/ui/GradientButton';
+import { TodayMoodCard } from '../../components/mood/TodayMoodCard';
 import { ScreenHeader } from '../components/layout/ScreenHeader';
 
 /** RF-32 - Historial emocional. Privado (RN-28): solo lo ve el propio usuario. */
@@ -63,13 +63,12 @@ export default function MoodHistoryScreen() {
     loadHistory();
   };
 
-  const goToLog = () => {
-    if (router.canGoBack()) router.back();
-    else router.replace('/(mood)/mood-log');
-  };
-
   const sections = useMemo(() => groupByDay(entries), [entries]);
   const week = useMemo(() => lastSevenDays(entries), [entries]);
+  // [animo-historial] Figma R1/R1b: el ánimo de hoy se registra aquí mismo (antes «Registrar mi
+  // día» hacía router.back() y desde Perfil solo regresaba a Perfil).
+  const today = useMemo(() => todayEntry(entries) ?? null, [entries]);
+  const todayCard = user ? <TodayMoodCard userId={user.userId} today={today} onSaved={loadHistory} /> : null;
 
   const header = (
     <ScreenHeader title="Mi historial" onBack={() => router.back()} />
@@ -111,7 +110,9 @@ export default function MoodHistoryScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={palette.primary} />
         }
         ListHeaderComponent={
-          entries.length > 0 ? (
+          <>
+          {todayCard}
+          {entries.length > 0 ? (
             <View style={styles.weekCard}>
               <Text style={styles.weekTitle}>Últimos 7 días</Text>
               <View style={styles.weekRow}>
@@ -132,7 +133,8 @@ export default function MoodHistoryScreen() {
                 ))}
               </View>
             </View>
-          ) : null
+          ) : null}
+          </>
         }
         renderSectionHeader={({ section }) => (
           <Text style={styles.sectionTitle}>{section.title}</Text>
@@ -157,7 +159,6 @@ export default function MoodHistoryScreen() {
             <Text style={styles.stateSubtitle}>
               Cuéntanos cómo estuvo tu día y aquí verás cómo te has sentido.
             </Text>
-            <GradientButton title="Registrar mi día" onPress={goToLog} style={styles.emptyButton} />
           </View>
         }
       />
@@ -287,9 +288,6 @@ const styles = StyleSheet.create({
   },
   emptyFace: {
     marginBottom: 16,
-  },
-  emptyButton: {
-    alignSelf: 'stretch',
   },
   emptyState: {
     flex: 1,

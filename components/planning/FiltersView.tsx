@@ -16,6 +16,7 @@ import { formatMxn, slotOptionLabel } from '../../utils/recommendationFormat';
 import {
   DEFAULT_RADIUS_KM,
   eligibleSlots,
+  visibleSlots,
   MAX_COST_MXN,
   SlotOption,
   slotToInstants,
@@ -101,6 +102,10 @@ export function FiltersView({ view, now, busy, onChange, onReady, onUnready, onO
     fullSlot && chosenRange && (chosenRange.start !== fullSlot.start || chosenRange.end !== fullSlot.end)
       ? { from: chosenRange.start, to: chosenRange.end }
       : null;
+  // [horario-elegido] Figma R2: si la planeación empezó con un horario (Libres juntos), solo sale ese
+  // hasta tocar «Elegir otro horario».
+  const [showAllSlots, setShowAllSlots] = useState(!view.filters?.slotStart);
+  const lockedSlot = !showAllSlots && !!fullSlot && (slots?.length ?? 0) > 1;
   const scope = filters.scope ?? 'ANY';
   const chooseScope = (value: Scope) =>
     value === 'HOME' ? send({ scope: value, zoneType: 'NONE', boroughCode: null }) : send({ scope: value });
@@ -151,12 +156,15 @@ export function FiltersView({ view, now, busy, onChange, onReady, onUnready, onO
           <ActivityLine key={`${i}-${line}`} text={line} />
         ))}
 
-        <Section title="¿Cuándo?" hint="Espacios libres de los dos.">
+        <Section
+          title="¿Cuándo?"
+          hint={lockedSlot ? 'El horario que eligieron.' : 'Espacios libres de los dos.'}
+        >
           {slots === null && <ActivityIndicator color={palette.primary} />}
           {slots?.length === 0 && <Text style={styles.empty}>No tienen horarios libres en común en los próximos días.</Text>}
           {slots && slots.length > 0 && (
             <View style={styles.chips}>
-              {slots.map((slot) => (
+              {visibleSlots(slots, fullSlot, { fromProposal: true, showAll: showAllSlots }).map((slot) => (
                 <OptionChip
                   key={slot.key}
                   label={slotOptionLabel(slot, now)}
@@ -165,6 +173,11 @@ export function FiltersView({ view, now, busy, onChange, onReady, onUnready, onO
                 />
               ))}
             </View>
+          )}
+          {lockedSlot && (
+            <TouchableOpacity onPress={() => setShowAllSlots(true)} accessibilityRole="button" hitSlop={8}>
+              <Text style={styles.slotLink}>Elegir otro horario</Text>
+            </TouchableOpacity>
           )}
           {fullSlot && (
             <HoursCard
@@ -309,6 +322,7 @@ export function FiltersView({ view, now, busy, onChange, onReady, onUnready, onO
 }
 
 const styles = StyleSheet.create({
+  slotLink: { fontSize: 14, fontWeight: '600', color: palette.textAccent },
   content: { padding: 16, gap: 16, paddingBottom: 32 },
   members: { flexDirection: 'row', justifyContent: 'center', gap: 24 },
   section: { gap: 10 },

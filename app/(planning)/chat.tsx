@@ -4,7 +4,6 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -76,7 +75,9 @@ export default function PlanningChatScreen() {
   return (
     <SafeAreaView style={styles.container} edges={["left", "right", "bottom"]}>
       <ScreenHeader title="Mensajes" onBack={() => router.back()} />
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      {/* [chat-teclado] También en Android: con pantalla completa (edgeToEdgeEnabled) la ventana ya no
+          se encoge sola y el campo quedaba detrás del teclado. */}
+      <KeyboardAvoidingView style={styles.flex} behavior="padding">
         <ScrollView
           ref={scroll}
           contentContainerStyle={styles.content}

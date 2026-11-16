@@ -28,6 +28,9 @@ jest.mock('../services/availabilityService', () => ({
 
 import AvailabilityScheduleScreen from '../app/(settings)/availability-schedule';
 
+// La pantalla carga muchas piezas; con toda la suite corriendo a veces pasaba de los 5 s por omisión.
+jest.setTimeout(20_000);
+
 it('se llama «Horarios para citas» y aclara que no es el horario de trabajo', async () => {
   render(<AvailabilityScheduleScreen />);
   await act(async () => {});
