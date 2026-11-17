@@ -72,6 +72,18 @@ function localDateOf(iso: string, endOfDay: boolean): Date {
   return endOfDay ? new Date(y, m - 1, d, 23, 59, 59, 999) : new Date(y, m - 1, d);
 }
 
+/**
+ * [eventos-duplicados] Ultimo dia de un evento de todo el dia del telefono. Android guarda el fin como
+ * la medianoche del dia siguiente (exclusiva); tomarlo tal cual hacia que el evento saliera tambien
+ * al dia siguiente. Si el fin es medianoche exacta, el ultimo dia es el anterior.
+ */
+function allDayEndIso(startIso: string, endIso: string): string {
+  const end = new Date(endIso);
+  const exclusive = end.getUTCHours() === 0 && end.getUTCMinutes() === 0 && end.getUTCSeconds() === 0;
+  if (!exclusive || end.getTime() <= new Date(startIso).getTime()) return endIso;
+  return new Date(end.getTime() - 86_400_000).toISOString();
+}
+
 /** Todo el dia: de 00:00 a 23:59 UTC, o 24 h exactas (eventos viejos creados en hora local). */
 function isAllDayEvent(startIso: string, endIso: string): boolean {
   const start = new Date(startIso);
@@ -172,7 +184,9 @@ export function buildCalendarItems({ events, external, userId, partnerName, rang
       const mine = ext.ownerId === userId;
       const busyOnly = ext.visibility === 'BUSY_ONLY';
       const start = ext.isAllDay ? localDateOf(ext.startDatetime, false) : new Date(ext.startDatetime);
-      const end = ext.isAllDay ? localDateOf(ext.endDatetime, true) : new Date(ext.endDatetime);
+      const end = ext.isAllDay
+        ? localDateOf(allDayEndIso(ext.startDatetime, ext.endDatetime), true)
+        : new Date(ext.endDatetime);
       const base = {
         title: busyOnly ? 'Ocupado' : ext.title,
         allDay: ext.isAllDay,

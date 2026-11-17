@@ -323,3 +323,30 @@ describe('openingHour ([ux-ajustes] D6)', () => {
     expect(openingHour([], nextWeek, now)).toBe(8);
   });
 });
+
+describe('[eventos-duplicados] todo el día del teléfono', () => {
+  it('un evento de todo el día del teléfono sale solo ese día, no también el siguiente', () => {
+    // Android guarda el fin como la medianoche del día siguiente (exclusiva).
+    const items = buildCalendarItems({
+      events: [],
+      external: [external({ isAllDay: true, title: 'Cumpleaños', startDatetime: '2026-11-17T00:00:00.000Z', endDatetime: '2026-11-18T00:00:00.000Z' })],
+      userId: 4,
+      partnerName: 'Sam',
+      range,
+    });
+    expect(itemsOnDay(items, new Date(2026, 10, 17)).map((i) => i.title)).toEqual(['Cumpleaños']);
+    expect(itemsOnDay(items, new Date(2026, 10, 18))).toEqual([]);
+  });
+
+  it('uno de varios días sigue ocupando todos sus días', () => {
+    const items = buildCalendarItems({
+      events: [],
+      external: [external({ isAllDay: true, title: 'Viaje', startDatetime: '2026-11-17T00:00:00.000Z', endDatetime: '2026-11-19T00:00:00.000Z' })],
+      userId: 4,
+      partnerName: 'Sam',
+      range,
+    });
+    expect(itemsOnDay(items, new Date(2026, 10, 18)).map((i) => i.title)).toEqual(['Viaje']);
+    expect(itemsOnDay(items, new Date(2026, 10, 19))).toEqual([]);
+  });
+});
