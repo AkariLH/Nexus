@@ -22,7 +22,7 @@ import { RecurrenceModal } from "../components/RecurrenceModal";
 import { RemindersModal, Reminder } from "../components/RemindersModal";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { endFromDuration } from "../../utils/ideaFormat";
-import { EVENT_CATEGORIES, errorTitleFor, missingForEvent, toDateInput } from "../../utils/eventForm";
+import { EVENT_CATEGORIES, errorTitleFor, eventStart, missingForEvent, toDateInput } from "../../utils/eventForm";
 import { EventDateField } from "../../components/ui/EventDateField";
 import { palette, gradients, eventColors } from "../../constants/colors";
 import { ScreenHeader } from "../components/layout/ScreenHeader";
@@ -753,7 +753,7 @@ export default function CreateEventScreen() {
         onClose={() => setShowRemindersModal(false)}
         onSave={handleSaveReminders}
         initialReminders={reminders}
-        eventStartDate={startDate}
+        eventStartDate={eventStart(startDate, startTime, isAllDay)}
       />
 
       {/* Modal de error */}

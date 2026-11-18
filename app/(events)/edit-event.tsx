@@ -22,7 +22,7 @@ import { RemindersModal, Reminder } from "../components/RemindersModal";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { palette, gradients, eventColors } from "../../constants/colors";
 import { ScreenHeader } from "../components/layout/ScreenHeader";
-import { EVENT_CATEGORIES, errorTitleFor, toDateInput } from "../../utils/eventForm";
+import { EVENT_CATEGORIES, errorTitleFor, eventStart, toDateInput } from "../../utils/eventForm";
 import { EventDateField } from "../../components/ui/EventDateField";
 
 export default function EditEventScreen() {
@@ -885,7 +885,7 @@ export default function EditEventScreen() {
           onClose={() => setShowRemindersModal(false)}
           onSave={handleSaveReminders}
           initialReminders={reminders}
-          eventStartDate={startDate}
+          eventStartDate={eventStart(startDate, startTime, isAllDay)}
         />
 
         {/* Modal de error */}

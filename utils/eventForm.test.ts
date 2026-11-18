@@ -1,4 +1,18 @@
-import { EVENT_CATEGORIES, errorTitleFor, missingForEvent, withDateInput, withTimeInput, toDateInput, toTimeInput } from './eventForm';
+import { EVENT_CATEGORIES, errorTitleFor, eventStart, missingForEvent, withDateInput, withTimeInput, toDateInput, toTimeInput } from './eventForm';
+
+describe('[recordatorio-hora] eventStart', () => {
+  it('junta el día elegido con la hora elegida (antes los recordatorios usaban una hora cualquiera)', () => {
+    const day = new Date(2026, 10, 17, 9, 2); // la fecha guarda la hora en que se eligió
+    const time = new Date(2026, 0, 1, 18, 30);
+    const start = eventStart(day, time, false);
+    expect([start.getFullYear(), start.getMonth(), start.getDate(), start.getHours(), start.getMinutes()]).toEqual([2026, 10, 17, 18, 30]);
+  });
+
+  it('todo el día empieza a medianoche de ese día', () => {
+    const start = eventStart(new Date(2026, 10, 17, 9, 2), new Date(2026, 0, 1, 18, 30), true);
+    expect([start.getDate(), start.getHours(), start.getMinutes()]).toEqual([17, 0, 0]);
+  });
+});
 
 describe('[fecha-web] campos de fecha y hora del navegador', () => {
   const base = new Date(2026, 10, 20, 18, 30); // 20 nov 2026, 18:30 hora local

@@ -24,6 +24,17 @@ export function missingForEvent(form: EventFormState): string | null {
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
+/**
+ * [recordatorio-hora] Inicio real del evento: el día de `date` con la hora de `time` (o medianoche si
+ * es de todo el día). Los recordatorios comparaban contra `date` sola, que guarda una hora cualquiera,
+ * y decían «ocurriría antes de la hora actual» aunque el plan fuera más tarde.
+ */
+export function eventStart(date: Date, time: Date, allDay: boolean): Date {
+  return allDay
+    ? new Date(date.getFullYear(), date.getMonth(), date.getDate())
+    : new Date(date.getFullYear(), date.getMonth(), date.getDate(), time.getHours(), time.getMinutes());
+}
+
 /** [fecha-web] Fecha local como la usa <input type="date">: "2026-11-20". */
 export function toDateInput(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
