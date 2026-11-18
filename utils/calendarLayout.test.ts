@@ -349,4 +349,48 @@ describe('[eventos-duplicados] todo el día del teléfono', () => {
     expect(itemsOnDay(items, new Date(2026, 10, 18)).map((i) => i.title)).toEqual(['Viaje']);
     expect(itemsOnDay(items, new Date(2026, 10, 19))).toEqual([]);
   });
+
+  it('un cumpleaños que se repite cada año sale solo en el día, no también el anterior', () => {
+    const items = buildCalendarItems({
+      events: [],
+      external: [
+        external({
+          isAllDay: true,
+          title: 'Cumpleaños',
+          startDatetime: '2026-11-03T00:00:00.000Z',
+          endDatetime: '2026-11-04T00:00:00.000Z',
+          recurrenceRule: 'FREQ=YEARLY',
+          rruleDtstartUtc: '2026-11-03T00:00:00.000Z',
+        } as never),
+      ],
+      userId: 4,
+      partnerName: 'Sam',
+      range,
+    });
+    expect(itemsOnDay(items, new Date(2026, 10, 2))).toEqual([]);
+    expect(itemsOnDay(items, new Date(2026, 10, 3)).map((i) => i.title)).toEqual(['Cumpleaños']);
+    expect(itemsOnDay(items, new Date(2026, 10, 4))).toEqual([]);
+  });
+
+  it('un plan de Nexus de todo el día que se repite cada semana tampoco sale el día anterior', () => {
+    const items = buildCalendarItems({
+      events: [
+        event({
+          title: 'Día libre',
+          startDateTime: '2026-11-03T00:00:00.000Z',
+          endDateTime: '2026-11-03T23:59:59.999Z',
+          isRecurring: true,
+          recurrencePattern: 'FREQ=WEEKLY',
+          rruleDtstartUtc: '2026-11-03T00:00:00.000Z',
+        }),
+      ],
+      external: [],
+      userId: 4,
+      partnerName: 'Sam',
+      range,
+    });
+    expect(itemsOnDay(items, new Date(2026, 10, 9))).toEqual([]);
+    expect(itemsOnDay(items, new Date(2026, 10, 10)).map((i) => i.title)).toEqual(['Día libre']);
+    expect(itemsOnDay(items, new Date(2026, 10, 11))).toEqual([]);
+  });
 });

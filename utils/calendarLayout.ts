@@ -209,7 +209,11 @@ export function buildCalendarItems({ events, external, userId, partnerName, rang
           endDateTime: asLocalIso(end),
           isRecurring: true,
           recurrencePattern: ext.recurrenceRule,
-          rruleDtstartUtc: ext.rruleDtstartUtc ? asLocalIso(new Date(ext.rruleDtstartUtc)) : undefined,
+          // [eventos-duplicados] En los de todo el dia, el inicio de la regla es una fecha, no una hora:
+          // convertir la medianoche UTC a hora de Mexico la pasaba a las 18:00 del dia anterior.
+          rruleDtstartUtc: ext.rruleDtstartUtc
+            ? asLocalIso(ext.isAllDay ? localDateOf(ext.rruleDtstartUtc, false) : new Date(ext.rruleDtstartUtc))
+            : undefined,
         },
         range.start,
         range.end,
