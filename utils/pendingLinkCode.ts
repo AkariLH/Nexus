@@ -51,6 +51,29 @@ export function codeFromLink(raw: string | string[] | undefined): string {
   return text.replace(/[^A-Z0-9]/g, '').slice(0, CODE_LENGTH);
 }
 
+/**
+ * [qr-escaner] El código de un QR leído con el escáner de la app, o null si el QR no es de Nexus.
+ * Acepta el QR que muestra «Invitar a mi pareja» (`nexus://enter-link-code?code=…`), el link https
+ * de invitación (`…/unirme?code=…`) y un QR con solo el código (con o sin `NEXUS-`).
+ */
+export function codeFromScannedQr(data: string): string | null {
+  const text = (data ?? '').trim();
+  if (!text) return null;
+  let candidate: string;
+  if (/^[a-z][a-z0-9+.-]*:/i.test(text)) {
+    const isNexusLink = /^nexus:\/\/enter-link-code\b/i.test(text) || /^https:\/\/[^/?#]+\/unirme\b/i.test(text);
+    if (!isNexusLink) return null;
+    const match = text.match(/[?&]code=([^&#]*)/i);
+    if (!match) return null;
+    candidate = decodeURIComponent(match[1]);
+  } else {
+    candidate = text;
+  }
+  if (!/^(NEXUS[^A-Z0-9]*)?[A-Z0-9]{6}$/i.test(candidate.trim())) return null;
+  const code = codeFromLink(candidate);
+  return code.length === CODE_LENGTH ? code : null;
+}
+
 export async function savePendingLinkCode(code: string, now: Date = new Date()): Promise<void> {
   try {
     await AsyncStorage.setItem(KEY, JSON.stringify({ code, savedAt: now.toISOString() }));

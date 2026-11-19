@@ -2,8 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { MotiView } from "moti";
-import { useState } from "react";
-import { StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Platform, StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator } from "react-native";
 import { useAuth } from "../../context/AuthContext";
 import { ErrorModal } from "../components/ErrorModal";
 import { SuccessModal } from "../components/SuccessModal";
@@ -11,17 +11,30 @@ import linkService from "../../services/link.service";
 import { palette, gradients } from "../../constants/colors";
 import { ScreenHeader } from "../components/layout/ScreenHeader";
 import { codeFromLink } from "../../utils/pendingLinkCode";
+import { GradientButton } from "../components/ui/GradientButton";
+
+// [qr-escaner] En web no hay escáner: solo el campo.
+const CAN_SCAN = Platform.OS !== "web";
 
 export default function EnterLinkCodeScreen() {
   const router = useRouter();
   const { user } = useAuth();
   // Llega con ?code=… desde el QR de la pareja (nexus://enter-link-code?code=…) o desde Inicio.
-  const params = useLocalSearchParams<{ code?: string }>();
+  const params = useLocalSearchParams<{ code?: string; auto?: string }>();
   const [code, setCode] = useState(() => codeFromLink(params.code));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showError, setShowError] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+
+  // [qr-escaner] Al volver del escáner (?auto=1) se conecta solo, una vez, con el código leído.
+  const autoTried = useRef(false);
+  useEffect(() => {
+    if (params.auto !== "1" || autoTried.current || !user?.userId) return;
+    if (codeFromLink(params.code).length < 6) return;
+    autoTried.current = true;
+    handleConnect();
+  }, [params.auto, params.code, user?.userId]);
 
   const handleConnect = async () => {
     if (!user?.userId) return;
@@ -81,12 +94,30 @@ export default function EnterLinkCodeScreen() {
 
         <Text style={styles.heading}>Conecta con tu pareja</Text>
         <Text style={styles.subtitle}>
-          Ingresa el código único que tu pareja te compartió
+          {CAN_SCAN
+            ? "Escanea el QR que aparece en su teléfono o escribe su código."
+            : "Ingresa el código único que tu pareja te compartió"}
         </Text>
+
+        {CAN_SCAN && (
+          <>
+            <GradientButton
+              title="Escanear QR"
+              onPress={() => router.push("/(link)/scan-link-qr")}
+              disabled={loading}
+              style={styles.scanButton}
+            />
+            <View style={styles.orRow}>
+              <View style={styles.orLine} />
+              <Text style={styles.orText}>o escribe su código</Text>
+              <View style={styles.orLine} />
+            </View>
+          </>
+        )}
 
         {/* Code input */}
         <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>Código de vínculo</Text>
+          {!CAN_SCAN && <Text style={styles.inputLabel}>Código de vínculo</Text>}
           <View style={styles.inputWrapper}>
             <Text style={styles.inputPrefix}>NEXUS  - </Text>
             <TextInput
@@ -166,6 +197,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 32,
     alignItems: "center",
+  },
+  scanButton: {
+    alignSelf: "stretch",
+    marginBottom: 20,
+  },
+  orRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "stretch",
+    gap: 12,
+    marginBottom: 20,
+  },
+  orLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: palette.border,
+  },
+  orText: {
+    fontSize: 13,
+    color: palette.textMuted,
   },
   iconContainer: {
     marginBottom: 32,

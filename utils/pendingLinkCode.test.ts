@@ -3,7 +3,7 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 );
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { codeFromLink, inviteMessage, linkCodeUrl, savePendingLinkCode, takePendingLinkCode } from './pendingLinkCode';
+import { codeFromLink, codeFromScannedQr, inviteMessage, linkCodeUrl, savePendingLinkCode, takePendingLinkCode } from './pendingLinkCode';
 
 const AT = new Date('2026-11-03T12:00:00Z');
 const minutesLater = (m: number) => new Date(AT.getTime() + m * 60_000);
@@ -75,5 +75,27 @@ describe('inviteMessage (botón Compartir)', () => {
   it('ignora una dirección que no es https (WhatsApp no la vuelve tocable)', () => {
     expect(inviteMessage('AB12CD', 15, 'http://192.168.0.197:8081')).toBe(inviteMessage('AB12CD', 15));
     expect(inviteMessage('AB12CD', 15, '  ')).toBe(inviteMessage('AB12CD', 15));
+  });
+});
+
+describe('[qr-escaner] codeFromScannedQr', () => {
+  it('reads the code from the QR that Nexus shows', () => {
+    expect(codeFromScannedQr(linkCodeUrl('ABC234'))).toBe('ABC234');
+  });
+
+  it('reads the code from the https invite link', () => {
+    expect(codeFromScannedQr('https://nexus-pareja.duckdns.org/unirme?code=XYZ789')).toBe('XYZ789');
+  });
+
+  it('accepts a QR that only has the code, with or without NEXUS-', () => {
+    expect(codeFromScannedQr('NEXUS-QWE456')).toBe('QWE456');
+    expect(codeFromScannedQr('qwe456')).toBe('QWE456');
+  });
+
+  it('rejects a QR that is not from Nexus', () => {
+    expect(codeFromScannedQr('https://www.google.com/search?q=hola')).toBeNull();
+    expect(codeFromScannedQr('WIFI:S:casa;T:WPA;P:secreto;;')).toBeNull();
+    expect(codeFromScannedQr('nexus://enter-link-code?code=AB')).toBeNull();
+    expect(codeFromScannedQr('')).toBeNull();
   });
 });

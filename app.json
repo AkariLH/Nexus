@@ -12,7 +12,7 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Necesitamos acceso a tu galería para que puedas seleccionar una foto de perfil",
-        "NSCameraUsageDescription": "Necesitamos acceso a la cámara para que puedas tomar una foto de perfil",
+        "NSCameraUsageDescription": "Nexus usa la cámara para tomar tu foto de perfil y para leer el QR de tu pareja.",
         "NSCalendarsUsageDescription": "Necesitamos acceso a tus calendarios para sincronizar eventos con tu pareja",
         "NSRemindersUsageDescription": "Necesitamos acceso a tus recordatorios para configurar notificaciones de eventos"
       }
@@ -51,6 +51,13 @@
         "expo-location",
         {
           "locationWhenInUsePermission": "Nexus usa tu ubicación solo para encontrar planes cerca de ti."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Nexus usa la cámara para tomar tu foto de perfil y para leer el QR de tu pareja.",
+          "recordAudioAndroid": false
         }
       ],
       [
